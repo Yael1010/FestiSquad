@@ -1,0 +1,2 @@
+"""FestiSquad backend package."""
+
