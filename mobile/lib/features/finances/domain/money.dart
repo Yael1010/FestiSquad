@@ -16,4 +16,3 @@ class Money {
 
   String format() => '\$${(cents / 100).toStringAsFixed(2)}';
 }
-

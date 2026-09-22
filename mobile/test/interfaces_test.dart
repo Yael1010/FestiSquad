@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:festisquad/core/theme/app_theme.dart';
+import 'package:festisquad/core/offline/offline_state.dart';
 import 'package:festisquad/features/auth/data/auth_repository.dart';
 import 'package:festisquad/features/auth/domain/auth_session.dart';
 import 'package:festisquad/features/auth/presentation/login_screen.dart';
@@ -162,7 +163,8 @@ class _FakeAuthRepository implements AuthRepository {
 
 class _FakeSquadRepository implements SquadRepository {
   @override
-  Future<List<Squad>> listMine() async => const [];
+  Future<OfflineData<List<Squad>>> loadMine() async =>
+      const OfflineData([], fromCache: false);
 
   @override
   Future<Squad> create(String name) async {

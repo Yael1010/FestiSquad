@@ -29,4 +29,3 @@ class FinancesScreen extends StatelessWidget {
     );
   }
 }
-

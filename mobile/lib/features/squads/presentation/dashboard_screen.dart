@@ -43,6 +43,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         id: squad.id,
         code: squad.code,
       );
+      if (ref.read(squadControllerProvider.notifier).lastLoadWasFromCache) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Mostrando el squad guardado en este dispositivo.'),
+          ),
+        );
+      }
     } on SquadRequestException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

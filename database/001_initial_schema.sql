@@ -1,3 +1,4 @@
+USE FestiSquad;
 CREATE TABLE users (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
     name NVARCHAR(120) NOT NULL,
@@ -48,17 +49,29 @@ CREATE TABLE stages (
     CONSTRAINT fk_stages_festival FOREIGN KEY (festival_id) REFERENCES festivals(id)
 );
 
+CREATE TABLE genres (
+    id INT IDENTITY(1,1) NOT NULL,
+    name NVARCHAR(80) NOT NULL,
+    CONSTRAINT pk_genres PRIMARY KEY (id),
+    CONSTRAINT uq_genres_name UNIQUE (name)
+);
+
 CREATE TABLE schedule_items (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
-    festival_id UNIQUEIDENTIFIER NOT NULL,
     stage_id UNIQUEIDENTIFIER NOT NULL,
     artist_name NVARCHAR(160) NOT NULL,
     starts_at DATETIME2 NOT NULL,
     ends_at DATETIME2 NOT NULL,
-    genres_csv NVARCHAR(400) NOT NULL DEFAULT '',
     CONSTRAINT pk_schedule_items PRIMARY KEY (id),
-    CONSTRAINT fk_schedule_items_festival FOREIGN KEY (festival_id) REFERENCES festivals(id),
     CONSTRAINT fk_schedule_items_stage FOREIGN KEY (stage_id) REFERENCES stages(id)
+);
+
+CREATE TABLE schedule_item_genres (
+    schedule_item_id UNIQUEIDENTIFIER NOT NULL,
+    genre_id INT NOT NULL,
+    CONSTRAINT pk_schedule_item_genres PRIMARY KEY (schedule_item_id, genre_id),
+    CONSTRAINT fk_schedule_item_genres_item FOREIGN KEY (schedule_item_id) REFERENCES schedule_items(id),
+    CONSTRAINT fk_schedule_item_genres_genre FOREIGN KEY (genre_id) REFERENCES genres(id)
 );
 
 CREATE TABLE locations (
@@ -113,15 +126,20 @@ CREATE TABLE expense_participants (
 
 CREATE TABLE music_preferences (
     user_id UNIQUEIDENTIFIER NOT NULL,
-    genre NVARCHAR(80) NOT NULL,
+    genre_id INT NOT NULL,
     source NVARCHAR(20) NOT NULL,
     weight DECIMAL(5,2) NOT NULL DEFAULT 1.00,
-    CONSTRAINT pk_music_preferences PRIMARY KEY (user_id, genre, source),
+    CONSTRAINT pk_music_preferences PRIMARY KEY (user_id, genre_id, source),
     CONSTRAINT ck_music_preferences_source CHECK (source IN ('manual', 'spotify')),
-    CONSTRAINT fk_music_preferences_user FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT fk_music_preferences_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_music_preferences_genre FOREIGN KEY (genre_id) REFERENCES genres(id)
 );
 
 CREATE INDEX ix_locations_squad_user_recorded ON locations(squad_id, user_id, recorded_at DESC);
 CREATE INDEX ix_expenses_squad_created ON expenses(squad_id, created_at DESC);
-CREATE INDEX ix_schedule_items_festival_time ON schedule_items(festival_id, starts_at, ends_at);
-
+CREATE INDEX ix_schedule_items_stage_time ON schedule_items(stage_id, starts_at, ends_at);
+CREATE INDEX ix_squad_members_user ON squad_members(user_id, squad_id);
+CREATE INDEX ix_stages_festival ON stages(festival_id, name);
+CREATE INDEX ix_meeting_points_squad_created ON meeting_points(squad_id, created_at DESC);
+CREATE INDEX ix_expense_participants_user ON expense_participants(user_id, expense_id);
+CREATE INDEX ix_music_preferences_genre ON music_preferences(genre_id, user_id);

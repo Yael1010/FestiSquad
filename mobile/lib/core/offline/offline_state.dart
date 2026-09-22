@@ -18,4 +18,3 @@ class OfflineFailure<T> extends OfflineState<T> {
 
   final String message;
 }
-

@@ -20,6 +20,16 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 6. Clash Resolver con Spotify OAuth 2.0 y fallback manual.
 7. Seguridad, rendimiento, tolerancia a fallos, batería y evidencias de calidad.
 
+## Estado de avance
+
+- [x] Fase 1: fundamentos del proyecto.
+- [x] Fase 2: autenticación y gestión de squads.
+- [x] Fase 3: modelo relacional 3FN y persistencia local offline-first.
+- [ ] Fase 4: mapa resiliente y política GPS.
+- [ ] Fase 5: fondo común y deudas cruzadas.
+- [ ] Fase 6: Clash Resolver y Spotify.
+- [ ] Fase 7: validación integral de requisitos no funcionales.
+
 ## APIs Iniciales
 
 - `POST /api/v1/auth/register`
@@ -46,4 +56,3 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - Evidencia de pruebas.
 - Evidencia de RNF.
 - README de instalación, ejecución y explicación del MVP.
-

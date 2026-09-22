@@ -30,6 +30,21 @@ uvicorn app.main:app --reload
 
 Documentación local: `http://127.0.0.1:8000/docs`
 
+## Base de datos
+
+En una instalación nueva, ejecutar en SQL Server y en este orden:
+
+```text
+database/001_initial_schema.sql
+database/002_fund_balances.sql
+```
+
+Si la base fue creada durante la Fase 2, ejecutar además la migración idempotente:
+
+```text
+database/003_phase3_normalization_and_indexes.sql
+```
+
 ## Inicio rápido Flutter
 
 ```bash
@@ -38,6 +53,9 @@ flutter pub get
 flutter run
 ```
 
+Flutter conserva localmente los squads con Drift/SQLite. Los tokens JWT se
+mantienen separados en el almacenamiento seguro del dispositivo.
+
 ## Alcance MVP
 
 - Registro, login y sesión JWT.
@@ -45,4 +63,3 @@ flutter run
 - Mapa offline-first con última ubicación conocida y throttling GPS.
 - Fondo común con cálculo exacto de deudas cruzadas.
 - Clash Resolver con preferencias musicales manuales y preparación para Spotify OAuth 2.0.
-

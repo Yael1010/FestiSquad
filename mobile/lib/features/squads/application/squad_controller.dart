@@ -13,12 +13,16 @@ class SquadController extends StateNotifier<AsyncValue<Squad?>> {
   SquadController(this._repository) : super(const AsyncValue.data(null));
 
   final SquadRepository _repository;
+  bool _lastLoadWasFromCache = false;
+
+  bool get lastLoadWasFromCache => _lastLoadWasFromCache;
 
   Future<Squad?> loadMine() async {
     state = const AsyncValue.loading();
     try {
-      final squads = await _repository.listMine();
-      final squad = squads.isEmpty ? null : squads.first;
+      final result = await _repository.loadMine();
+      _lastLoadWasFromCache = result.fromCache;
+      final squad = result.value.isEmpty ? null : result.value.first;
       state = AsyncValue.data(squad);
       return squad;
     } catch (error, stackTrace) {

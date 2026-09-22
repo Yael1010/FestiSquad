@@ -56,4 +56,3 @@ class LocationSyncPolicy {
 
   double _degreesToRadians(double degrees) => degrees * pi / 180;
 }
-

@@ -11,7 +11,7 @@ FestiSquad se organiza como monorepo para simplificar la evaluación académica 
 
 ## Frontend
 
-La app usa una arquitectura por feature con capas `data`, `domain` y `presentation`. Riverpod será el punto de composición para estado, repositorios y servicios.
+La app usa una arquitectura por feature con capas `data`, `domain` y `presentation`. Riverpod es el punto de composición para estado, repositorios y servicios. Drift administra una base SQLite local versionada y los tokens permanecen en almacenamiento seguro.
 
 La estrategia offline-first es:
 
@@ -22,9 +22,8 @@ La estrategia offline-first es:
 
 ## Backend
 
-FastAPI expone endpoints bajo `/api/v1`. Cada módulo tiene schemas, servicios y routers separados. La implementación inicial usa servicios en memoria para acelerar el bootstrap; la siguiente iteración conectará repositorios SQL Server sin cambiar los contratos públicos.
+FastAPI expone endpoints bajo `/api/v1`. Cada módulo tiene schemas, servicios y routers separados. Autenticación, squads, ubicaciones y finanzas usan sesiones SQLAlchemy sobre SQL Server sin mezclar persistencia con los routers.
 
 ## Datos
 
 SQL Server mantiene el modelo normalizado en 3FN. Finanzas usa `DECIMAL(18,2)` y ubicación usa `DECIMAL` para coordenadas. No se permite `FLOAT` ni `REAL` para importes monetarios.
-

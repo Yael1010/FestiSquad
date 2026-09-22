@@ -46,4 +46,3 @@ class _ClashResolverScreenState extends State<ClashResolverScreen> {
     );
   }
 }
-
