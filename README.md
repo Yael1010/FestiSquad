@@ -56,6 +56,12 @@ flutter run
 Flutter conserva localmente los squads con Drift/SQLite. Los tokens JWT se
 mantienen separados en el almacenamiento seguro del dispositivo.
 
+El mapa funciona en Android con permiso de ubicación bajo demanda. Para usar un
+festival real, registra su geometría en SQL Server y agrega
+`--dart-define=FESTIVAL_ID=<uuid>` al comando `flutter run`. Sin ese valor se
+muestra un plano de demostración. Ver [Fase 4](docs/phase-4-resilient-map.md)
+para los límites del modo web y del rastreo en segundo plano.
+
 ## Alcance MVP
 
 - Registro, login y sesión JWT.

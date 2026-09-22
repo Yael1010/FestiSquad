@@ -800,12 +800,297 @@ class CachedFestivalsCompanion extends UpdateCompanion<CachedFestival> {
   }
 }
 
+class $CachedStagesTable extends CachedStages
+    with TableInfo<$CachedStagesTable, CachedStage> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedStagesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _festivalIdMeta =
+      const VerificationMeta('festivalId');
+  @override
+  late final GeneratedColumn<String> festivalId = GeneratedColumn<String>(
+      'festival_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _polygonGeoJsonMeta =
+      const VerificationMeta('polygonGeoJson');
+  @override
+  late final GeneratedColumn<String> polygonGeoJson = GeneratedColumn<String>(
+      'polygon_geo_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [id, festivalId, name, polygonGeoJson];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_stages';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedStage> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('festival_id')) {
+      context.handle(
+          _festivalIdMeta,
+          festivalId.isAcceptableOrUnknown(
+              data['festival_id']!, _festivalIdMeta));
+    } else if (isInserting) {
+      context.missing(_festivalIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('polygon_geo_json')) {
+      context.handle(
+          _polygonGeoJsonMeta,
+          polygonGeoJson.isAcceptableOrUnknown(
+              data['polygon_geo_json']!, _polygonGeoJsonMeta));
+    } else if (isInserting) {
+      context.missing(_polygonGeoJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedStage map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedStage(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      festivalId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}festival_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      polygonGeoJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}polygon_geo_json'])!,
+    );
+  }
+
+  @override
+  $CachedStagesTable createAlias(String alias) {
+    return $CachedStagesTable(attachedDatabase, alias);
+  }
+}
+
+class CachedStage extends DataClass implements Insertable<CachedStage> {
+  final String id;
+  final String festivalId;
+  final String name;
+  final String polygonGeoJson;
+  const CachedStage(
+      {required this.id,
+      required this.festivalId,
+      required this.name,
+      required this.polygonGeoJson});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['festival_id'] = Variable<String>(festivalId);
+    map['name'] = Variable<String>(name);
+    map['polygon_geo_json'] = Variable<String>(polygonGeoJson);
+    return map;
+  }
+
+  CachedStagesCompanion toCompanion(bool nullToAbsent) {
+    return CachedStagesCompanion(
+      id: Value(id),
+      festivalId: Value(festivalId),
+      name: Value(name),
+      polygonGeoJson: Value(polygonGeoJson),
+    );
+  }
+
+  factory CachedStage.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedStage(
+      id: serializer.fromJson<String>(json['id']),
+      festivalId: serializer.fromJson<String>(json['festivalId']),
+      name: serializer.fromJson<String>(json['name']),
+      polygonGeoJson: serializer.fromJson<String>(json['polygonGeoJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'festivalId': serializer.toJson<String>(festivalId),
+      'name': serializer.toJson<String>(name),
+      'polygonGeoJson': serializer.toJson<String>(polygonGeoJson),
+    };
+  }
+
+  CachedStage copyWith(
+          {String? id,
+          String? festivalId,
+          String? name,
+          String? polygonGeoJson}) =>
+      CachedStage(
+        id: id ?? this.id,
+        festivalId: festivalId ?? this.festivalId,
+        name: name ?? this.name,
+        polygonGeoJson: polygonGeoJson ?? this.polygonGeoJson,
+      );
+  CachedStage copyWithCompanion(CachedStagesCompanion data) {
+    return CachedStage(
+      id: data.id.present ? data.id.value : this.id,
+      festivalId:
+          data.festivalId.present ? data.festivalId.value : this.festivalId,
+      name: data.name.present ? data.name.value : this.name,
+      polygonGeoJson: data.polygonGeoJson.present
+          ? data.polygonGeoJson.value
+          : this.polygonGeoJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedStage(')
+          ..write('id: $id, ')
+          ..write('festivalId: $festivalId, ')
+          ..write('name: $name, ')
+          ..write('polygonGeoJson: $polygonGeoJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, festivalId, name, polygonGeoJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedStage &&
+          other.id == this.id &&
+          other.festivalId == this.festivalId &&
+          other.name == this.name &&
+          other.polygonGeoJson == this.polygonGeoJson);
+}
+
+class CachedStagesCompanion extends UpdateCompanion<CachedStage> {
+  final Value<String> id;
+  final Value<String> festivalId;
+  final Value<String> name;
+  final Value<String> polygonGeoJson;
+  final Value<int> rowid;
+  const CachedStagesCompanion({
+    this.id = const Value.absent(),
+    this.festivalId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.polygonGeoJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedStagesCompanion.insert({
+    required String id,
+    required String festivalId,
+    required String name,
+    required String polygonGeoJson,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        festivalId = Value(festivalId),
+        name = Value(name),
+        polygonGeoJson = Value(polygonGeoJson);
+  static Insertable<CachedStage> custom({
+    Expression<String>? id,
+    Expression<String>? festivalId,
+    Expression<String>? name,
+    Expression<String>? polygonGeoJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (festivalId != null) 'festival_id': festivalId,
+      if (name != null) 'name': name,
+      if (polygonGeoJson != null) 'polygon_geo_json': polygonGeoJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedStagesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? festivalId,
+      Value<String>? name,
+      Value<String>? polygonGeoJson,
+      Value<int>? rowid}) {
+    return CachedStagesCompanion(
+      id: id ?? this.id,
+      festivalId: festivalId ?? this.festivalId,
+      name: name ?? this.name,
+      polygonGeoJson: polygonGeoJson ?? this.polygonGeoJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (festivalId.present) {
+      map['festival_id'] = Variable<String>(festivalId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (polygonGeoJson.present) {
+      map['polygon_geo_json'] = Variable<String>(polygonGeoJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedStagesCompanion(')
+          ..write('id: $id, ')
+          ..write('festivalId: $festivalId, ')
+          ..write('name: $name, ')
+          ..write('polygonGeoJson: $polygonGeoJson, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CachedLocationsTable extends CachedLocations
     with TableInfo<$CachedLocationsTable, CachedLocation> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $CachedLocationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionUserIdMeta =
+      const VerificationMeta('sessionUserId');
+  @override
+  late final GeneratedColumn<String> sessionUserId = GeneratedColumn<String>(
+      'session_user_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
   static const VerificationMeta _squadIdMeta =
       const VerificationMeta('squadId');
   @override
@@ -849,6 +1134,7 @@ class $CachedLocationsTable extends CachedLocations
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [
+        sessionUserId,
         squadId,
         userId,
         latitude,
@@ -867,6 +1153,12 @@ class $CachedLocationsTable extends CachedLocations
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('session_user_id')) {
+      context.handle(
+          _sessionUserIdMeta,
+          sessionUserId.isAcceptableOrUnknown(
+              data['session_user_id']!, _sessionUserIdMeta));
+    }
     if (data.containsKey('squad_id')) {
       context.handle(_squadIdMeta,
           squadId.isAcceptableOrUnknown(data['squad_id']!, _squadIdMeta));
@@ -920,6 +1212,8 @@ class $CachedLocationsTable extends CachedLocations
   CachedLocation map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CachedLocation(
+      sessionUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}session_user_id'])!,
       squadId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}squad_id'])!,
       userId: attachedDatabase.typeMapping
@@ -944,6 +1238,7 @@ class $CachedLocationsTable extends CachedLocations
 }
 
 class CachedLocation extends DataClass implements Insertable<CachedLocation> {
+  final String sessionUserId;
   final String squadId;
   final String userId;
   final double latitude;
@@ -952,7 +1247,8 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
   final DateTime recordedAt;
   final DateTime cachedAt;
   const CachedLocation(
-      {required this.squadId,
+      {required this.sessionUserId,
+      required this.squadId,
       required this.userId,
       required this.latitude,
       required this.longitude,
@@ -962,6 +1258,7 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['session_user_id'] = Variable<String>(sessionUserId);
     map['squad_id'] = Variable<String>(squadId);
     map['user_id'] = Variable<String>(userId);
     map['latitude'] = Variable<double>(latitude);
@@ -976,6 +1273,7 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
 
   CachedLocationsCompanion toCompanion(bool nullToAbsent) {
     return CachedLocationsCompanion(
+      sessionUserId: Value(sessionUserId),
       squadId: Value(squadId),
       userId: Value(userId),
       latitude: Value(latitude),
@@ -992,6 +1290,7 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CachedLocation(
+      sessionUserId: serializer.fromJson<String>(json['sessionUserId']),
       squadId: serializer.fromJson<String>(json['squadId']),
       userId: serializer.fromJson<String>(json['userId']),
       latitude: serializer.fromJson<double>(json['latitude']),
@@ -1005,6 +1304,7 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'sessionUserId': serializer.toJson<String>(sessionUserId),
       'squadId': serializer.toJson<String>(squadId),
       'userId': serializer.toJson<String>(userId),
       'latitude': serializer.toJson<double>(latitude),
@@ -1016,7 +1316,8 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
   }
 
   CachedLocation copyWith(
-          {String? squadId,
+          {String? sessionUserId,
+          String? squadId,
           String? userId,
           double? latitude,
           double? longitude,
@@ -1024,6 +1325,7 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
           DateTime? recordedAt,
           DateTime? cachedAt}) =>
       CachedLocation(
+        sessionUserId: sessionUserId ?? this.sessionUserId,
         squadId: squadId ?? this.squadId,
         userId: userId ?? this.userId,
         latitude: latitude ?? this.latitude,
@@ -1035,6 +1337,9 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
       );
   CachedLocation copyWithCompanion(CachedLocationsCompanion data) {
     return CachedLocation(
+      sessionUserId: data.sessionUserId.present
+          ? data.sessionUserId.value
+          : this.sessionUserId,
       squadId: data.squadId.present ? data.squadId.value : this.squadId,
       userId: data.userId.present ? data.userId.value : this.userId,
       latitude: data.latitude.present ? data.latitude.value : this.latitude,
@@ -1051,6 +1356,7 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
   @override
   String toString() {
     return (StringBuffer('CachedLocation(')
+          ..write('sessionUserId: $sessionUserId, ')
           ..write('squadId: $squadId, ')
           ..write('userId: $userId, ')
           ..write('latitude: $latitude, ')
@@ -1063,12 +1369,13 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
   }
 
   @override
-  int get hashCode => Object.hash(squadId, userId, latitude, longitude,
-      accuracyMeters, recordedAt, cachedAt);
+  int get hashCode => Object.hash(sessionUserId, squadId, userId, latitude,
+      longitude, accuracyMeters, recordedAt, cachedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CachedLocation &&
+          other.sessionUserId == this.sessionUserId &&
           other.squadId == this.squadId &&
           other.userId == this.userId &&
           other.latitude == this.latitude &&
@@ -1079,6 +1386,7 @@ class CachedLocation extends DataClass implements Insertable<CachedLocation> {
 }
 
 class CachedLocationsCompanion extends UpdateCompanion<CachedLocation> {
+  final Value<String> sessionUserId;
   final Value<String> squadId;
   final Value<String> userId;
   final Value<double> latitude;
@@ -1088,6 +1396,7 @@ class CachedLocationsCompanion extends UpdateCompanion<CachedLocation> {
   final Value<DateTime> cachedAt;
   final Value<int> rowid;
   const CachedLocationsCompanion({
+    this.sessionUserId = const Value.absent(),
     this.squadId = const Value.absent(),
     this.userId = const Value.absent(),
     this.latitude = const Value.absent(),
@@ -1098,6 +1407,7 @@ class CachedLocationsCompanion extends UpdateCompanion<CachedLocation> {
     this.rowid = const Value.absent(),
   });
   CachedLocationsCompanion.insert({
+    this.sessionUserId = const Value.absent(),
     required String squadId,
     required String userId,
     required double latitude,
@@ -1113,6 +1423,7 @@ class CachedLocationsCompanion extends UpdateCompanion<CachedLocation> {
         recordedAt = Value(recordedAt),
         cachedAt = Value(cachedAt);
   static Insertable<CachedLocation> custom({
+    Expression<String>? sessionUserId,
     Expression<String>? squadId,
     Expression<String>? userId,
     Expression<double>? latitude,
@@ -1123,6 +1434,7 @@ class CachedLocationsCompanion extends UpdateCompanion<CachedLocation> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (sessionUserId != null) 'session_user_id': sessionUserId,
       if (squadId != null) 'squad_id': squadId,
       if (userId != null) 'user_id': userId,
       if (latitude != null) 'latitude': latitude,
@@ -1135,7 +1447,8 @@ class CachedLocationsCompanion extends UpdateCompanion<CachedLocation> {
   }
 
   CachedLocationsCompanion copyWith(
-      {Value<String>? squadId,
+      {Value<String>? sessionUserId,
+      Value<String>? squadId,
       Value<String>? userId,
       Value<double>? latitude,
       Value<double>? longitude,
@@ -1144,6 +1457,7 @@ class CachedLocationsCompanion extends UpdateCompanion<CachedLocation> {
       Value<DateTime>? cachedAt,
       Value<int>? rowid}) {
     return CachedLocationsCompanion(
+      sessionUserId: sessionUserId ?? this.sessionUserId,
       squadId: squadId ?? this.squadId,
       userId: userId ?? this.userId,
       latitude: latitude ?? this.latitude,
@@ -1158,6 +1472,9 @@ class CachedLocationsCompanion extends UpdateCompanion<CachedLocation> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (sessionUserId.present) {
+      map['session_user_id'] = Variable<String>(sessionUserId.value);
+    }
     if (squadId.present) {
       map['squad_id'] = Variable<String>(squadId.value);
     }
@@ -1188,6 +1505,7 @@ class CachedLocationsCompanion extends UpdateCompanion<CachedLocation> {
   @override
   String toString() {
     return (StringBuffer('CachedLocationsCompanion(')
+          ..write('sessionUserId: $sessionUserId, ')
           ..write('squadId: $squadId, ')
           ..write('userId: $userId, ')
           ..write('latitude: $latitude, ')
@@ -1207,6 +1525,14 @@ class $CachedMeetingPointsTable extends CachedMeetingPoints
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $CachedMeetingPointsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionUserIdMeta =
+      const VerificationMeta('sessionUserId');
+  @override
+  late final GeneratedColumn<String> sessionUserId = GeneratedColumn<String>(
+      'session_user_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -1258,6 +1584,7 @@ class $CachedMeetingPointsTable extends CachedMeetingPoints
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [
+        sessionUserId,
         id,
         squadId,
         title,
@@ -1277,6 +1604,12 @@ class $CachedMeetingPointsTable extends CachedMeetingPoints
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('session_user_id')) {
+      context.handle(
+          _sessionUserIdMeta,
+          sessionUserId.isAcceptableOrUnknown(
+              data['session_user_id']!, _sessionUserIdMeta));
+    }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
@@ -1335,6 +1668,8 @@ class $CachedMeetingPointsTable extends CachedMeetingPoints
   CachedMeetingPoint map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CachedMeetingPoint(
+      sessionUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}session_user_id'])!,
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       squadId: attachedDatabase.typeMapping
@@ -1362,6 +1697,7 @@ class $CachedMeetingPointsTable extends CachedMeetingPoints
 
 class CachedMeetingPoint extends DataClass
     implements Insertable<CachedMeetingPoint> {
+  final String sessionUserId;
   final String id;
   final String squadId;
   final String title;
@@ -1371,7 +1707,8 @@ class CachedMeetingPoint extends DataClass
   final DateTime createdAt;
   final DateTime cachedAt;
   const CachedMeetingPoint(
-      {required this.id,
+      {required this.sessionUserId,
+      required this.id,
       required this.squadId,
       required this.title,
       required this.latitude,
@@ -1382,6 +1719,7 @@ class CachedMeetingPoint extends DataClass
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['session_user_id'] = Variable<String>(sessionUserId);
     map['id'] = Variable<String>(id);
     map['squad_id'] = Variable<String>(squadId);
     map['title'] = Variable<String>(title);
@@ -1395,6 +1733,7 @@ class CachedMeetingPoint extends DataClass
 
   CachedMeetingPointsCompanion toCompanion(bool nullToAbsent) {
     return CachedMeetingPointsCompanion(
+      sessionUserId: Value(sessionUserId),
       id: Value(id),
       squadId: Value(squadId),
       title: Value(title),
@@ -1410,6 +1749,7 @@ class CachedMeetingPoint extends DataClass
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CachedMeetingPoint(
+      sessionUserId: serializer.fromJson<String>(json['sessionUserId']),
       id: serializer.fromJson<String>(json['id']),
       squadId: serializer.fromJson<String>(json['squadId']),
       title: serializer.fromJson<String>(json['title']),
@@ -1424,6 +1764,7 @@ class CachedMeetingPoint extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'sessionUserId': serializer.toJson<String>(sessionUserId),
       'id': serializer.toJson<String>(id),
       'squadId': serializer.toJson<String>(squadId),
       'title': serializer.toJson<String>(title),
@@ -1436,7 +1777,8 @@ class CachedMeetingPoint extends DataClass
   }
 
   CachedMeetingPoint copyWith(
-          {String? id,
+          {String? sessionUserId,
+          String? id,
           String? squadId,
           String? title,
           double? latitude,
@@ -1445,6 +1787,7 @@ class CachedMeetingPoint extends DataClass
           DateTime? createdAt,
           DateTime? cachedAt}) =>
       CachedMeetingPoint(
+        sessionUserId: sessionUserId ?? this.sessionUserId,
         id: id ?? this.id,
         squadId: squadId ?? this.squadId,
         title: title ?? this.title,
@@ -1456,6 +1799,9 @@ class CachedMeetingPoint extends DataClass
       );
   CachedMeetingPoint copyWithCompanion(CachedMeetingPointsCompanion data) {
     return CachedMeetingPoint(
+      sessionUserId: data.sessionUserId.present
+          ? data.sessionUserId.value
+          : this.sessionUserId,
       id: data.id.present ? data.id.value : this.id,
       squadId: data.squadId.present ? data.squadId.value : this.squadId,
       title: data.title.present ? data.title.value : this.title,
@@ -1472,6 +1818,7 @@ class CachedMeetingPoint extends DataClass
   @override
   String toString() {
     return (StringBuffer('CachedMeetingPoint(')
+          ..write('sessionUserId: $sessionUserId, ')
           ..write('id: $id, ')
           ..write('squadId: $squadId, ')
           ..write('title: $title, ')
@@ -1485,12 +1832,13 @@ class CachedMeetingPoint extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(id, squadId, title, latitude, longitude,
-      createdByUserId, createdAt, cachedAt);
+  int get hashCode => Object.hash(sessionUserId, id, squadId, title, latitude,
+      longitude, createdByUserId, createdAt, cachedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CachedMeetingPoint &&
+          other.sessionUserId == this.sessionUserId &&
           other.id == this.id &&
           other.squadId == this.squadId &&
           other.title == this.title &&
@@ -1502,6 +1850,7 @@ class CachedMeetingPoint extends DataClass
 }
 
 class CachedMeetingPointsCompanion extends UpdateCompanion<CachedMeetingPoint> {
+  final Value<String> sessionUserId;
   final Value<String> id;
   final Value<String> squadId;
   final Value<String> title;
@@ -1512,6 +1861,7 @@ class CachedMeetingPointsCompanion extends UpdateCompanion<CachedMeetingPoint> {
   final Value<DateTime> cachedAt;
   final Value<int> rowid;
   const CachedMeetingPointsCompanion({
+    this.sessionUserId = const Value.absent(),
     this.id = const Value.absent(),
     this.squadId = const Value.absent(),
     this.title = const Value.absent(),
@@ -1523,6 +1873,7 @@ class CachedMeetingPointsCompanion extends UpdateCompanion<CachedMeetingPoint> {
     this.rowid = const Value.absent(),
   });
   CachedMeetingPointsCompanion.insert({
+    this.sessionUserId = const Value.absent(),
     required String id,
     required String squadId,
     required String title,
@@ -1541,6 +1892,7 @@ class CachedMeetingPointsCompanion extends UpdateCompanion<CachedMeetingPoint> {
         createdAt = Value(createdAt),
         cachedAt = Value(cachedAt);
   static Insertable<CachedMeetingPoint> custom({
+    Expression<String>? sessionUserId,
     Expression<String>? id,
     Expression<String>? squadId,
     Expression<String>? title,
@@ -1552,6 +1904,7 @@ class CachedMeetingPointsCompanion extends UpdateCompanion<CachedMeetingPoint> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (sessionUserId != null) 'session_user_id': sessionUserId,
       if (id != null) 'id': id,
       if (squadId != null) 'squad_id': squadId,
       if (title != null) 'title': title,
@@ -1565,7 +1918,8 @@ class CachedMeetingPointsCompanion extends UpdateCompanion<CachedMeetingPoint> {
   }
 
   CachedMeetingPointsCompanion copyWith(
-      {Value<String>? id,
+      {Value<String>? sessionUserId,
+      Value<String>? id,
       Value<String>? squadId,
       Value<String>? title,
       Value<double>? latitude,
@@ -1575,6 +1929,7 @@ class CachedMeetingPointsCompanion extends UpdateCompanion<CachedMeetingPoint> {
       Value<DateTime>? cachedAt,
       Value<int>? rowid}) {
     return CachedMeetingPointsCompanion(
+      sessionUserId: sessionUserId ?? this.sessionUserId,
       id: id ?? this.id,
       squadId: squadId ?? this.squadId,
       title: title ?? this.title,
@@ -1590,6 +1945,9 @@ class CachedMeetingPointsCompanion extends UpdateCompanion<CachedMeetingPoint> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (sessionUserId.present) {
+      map['session_user_id'] = Variable<String>(sessionUserId.value);
+    }
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
@@ -1623,6 +1981,7 @@ class CachedMeetingPointsCompanion extends UpdateCompanion<CachedMeetingPoint> {
   @override
   String toString() {
     return (StringBuffer('CachedMeetingPointsCompanion(')
+          ..write('sessionUserId: $sessionUserId, ')
           ..write('id: $id, ')
           ..write('squadId: $squadId, ')
           ..write('title: $title, ')
@@ -1989,6 +2348,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CachedSquadsTable cachedSquads = $CachedSquadsTable(this);
   late final $CachedFestivalsTable cachedFestivals =
       $CachedFestivalsTable(this);
+  late final $CachedStagesTable cachedStages = $CachedStagesTable(this);
   late final $CachedLocationsTable cachedLocations =
       $CachedLocationsTable(this);
   late final $CachedMeetingPointsTable cachedMeetingPoints =
@@ -2002,6 +2362,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         cachedSquads,
         cachedFestivals,
+        cachedStages,
         cachedLocations,
         cachedMeetingPoints,
         pendingSyncOperations
@@ -2421,8 +2782,169 @@ typedef $$CachedFestivalsTableProcessedTableManager = ProcessedTableManager<
     ),
     CachedFestival,
     PrefetchHooks Function()>;
+typedef $$CachedStagesTableCreateCompanionBuilder = CachedStagesCompanion
+    Function({
+  required String id,
+  required String festivalId,
+  required String name,
+  required String polygonGeoJson,
+  Value<int> rowid,
+});
+typedef $$CachedStagesTableUpdateCompanionBuilder = CachedStagesCompanion
+    Function({
+  Value<String> id,
+  Value<String> festivalId,
+  Value<String> name,
+  Value<String> polygonGeoJson,
+  Value<int> rowid,
+});
+
+class $$CachedStagesTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedStagesTable> {
+  $$CachedStagesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get festivalId => $composableBuilder(
+      column: $table.festivalId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get polygonGeoJson => $composableBuilder(
+      column: $table.polygonGeoJson,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedStagesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedStagesTable> {
+  $$CachedStagesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get festivalId => $composableBuilder(
+      column: $table.festivalId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get polygonGeoJson => $composableBuilder(
+      column: $table.polygonGeoJson,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedStagesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedStagesTable> {
+  $$CachedStagesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get festivalId => $composableBuilder(
+      column: $table.festivalId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get polygonGeoJson => $composableBuilder(
+      column: $table.polygonGeoJson, builder: (column) => column);
+}
+
+class $$CachedStagesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedStagesTable,
+    CachedStage,
+    $$CachedStagesTableFilterComposer,
+    $$CachedStagesTableOrderingComposer,
+    $$CachedStagesTableAnnotationComposer,
+    $$CachedStagesTableCreateCompanionBuilder,
+    $$CachedStagesTableUpdateCompanionBuilder,
+    (
+      CachedStage,
+      BaseReferences<_$AppDatabase, $CachedStagesTable, CachedStage>
+    ),
+    CachedStage,
+    PrefetchHooks Function()> {
+  $$CachedStagesTableTableManager(_$AppDatabase db, $CachedStagesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedStagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedStagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedStagesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> festivalId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> polygonGeoJson = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedStagesCompanion(
+            id: id,
+            festivalId: festivalId,
+            name: name,
+            polygonGeoJson: polygonGeoJson,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String festivalId,
+            required String name,
+            required String polygonGeoJson,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedStagesCompanion.insert(
+            id: id,
+            festivalId: festivalId,
+            name: name,
+            polygonGeoJson: polygonGeoJson,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedStagesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CachedStagesTable,
+    CachedStage,
+    $$CachedStagesTableFilterComposer,
+    $$CachedStagesTableOrderingComposer,
+    $$CachedStagesTableAnnotationComposer,
+    $$CachedStagesTableCreateCompanionBuilder,
+    $$CachedStagesTableUpdateCompanionBuilder,
+    (
+      CachedStage,
+      BaseReferences<_$AppDatabase, $CachedStagesTable, CachedStage>
+    ),
+    CachedStage,
+    PrefetchHooks Function()>;
 typedef $$CachedLocationsTableCreateCompanionBuilder = CachedLocationsCompanion
     Function({
+  Value<String> sessionUserId,
   required String squadId,
   required String userId,
   required double latitude,
@@ -2434,6 +2956,7 @@ typedef $$CachedLocationsTableCreateCompanionBuilder = CachedLocationsCompanion
 });
 typedef $$CachedLocationsTableUpdateCompanionBuilder = CachedLocationsCompanion
     Function({
+  Value<String> sessionUserId,
   Value<String> squadId,
   Value<String> userId,
   Value<double> latitude,
@@ -2453,6 +2976,9 @@ class $$CachedLocationsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<String> get squadId => $composableBuilder(
       column: $table.squadId, builder: (column) => ColumnFilters(column));
 
@@ -2485,6 +3011,10 @@ class $$CachedLocationsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get squadId => $composableBuilder(
       column: $table.squadId, builder: (column) => ColumnOrderings(column));
 
@@ -2517,6 +3047,9 @@ class $$CachedLocationsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => column);
+
   GeneratedColumn<String> get squadId =>
       $composableBuilder(column: $table.squadId, builder: (column) => column);
 
@@ -2566,6 +3099,7 @@ class $$CachedLocationsTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$CachedLocationsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
             Value<String> squadId = const Value.absent(),
             Value<String> userId = const Value.absent(),
             Value<double> latitude = const Value.absent(),
@@ -2576,6 +3110,7 @@ class $$CachedLocationsTableTableManager extends RootTableManager<
             Value<int> rowid = const Value.absent(),
           }) =>
               CachedLocationsCompanion(
+            sessionUserId: sessionUserId,
             squadId: squadId,
             userId: userId,
             latitude: latitude,
@@ -2586,6 +3121,7 @@ class $$CachedLocationsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           createCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
             required String squadId,
             required String userId,
             required double latitude,
@@ -2596,6 +3132,7 @@ class $$CachedLocationsTableTableManager extends RootTableManager<
             Value<int> rowid = const Value.absent(),
           }) =>
               CachedLocationsCompanion.insert(
+            sessionUserId: sessionUserId,
             squadId: squadId,
             userId: userId,
             latitude: latitude,
@@ -2629,6 +3166,7 @@ typedef $$CachedLocationsTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function()>;
 typedef $$CachedMeetingPointsTableCreateCompanionBuilder
     = CachedMeetingPointsCompanion Function({
+  Value<String> sessionUserId,
   required String id,
   required String squadId,
   required String title,
@@ -2641,6 +3179,7 @@ typedef $$CachedMeetingPointsTableCreateCompanionBuilder
 });
 typedef $$CachedMeetingPointsTableUpdateCompanionBuilder
     = CachedMeetingPointsCompanion Function({
+  Value<String> sessionUserId,
   Value<String> id,
   Value<String> squadId,
   Value<String> title,
@@ -2661,6 +3200,9 @@ class $$CachedMeetingPointsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
@@ -2696,6 +3238,10 @@ class $$CachedMeetingPointsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
@@ -2731,6 +3277,9 @@ class $$CachedMeetingPointsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => column);
+
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -2786,6 +3335,7 @@ class $$CachedMeetingPointsTableTableManager extends RootTableManager<
               $$CachedMeetingPointsTableAnnotationComposer(
                   $db: db, $table: table),
           updateCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
             Value<String> id = const Value.absent(),
             Value<String> squadId = const Value.absent(),
             Value<String> title = const Value.absent(),
@@ -2797,6 +3347,7 @@ class $$CachedMeetingPointsTableTableManager extends RootTableManager<
             Value<int> rowid = const Value.absent(),
           }) =>
               CachedMeetingPointsCompanion(
+            sessionUserId: sessionUserId,
             id: id,
             squadId: squadId,
             title: title,
@@ -2808,6 +3359,7 @@ class $$CachedMeetingPointsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           createCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
             required String id,
             required String squadId,
             required String title,
@@ -2819,6 +3371,7 @@ class $$CachedMeetingPointsTableTableManager extends RootTableManager<
             Value<int> rowid = const Value.absent(),
           }) =>
               CachedMeetingPointsCompanion.insert(
+            sessionUserId: sessionUserId,
             id: id,
             squadId: squadId,
             title: title,
@@ -3050,6 +3603,8 @@ class $AppDatabaseManager {
       $$CachedSquadsTableTableManager(_db, _db.cachedSquads);
   $$CachedFestivalsTableTableManager get cachedFestivals =>
       $$CachedFestivalsTableTableManager(_db, _db.cachedFestivals);
+  $$CachedStagesTableTableManager get cachedStages =>
+      $$CachedStagesTableTableManager(_db, _db.cachedStages);
   $$CachedLocationsTableTableManager get cachedLocations =>
       $$CachedLocationsTableTableManager(_db, _db.cachedLocations);
   $$CachedMeetingPointsTableTableManager get cachedMeetingPoints =>

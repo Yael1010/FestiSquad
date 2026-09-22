@@ -30,12 +30,20 @@ class LocationSyncPolicy {
       return true;
     }
 
+    if (isInBackground &&
+        current.recordedAt.difference(lastSynced.recordedAt) <
+            backgroundInterval) {
+      return false;
+    }
+
     final distance = _haversineMeters(lastSynced, current);
     if (distance >= minimumDistanceMeters) {
       return true;
     }
 
-    if (isInBackground && current.recordedAt.difference(lastSynced.recordedAt) >= backgroundInterval) {
+    if (isInBackground &&
+        current.recordedAt.difference(lastSynced.recordedAt) >=
+            backgroundInterval) {
       return true;
     }
 
