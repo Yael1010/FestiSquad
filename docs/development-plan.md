@@ -25,8 +25,8 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - [x] Fase 1: fundamentos del proyecto.
 - [x] Fase 2: autenticación y gestión de squads.
 - [x] Fase 3: modelo relacional 3FN y persistencia local offline-first.
-- [ ] Fase 4: núcleo implementado; pendientes rastreo background, binarios de
-  caché web y medición de batería en dispositivo físico.
+- [x] Fase 4: mapa resiliente implementado en Android y web; la medición física
+  de batería queda como evidencia de aceptación de RNF en la fase 7.
 - [ ] Fase 5: fondo común y deudas cruzadas.
 - [ ] Fase 6: Clash Resolver y Spotify.
 - [ ] Fase 7: validación integral de requisitos no funcionales.

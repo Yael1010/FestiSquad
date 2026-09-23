@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
@@ -84,6 +86,16 @@ void main() {
     });
     expect(points.first.latitude, 19.4);
     expect(points.first.longitude, -99.09);
+  });
+
+  test('web persistence artifacts are present and valid', () {
+    final wasm = File('web/sqlite3.wasm').readAsBytesSync();
+    final worker = File('web/drift_worker.js');
+
+    expect(wasm.take(4), orderedEquals([0x00, 0x61, 0x73, 0x6d]));
+    expect(wasm.length, greaterThan(700000));
+    expect(worker.existsSync(), isTrue);
+    expect(worker.lengthSync(), greaterThan(300000));
   });
 
   test('offline map retains locations and meeting points by session', () async {

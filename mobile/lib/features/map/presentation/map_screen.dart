@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -28,9 +29,38 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _loading = true;
   bool _tracking = false;
   bool _sending = false;
+  bool _isInBackground = false;
+  bool _backgroundPermissionGranted = false;
   String? _error;
 
   String? get _squadId => activeSquadPreview.value.id;
+
+  bool get _supportsBackgroundTracking =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  bool get _canTrackInBackground =>
+      _supportsBackgroundTracking && _backgroundPermissionGranted;
+
+  LocationSettings get _locationSettings {
+    if (_canTrackInBackground) {
+      return AndroidSettings(
+        accuracy: LocationAccuracy.low,
+        distanceFilter: 15,
+        intervalDuration: Duration(seconds: 30),
+        foregroundNotificationConfig: ForegroundNotificationConfig(
+          notificationTitle: 'FestiSquad comparte tu ubicación',
+          notificationText:
+              'Solo se sincroniza al moverte y como máximo cada 3 minutos.',
+          enableWakeLock: false,
+          setOngoing: true,
+        ),
+      );
+    }
+    return const LocationSettings(
+      accuracy: LocationAccuracy.low,
+      distanceFilter: 15,
+    );
+  }
 
   @override
   void initState() {
@@ -73,17 +103,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _show('El permiso de ubicación está desactivado.');
         return;
       }
+      _backgroundPermissionGranted = permission == LocationPermission.always;
+      if (_supportsBackgroundTracking && !_backgroundPermissionGranted) {
+        _showBackgroundPermissionHint();
+      }
       final current = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.low),
+        locationSettings: _locationSettings,
       );
       await _onPosition(current);
       if (!mounted) return;
       _positions = Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.low,
-          distanceFilter: 15,
-        ),
+        locationSettings: _locationSettings,
       ).listen(
         (position) => unawaited(_onPosition(position)),
         onError: (_) {
@@ -105,14 +135,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
       longitude: position.longitude,
       recordedAt: now,
     );
-    setState(() {
-      _myLocation = MapPoint(position.latitude, position.longitude);
-    });
+    _myLocation = MapPoint(position.latitude, position.longitude);
+    if (!_isInBackground) setState(() {});
     if (_squadId == null || _sending) return;
     if (!_policy.shouldSync(
       lastSynced: _lastSent,
       current: current,
-      isInBackground: false,
+      isInBackground: _isInBackground,
     )) {
       return;
     }
@@ -190,9 +219,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void _showBackgroundPermissionHint() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: const Text(
+          'Para compartir en segundo plano, permite la ubicación todo el tiempo.',
+        ),
+        action: SnackBarAction(
+          label: 'AJUSTES',
+          onPressed: () => unawaited(Geolocator.openAppSettings()),
+        ),
+      ));
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) {
+    _isInBackground = state != AppLifecycleState.resumed;
+    if (_isInBackground && !_canTrackInBackground) {
       _stopTracking();
     }
   }
