@@ -43,7 +43,9 @@ CREATE DATABASE FestiSquad;
 
 Selecciona esa base. Para el repositorio completo, ejecuta su
 `database/001_initial_schema.sql` **solo si aún no se aplicó**. Después ejecuta
-el nuevo `database/002_fund_balances.sql`. No vuelvas a crear tablas existentes.
+`database/002_fund_balances.sql` y
+`database/004_phase5_expense_idempotency.sql`. No vuelvas a crear tablas
+existentes.
 
 Se incluye `database/fund_schema_reference.sql` como DDL autónomo del módulo,
 generado a partir de los modelos. Es una alternativa para una base de pruebas
@@ -98,7 +100,8 @@ y `actor_id` obtenido del JWT verificado. Comprueba que actor, pagador y partici
 pertenezcan al grupo; inserta ticket/cuotas en una transacción. Ante fallo revierte
 todo. Usa SERIALIZABLE para mantener coherencia entre validación y operación; medir
 contención bajo carga antes de cambiar aislamiento. No reintentar escrituras a
-ciegas: aún falta una clave de idempotencia para sincronización móvil offline.
+La sincronización móvil usa una clave de idempotencia por ticket para que un
+reintento después de perder la respuesta no duplique el gasto.
 
 Ejemplo de uso interno (sustituye IDs por usuarios y grupos existentes en SQL):
 
@@ -111,6 +114,7 @@ from app.domains.finances.db_service import DatabaseFinanceService
 
 payload = ExpenseInput.model_validate({
     "squad_id": "00000000-0000-0000-0000-000000000010",
+    "client_request_id": "00000000-0000-0000-0000-000000000099",
     "paid_by_user_id": "00000000-0000-0000-0000-000000000001",
     "description": "Transporte al festival",
     "amount": "100.00",
@@ -123,7 +127,7 @@ payload = ExpenseInput.model_validate({
 actor_id = UUID("00000000-0000-0000-0000-000000000001")  # En HTTP: JWT verificado.
 service = DatabaseFinanceService()
 with Session(get_engine(), expire_on_commit=False) as db:
-    expense_id = service.create_expense(db, payload, actor_id)
+    expense = service.create_expense(db, payload, actor_id)
     result = service.balances_for_squad(db, payload.squad_id, actor_id)
     print(result.model_dump_json())
 ```
@@ -138,15 +142,12 @@ nunca números flotantes. La validación rechaza floats, más de dos decimales,
 NaN/infinito, importes fuera del rango, duplicados y sumas incorrectas. Las sumas
 SQL se amplían a DECIMAL(38,2) para acumular tickets sin reducir la precisión.
 
-## Integración pendiente y límites de este paso
+## Integración activa
 
-El servicio original `FinanceService` sigue guardando gastos en memoria. Este
-paquete no cambia sus rutas ni migra automáticamente usuarios/squads de memoria.
-Para activar los endpoints financieros persistentes hay que conectar autenticación
-y squads a las mismas tablas, inyectar get_db y usar DatabaseFinanceService.
-No aceptar un actor_id enviado por el cliente ni exponer rutas financieras sin JWT.
-Traducir PermissionError a 403, errores de validación a 422 y fallos de base a una
-respuesta tipada; devolver BalanceOutput para conservar los importes como cadenas.
+Las rutas financieras usan `DatabaseFinanceService`, una sesión SQLAlchemy por
+petición y la identidad obtenida del JWT. `POST /api/v1/expenses` es idempotente
+mediante `client_request_id`; los reintentos de la cola offline no crean tickets
+duplicados. La API también expone el listado paginado y los balances por squad.
 
 La base impone PK/FK, unicidad y positividad; la pertenencia al squad y la igualdad
 entre el total y la suma de cuotas se garantizan en este servicio transaccional.

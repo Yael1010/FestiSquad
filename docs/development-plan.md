@@ -27,7 +27,7 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - [x] Fase 3: modelo relacional 3FN y persistencia local offline-first.
 - [x] Fase 4: mapa resiliente implementado en Android y web; la medición física
   de batería queda como evidencia de aceptación de RNF en la fase 7.
-- [ ] Fase 5: fondo común y deudas cruzadas.
+- [x] Fase 5: fondo común, tickets offline, balances exactos y deudas cruzadas.
 - [ ] Fase 6: Clash Resolver y Spotify.
 - [ ] Fase 7: validación integral de requisitos no funcionales.
 
@@ -42,6 +42,7 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - `POST /api/v1/locations`
 - `GET /api/v1/locations/squad/{squad_id}/latest`
 - `POST /api/v1/expenses`
+- `GET /api/v1/expenses/squad/{squad_id}`
 - `GET /api/v1/expenses/squad/{squad_id}/balances`
 - `GET /api/v1/clash-resolver/conflicts`
 - `POST /api/v1/clash-resolver/recommendation`

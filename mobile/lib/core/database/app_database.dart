@@ -80,6 +80,44 @@ class PendingSyncOperations extends Table {
   IntColumn get attempts => integer().withDefault(const Constant(0))();
 }
 
+class CachedExpenses extends Table {
+  TextColumn get sessionUserId => text()();
+  TextColumn get clientRequestId => text()();
+  TextColumn get serverId => text().nullable()();
+  TextColumn get squadId => text()();
+  TextColumn get paidByUserId => text()();
+  TextColumn get description => text().withLength(min: 2, max: 180)();
+  IntColumn get amountCents => integer()();
+  TextColumn get participantsJson => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  TextColumn get syncState => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sessionUserId, clientRequestId};
+}
+
+class CachedBalances extends Table {
+  TextColumn get sessionUserId => text()();
+  TextColumn get squadId => text()();
+  TextColumn get userId => text()();
+  IntColumn get balanceCents => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sessionUserId, squadId, userId};
+}
+
+class CachedDebtTransfers extends Table {
+  TextColumn get sessionUserId => text()();
+  TextColumn get squadId => text()();
+  IntColumn get position => integer()();
+  TextColumn get fromUserId => text()();
+  TextColumn get toUserId => text()();
+  IntColumn get amountCents => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sessionUserId, squadId, position};
+}
+
 @DriftDatabase(
   tables: [
     CachedSquads,
@@ -88,6 +126,9 @@ class PendingSyncOperations extends Table {
     CachedLocations,
     CachedMeetingPoints,
     PendingSyncOperations,
+    CachedExpenses,
+    CachedBalances,
+    CachedDebtTransfers,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -104,7 +145,7 @@ class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -120,6 +161,11 @@ class AppDatabase extends _$AppDatabase {
               cachedMeetingPoints,
               cachedMeetingPoints.sessionUserId,
             );
+          }
+          if (from < 3) {
+            await migrator.createTable(cachedExpenses);
+            await migrator.createTable(cachedBalances);
+            await migrator.createTable(cachedDebtTransfers);
           }
         },
       );
@@ -278,6 +324,144 @@ class AppDatabase extends _$AppDatabase {
         await batch((batch) => batch.insertAll(cachedStages, rows));
       }
     });
+  }
+
+  Future<List<CachedExpense>> readExpenses(
+    String sessionUserId,
+    String squadId,
+  ) {
+    return (select(cachedExpenses)
+          ..where((row) =>
+              row.sessionUserId.equals(sessionUserId) &
+              row.squadId.equals(squadId))
+          ..orderBy([(row) => OrderingTerm.desc(row.createdAt)]))
+        .get();
+  }
+
+  Future<void> replaceSyncedExpenses(
+    String sessionUserId,
+    String squadId,
+    Iterable<CachedExpensesCompanion> values,
+  ) {
+    return transaction(() async {
+      await (delete(cachedExpenses)
+            ..where((row) =>
+                row.sessionUserId.equals(sessionUserId) &
+                row.squadId.equals(squadId) &
+                row.syncState.equals('synced')))
+          .go();
+      final rows = values.toList(growable: false);
+      if (rows.isNotEmpty) {
+        await batch((batch) => batch.insertAll(cachedExpenses, rows,
+            mode: InsertMode.insertOrReplace));
+      }
+    });
+  }
+
+  Future<void> upsertExpense(CachedExpensesCompanion value) {
+    return into(cachedExpenses).insertOnConflictUpdate(value);
+  }
+
+  Future<void> deleteExpense(
+      String sessionUserId, String clientRequestId) async {
+    await (delete(cachedExpenses)
+          ..where((row) =>
+              row.sessionUserId.equals(sessionUserId) &
+              row.clientRequestId.equals(clientRequestId)))
+        .go();
+  }
+
+  Future<void> markExpenseSynced({
+    required String sessionUserId,
+    required String clientRequestId,
+    required String serverId,
+    required DateTime createdAt,
+  }) async {
+    await (update(cachedExpenses)
+          ..where((row) =>
+              row.sessionUserId.equals(sessionUserId) &
+              row.clientRequestId.equals(clientRequestId)))
+        .write(CachedExpensesCompanion(
+      serverId: Value(serverId),
+      createdAt: Value(createdAt),
+      syncState: const Value('synced'),
+    ));
+  }
+
+  Future<List<CachedBalance>> readBalances(
+    String sessionUserId,
+    String squadId,
+  ) {
+    return (select(cachedBalances)
+          ..where((row) =>
+              row.sessionUserId.equals(sessionUserId) &
+              row.squadId.equals(squadId)))
+        .get();
+  }
+
+  Future<List<CachedDebtTransfer>> readDebtTransfers(
+    String sessionUserId,
+    String squadId,
+  ) {
+    return (select(cachedDebtTransfers)
+          ..where((row) =>
+              row.sessionUserId.equals(sessionUserId) &
+              row.squadId.equals(squadId))
+          ..orderBy([(row) => OrderingTerm.asc(row.position)]))
+        .get();
+  }
+
+  Future<void> replaceFinanceSummary(
+    String sessionUserId,
+    String squadId,
+    Iterable<CachedBalancesCompanion> balances,
+    Iterable<CachedDebtTransfersCompanion> transfers,
+  ) {
+    return transaction(() async {
+      await (delete(cachedBalances)
+            ..where((row) =>
+                row.sessionUserId.equals(sessionUserId) &
+                row.squadId.equals(squadId)))
+          .go();
+      await (delete(cachedDebtTransfers)
+            ..where((row) =>
+                row.sessionUserId.equals(sessionUserId) &
+                row.squadId.equals(squadId)))
+          .go();
+      final balanceRows = balances.toList(growable: false);
+      final transferRows = transfers.toList(growable: false);
+      if (balanceRows.isNotEmpty) {
+        await batch((batch) => batch.insertAll(cachedBalances, balanceRows));
+      }
+      if (transferRows.isNotEmpty) {
+        await batch(
+            (batch) => batch.insertAll(cachedDebtTransfers, transferRows));
+      }
+    });
+  }
+
+  Future<List<PendingSyncOperation>> readPendingExpenses() {
+    return (select(pendingSyncOperations)
+          ..where((row) => row.resourceType.equals('expense'))
+          ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]))
+        .get();
+  }
+
+  Future<void> queueExpense(String payloadJson) async {
+    final payload = jsonDecode(payloadJson) as Map<String, dynamic>;
+    final clientRequestId = payload['client_request_id'] as String;
+    for (final pending in await readPendingExpenses()) {
+      final queued = jsonDecode(pending.payloadJson) as Map<String, dynamic>;
+      if (queued['client_request_id'] == clientRequestId) return;
+    }
+    await into(pendingSyncOperations).insert(
+      PendingSyncOperationsCompanion.insert(
+        resourceType: 'expense',
+        operation: 'create',
+        payloadJson: payloadJson,
+        createdAt: DateTime.now().toUtc(),
+      ),
+    );
   }
 }
 

@@ -21,9 +21,11 @@ class Expense(Base):
     __table_args__ = (
         CheckConstraint('amount > 0', name='ck_expenses_amount'),
         Index('ix_expenses_squad_created', 'squad_id', text('created_at DESC')),
+        Index('uq_expenses_client_request', 'client_request_id', unique=True),
     )
     id: Mapped[UUID] = mapped_column(UNIQUEIDENTIFIER, primary_key=True, default=uuid4, server_default=text('NEWID()'))
     squad_id: Mapped[UUID] = mapped_column(ForeignKey('squads.id'))
+    client_request_id: Mapped[UUID] = mapped_column(UNIQUEIDENTIFIER)
     paid_by_user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'))
     description: Mapped[str] = mapped_column(Unicode(180))
     amount: Mapped[Decimal] = mapped_column(DECIMAL(18, 2, asdecimal=True))

@@ -104,11 +104,13 @@ CREATE TABLE meeting_points (
 CREATE TABLE expenses (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
     squad_id UNIQUEIDENTIFIER NOT NULL,
+    client_request_id UNIQUEIDENTIFIER NOT NULL,
     paid_by_user_id UNIQUEIDENTIFIER NOT NULL,
     description NVARCHAR(180) NOT NULL,
     amount DECIMAL(18,2) NOT NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT pk_expenses PRIMARY KEY (id),
+    CONSTRAINT uq_expenses_client_request UNIQUE (client_request_id),
     CONSTRAINT ck_expenses_amount CHECK (amount > 0),
     CONSTRAINT fk_expenses_squad FOREIGN KEY (squad_id) REFERENCES squads(id),
     CONSTRAINT fk_expenses_user FOREIGN KEY (paid_by_user_id) REFERENCES users(id)

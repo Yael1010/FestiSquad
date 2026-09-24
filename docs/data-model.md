@@ -35,6 +35,8 @@ erDiagram
   repetir el nombre textual del género.
 - Los balances financieros se calculan en la vista `fund_balances`; no se guarda
   un saldo derivado que pudiera quedar desactualizado.
+- Cada gasto conserva un `client_request_id` único para que los reintentos de la
+  cola offline sean idempotentes y no creen tickets duplicados.
 - Todos los importes usan `DECIMAL(18,2)`. `FLOAT` y `REAL` están prohibidos para
   dinero.
 
@@ -45,7 +47,7 @@ en SQL Server. La migración de Fase 3 agrega índices para membresías por usua
 ubicaciones recientes, gastos por squad, horarios, puntos de encuentro y
 participantes de gastos.
 
-Para una base creada durante la Fase 2 se debe ejecutar
-`database/003_phase3_normalization_and_indexes.sql`. El script migra los géneros
-existentes, elimina las dependencias redundantes y puede ejecutarse nuevamente sin
-duplicar índices.
+Para una base creada durante la Fase 2 se deben ejecutar, en orden,
+`database/003_phase3_normalization_and_indexes.sql` y
+`database/004_phase5_expense_idempotency.sql`. Estos scripts normalizan los datos,
+agregan índices y habilitan la idempotencia de gastos sin recrear la base.

@@ -1,5 +1,5 @@
 -- Referencia Fondo Comun: ejecutar SOLO en una base de pruebas vacia.
--- En el repositorio completo, usar 001_initial_schema.sql y luego 002_fund_balances.sql.
+-- En el repositorio completo, usar 001_initial_schema.sql y luego 002, 003 y 004.
 
 CREATE TABLE users (
 	id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(), 
@@ -25,11 +25,13 @@ CREATE TABLE squads (
 CREATE TABLE expenses (
 	id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(), 
 	squad_id UNIQUEIDENTIFIER NOT NULL, 
+	client_request_id UNIQUEIDENTIFIER NOT NULL,
 	paid_by_user_id UNIQUEIDENTIFIER NOT NULL, 
 	description NVARCHAR(180) NOT NULL, 
 	amount DECIMAL(18, 2) NOT NULL, 
 	created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(), 
 	PRIMARY KEY (id), 
+	CONSTRAINT uq_expenses_client_request UNIQUE (client_request_id),
 	CONSTRAINT ck_expenses_amount CHECK (amount > 0), 
 	FOREIGN KEY(squad_id) REFERENCES squads (id), 
 	FOREIGN KEY(paid_by_user_id) REFERENCES users (id)

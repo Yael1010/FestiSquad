@@ -42,8 +42,14 @@ def suggest_transfers(balances: dict[UUID, Decimal]) -> list[dict]:
             raise ValueError('Saldo inválido')
         if sum(balances.values(), ZERO) != ZERO:
             raise ValueError('Los saldos no suman cero: revisar integridad de gastos')
-        debtors = [[uid, -v] for uid, v in sorted(balances.items(), key=lambda x: str(x[0])) if v < 0]
-        creditors = [[uid, v] for uid, v in sorted(balances.items(), key=lambda x: str(x[0])) if v > 0]
+        debtors = sorted(
+            [[uid, -value] for uid, value in balances.items() if value < 0],
+            key=lambda item: (-item[1], str(item[0])),
+        )
+        creditors = sorted(
+            [[uid, value] for uid, value in balances.items() if value > 0],
+            key=lambda item: (-item[1], str(item[0])),
+        )
         transfers = []
         i = j = 0
         while i < len(debtors) and j < len(creditors):

@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal, localcontext
 from typing import Annotated
 from uuid import UUID
@@ -17,6 +18,7 @@ class ShareInput(BaseModel):
 class ExpenseInput(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     squad_id: UUID
+    client_request_id: UUID
     paid_by_user_id: UUID
     description: str = Field(min_length=2, max_length=180)
     amount: Money
@@ -32,6 +34,12 @@ class ExpenseInput(BaseModel):
             if sum((p.share_amount for p in self.participants), Decimal('0.00')) != self.amount:
                 raise ValueError('Las cuotas deben sumar exactamente el total')
         return self
+
+
+class ExpenseOutput(ExpenseInput):
+    id: UUID
+    currency: str = 'MXN'
+    created_at: datetime
 
 
 class TransferOutput(BaseModel):

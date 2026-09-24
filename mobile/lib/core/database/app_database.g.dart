@@ -2342,6 +2342,1189 @@ class PendingSyncOperationsCompanion
   }
 }
 
+class $CachedExpensesTable extends CachedExpenses
+    with TableInfo<$CachedExpensesTable, CachedExpense> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedExpensesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionUserIdMeta =
+      const VerificationMeta('sessionUserId');
+  @override
+  late final GeneratedColumn<String> sessionUserId = GeneratedColumn<String>(
+      'session_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _clientRequestIdMeta =
+      const VerificationMeta('clientRequestId');
+  @override
+  late final GeneratedColumn<String> clientRequestId = GeneratedColumn<String>(
+      'client_request_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _serverIdMeta =
+      const VerificationMeta('serverId');
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+      'server_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _squadIdMeta =
+      const VerificationMeta('squadId');
+  @override
+  late final GeneratedColumn<String> squadId = GeneratedColumn<String>(
+      'squad_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _paidByUserIdMeta =
+      const VerificationMeta('paidByUserId');
+  @override
+  late final GeneratedColumn<String> paidByUserId = GeneratedColumn<String>(
+      'paid_by_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 2, maxTextLength: 180),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _amountCentsMeta =
+      const VerificationMeta('amountCents');
+  @override
+  late final GeneratedColumn<int> amountCents = GeneratedColumn<int>(
+      'amount_cents', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _participantsJsonMeta =
+      const VerificationMeta('participantsJson');
+  @override
+  late final GeneratedColumn<String> participantsJson = GeneratedColumn<String>(
+      'participants_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _syncStateMeta =
+      const VerificationMeta('syncState');
+  @override
+  late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
+      'sync_state', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        sessionUserId,
+        clientRequestId,
+        serverId,
+        squadId,
+        paidByUserId,
+        description,
+        amountCents,
+        participantsJson,
+        createdAt,
+        syncState
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_expenses';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedExpense> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_user_id')) {
+      context.handle(
+          _sessionUserIdMeta,
+          sessionUserId.isAcceptableOrUnknown(
+              data['session_user_id']!, _sessionUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionUserIdMeta);
+    }
+    if (data.containsKey('client_request_id')) {
+      context.handle(
+          _clientRequestIdMeta,
+          clientRequestId.isAcceptableOrUnknown(
+              data['client_request_id']!, _clientRequestIdMeta));
+    } else if (isInserting) {
+      context.missing(_clientRequestIdMeta);
+    }
+    if (data.containsKey('server_id')) {
+      context.handle(_serverIdMeta,
+          serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta));
+    }
+    if (data.containsKey('squad_id')) {
+      context.handle(_squadIdMeta,
+          squadId.isAcceptableOrUnknown(data['squad_id']!, _squadIdMeta));
+    } else if (isInserting) {
+      context.missing(_squadIdMeta);
+    }
+    if (data.containsKey('paid_by_user_id')) {
+      context.handle(
+          _paidByUserIdMeta,
+          paidByUserId.isAcceptableOrUnknown(
+              data['paid_by_user_id']!, _paidByUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_paidByUserIdMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('amount_cents')) {
+      context.handle(
+          _amountCentsMeta,
+          amountCents.isAcceptableOrUnknown(
+              data['amount_cents']!, _amountCentsMeta));
+    } else if (isInserting) {
+      context.missing(_amountCentsMeta);
+    }
+    if (data.containsKey('participants_json')) {
+      context.handle(
+          _participantsJsonMeta,
+          participantsJson.isAcceptableOrUnknown(
+              data['participants_json']!, _participantsJsonMeta));
+    } else if (isInserting) {
+      context.missing(_participantsJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('sync_state')) {
+      context.handle(_syncStateMeta,
+          syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta));
+    } else if (isInserting) {
+      context.missing(_syncStateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionUserId, clientRequestId};
+  @override
+  CachedExpense map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedExpense(
+      sessionUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}session_user_id'])!,
+      clientRequestId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}client_request_id'])!,
+      serverId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}server_id']),
+      squadId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}squad_id'])!,
+      paidByUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}paid_by_user_id'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      amountCents: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}amount_cents'])!,
+      participantsJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}participants_json'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      syncState: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+    );
+  }
+
+  @override
+  $CachedExpensesTable createAlias(String alias) {
+    return $CachedExpensesTable(attachedDatabase, alias);
+  }
+}
+
+class CachedExpense extends DataClass implements Insertable<CachedExpense> {
+  final String sessionUserId;
+  final String clientRequestId;
+  final String? serverId;
+  final String squadId;
+  final String paidByUserId;
+  final String description;
+  final int amountCents;
+  final String participantsJson;
+  final DateTime createdAt;
+  final String syncState;
+  const CachedExpense(
+      {required this.sessionUserId,
+      required this.clientRequestId,
+      this.serverId,
+      required this.squadId,
+      required this.paidByUserId,
+      required this.description,
+      required this.amountCents,
+      required this.participantsJson,
+      required this.createdAt,
+      required this.syncState});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_user_id'] = Variable<String>(sessionUserId);
+    map['client_request_id'] = Variable<String>(clientRequestId);
+    if (!nullToAbsent || serverId != null) {
+      map['server_id'] = Variable<String>(serverId);
+    }
+    map['squad_id'] = Variable<String>(squadId);
+    map['paid_by_user_id'] = Variable<String>(paidByUserId);
+    map['description'] = Variable<String>(description);
+    map['amount_cents'] = Variable<int>(amountCents);
+    map['participants_json'] = Variable<String>(participantsJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['sync_state'] = Variable<String>(syncState);
+    return map;
+  }
+
+  CachedExpensesCompanion toCompanion(bool nullToAbsent) {
+    return CachedExpensesCompanion(
+      sessionUserId: Value(sessionUserId),
+      clientRequestId: Value(clientRequestId),
+      serverId: serverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverId),
+      squadId: Value(squadId),
+      paidByUserId: Value(paidByUserId),
+      description: Value(description),
+      amountCents: Value(amountCents),
+      participantsJson: Value(participantsJson),
+      createdAt: Value(createdAt),
+      syncState: Value(syncState),
+    );
+  }
+
+  factory CachedExpense.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedExpense(
+      sessionUserId: serializer.fromJson<String>(json['sessionUserId']),
+      clientRequestId: serializer.fromJson<String>(json['clientRequestId']),
+      serverId: serializer.fromJson<String?>(json['serverId']),
+      squadId: serializer.fromJson<String>(json['squadId']),
+      paidByUserId: serializer.fromJson<String>(json['paidByUserId']),
+      description: serializer.fromJson<String>(json['description']),
+      amountCents: serializer.fromJson<int>(json['amountCents']),
+      participantsJson: serializer.fromJson<String>(json['participantsJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      syncState: serializer.fromJson<String>(json['syncState']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionUserId': serializer.toJson<String>(sessionUserId),
+      'clientRequestId': serializer.toJson<String>(clientRequestId),
+      'serverId': serializer.toJson<String?>(serverId),
+      'squadId': serializer.toJson<String>(squadId),
+      'paidByUserId': serializer.toJson<String>(paidByUserId),
+      'description': serializer.toJson<String>(description),
+      'amountCents': serializer.toJson<int>(amountCents),
+      'participantsJson': serializer.toJson<String>(participantsJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'syncState': serializer.toJson<String>(syncState),
+    };
+  }
+
+  CachedExpense copyWith(
+          {String? sessionUserId,
+          String? clientRequestId,
+          Value<String?> serverId = const Value.absent(),
+          String? squadId,
+          String? paidByUserId,
+          String? description,
+          int? amountCents,
+          String? participantsJson,
+          DateTime? createdAt,
+          String? syncState}) =>
+      CachedExpense(
+        sessionUserId: sessionUserId ?? this.sessionUserId,
+        clientRequestId: clientRequestId ?? this.clientRequestId,
+        serverId: serverId.present ? serverId.value : this.serverId,
+        squadId: squadId ?? this.squadId,
+        paidByUserId: paidByUserId ?? this.paidByUserId,
+        description: description ?? this.description,
+        amountCents: amountCents ?? this.amountCents,
+        participantsJson: participantsJson ?? this.participantsJson,
+        createdAt: createdAt ?? this.createdAt,
+        syncState: syncState ?? this.syncState,
+      );
+  CachedExpense copyWithCompanion(CachedExpensesCompanion data) {
+    return CachedExpense(
+      sessionUserId: data.sessionUserId.present
+          ? data.sessionUserId.value
+          : this.sessionUserId,
+      clientRequestId: data.clientRequestId.present
+          ? data.clientRequestId.value
+          : this.clientRequestId,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      squadId: data.squadId.present ? data.squadId.value : this.squadId,
+      paidByUserId: data.paidByUserId.present
+          ? data.paidByUserId.value
+          : this.paidByUserId,
+      description:
+          data.description.present ? data.description.value : this.description,
+      amountCents:
+          data.amountCents.present ? data.amountCents.value : this.amountCents,
+      participantsJson: data.participantsJson.present
+          ? data.participantsJson.value
+          : this.participantsJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      syncState: data.syncState.present ? data.syncState.value : this.syncState,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedExpense(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('clientRequestId: $clientRequestId, ')
+          ..write('serverId: $serverId, ')
+          ..write('squadId: $squadId, ')
+          ..write('paidByUserId: $paidByUserId, ')
+          ..write('description: $description, ')
+          ..write('amountCents: $amountCents, ')
+          ..write('participantsJson: $participantsJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncState: $syncState')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      sessionUserId,
+      clientRequestId,
+      serverId,
+      squadId,
+      paidByUserId,
+      description,
+      amountCents,
+      participantsJson,
+      createdAt,
+      syncState);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedExpense &&
+          other.sessionUserId == this.sessionUserId &&
+          other.clientRequestId == this.clientRequestId &&
+          other.serverId == this.serverId &&
+          other.squadId == this.squadId &&
+          other.paidByUserId == this.paidByUserId &&
+          other.description == this.description &&
+          other.amountCents == this.amountCents &&
+          other.participantsJson == this.participantsJson &&
+          other.createdAt == this.createdAt &&
+          other.syncState == this.syncState);
+}
+
+class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
+  final Value<String> sessionUserId;
+  final Value<String> clientRequestId;
+  final Value<String?> serverId;
+  final Value<String> squadId;
+  final Value<String> paidByUserId;
+  final Value<String> description;
+  final Value<int> amountCents;
+  final Value<String> participantsJson;
+  final Value<DateTime> createdAt;
+  final Value<String> syncState;
+  final Value<int> rowid;
+  const CachedExpensesCompanion({
+    this.sessionUserId = const Value.absent(),
+    this.clientRequestId = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.squadId = const Value.absent(),
+    this.paidByUserId = const Value.absent(),
+    this.description = const Value.absent(),
+    this.amountCents = const Value.absent(),
+    this.participantsJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedExpensesCompanion.insert({
+    required String sessionUserId,
+    required String clientRequestId,
+    this.serverId = const Value.absent(),
+    required String squadId,
+    required String paidByUserId,
+    required String description,
+    required int amountCents,
+    required String participantsJson,
+    required DateTime createdAt,
+    required String syncState,
+    this.rowid = const Value.absent(),
+  })  : sessionUserId = Value(sessionUserId),
+        clientRequestId = Value(clientRequestId),
+        squadId = Value(squadId),
+        paidByUserId = Value(paidByUserId),
+        description = Value(description),
+        amountCents = Value(amountCents),
+        participantsJson = Value(participantsJson),
+        createdAt = Value(createdAt),
+        syncState = Value(syncState);
+  static Insertable<CachedExpense> custom({
+    Expression<String>? sessionUserId,
+    Expression<String>? clientRequestId,
+    Expression<String>? serverId,
+    Expression<String>? squadId,
+    Expression<String>? paidByUserId,
+    Expression<String>? description,
+    Expression<int>? amountCents,
+    Expression<String>? participantsJson,
+    Expression<DateTime>? createdAt,
+    Expression<String>? syncState,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sessionUserId != null) 'session_user_id': sessionUserId,
+      if (clientRequestId != null) 'client_request_id': clientRequestId,
+      if (serverId != null) 'server_id': serverId,
+      if (squadId != null) 'squad_id': squadId,
+      if (paidByUserId != null) 'paid_by_user_id': paidByUserId,
+      if (description != null) 'description': description,
+      if (amountCents != null) 'amount_cents': amountCents,
+      if (participantsJson != null) 'participants_json': participantsJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (syncState != null) 'sync_state': syncState,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedExpensesCompanion copyWith(
+      {Value<String>? sessionUserId,
+      Value<String>? clientRequestId,
+      Value<String?>? serverId,
+      Value<String>? squadId,
+      Value<String>? paidByUserId,
+      Value<String>? description,
+      Value<int>? amountCents,
+      Value<String>? participantsJson,
+      Value<DateTime>? createdAt,
+      Value<String>? syncState,
+      Value<int>? rowid}) {
+    return CachedExpensesCompanion(
+      sessionUserId: sessionUserId ?? this.sessionUserId,
+      clientRequestId: clientRequestId ?? this.clientRequestId,
+      serverId: serverId ?? this.serverId,
+      squadId: squadId ?? this.squadId,
+      paidByUserId: paidByUserId ?? this.paidByUserId,
+      description: description ?? this.description,
+      amountCents: amountCents ?? this.amountCents,
+      participantsJson: participantsJson ?? this.participantsJson,
+      createdAt: createdAt ?? this.createdAt,
+      syncState: syncState ?? this.syncState,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionUserId.present) {
+      map['session_user_id'] = Variable<String>(sessionUserId.value);
+    }
+    if (clientRequestId.present) {
+      map['client_request_id'] = Variable<String>(clientRequestId.value);
+    }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (squadId.present) {
+      map['squad_id'] = Variable<String>(squadId.value);
+    }
+    if (paidByUserId.present) {
+      map['paid_by_user_id'] = Variable<String>(paidByUserId.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (amountCents.present) {
+      map['amount_cents'] = Variable<int>(amountCents.value);
+    }
+    if (participantsJson.present) {
+      map['participants_json'] = Variable<String>(participantsJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (syncState.present) {
+      map['sync_state'] = Variable<String>(syncState.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedExpensesCompanion(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('clientRequestId: $clientRequestId, ')
+          ..write('serverId: $serverId, ')
+          ..write('squadId: $squadId, ')
+          ..write('paidByUserId: $paidByUserId, ')
+          ..write('description: $description, ')
+          ..write('amountCents: $amountCents, ')
+          ..write('participantsJson: $participantsJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncState: $syncState, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CachedBalancesTable extends CachedBalances
+    with TableInfo<$CachedBalancesTable, CachedBalance> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedBalancesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionUserIdMeta =
+      const VerificationMeta('sessionUserId');
+  @override
+  late final GeneratedColumn<String> sessionUserId = GeneratedColumn<String>(
+      'session_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _squadIdMeta =
+      const VerificationMeta('squadId');
+  @override
+  late final GeneratedColumn<String> squadId = GeneratedColumn<String>(
+      'squad_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _balanceCentsMeta =
+      const VerificationMeta('balanceCents');
+  @override
+  late final GeneratedColumn<int> balanceCents = GeneratedColumn<int>(
+      'balance_cents', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [sessionUserId, squadId, userId, balanceCents];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_balances';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedBalance> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_user_id')) {
+      context.handle(
+          _sessionUserIdMeta,
+          sessionUserId.isAcceptableOrUnknown(
+              data['session_user_id']!, _sessionUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionUserIdMeta);
+    }
+    if (data.containsKey('squad_id')) {
+      context.handle(_squadIdMeta,
+          squadId.isAcceptableOrUnknown(data['squad_id']!, _squadIdMeta));
+    } else if (isInserting) {
+      context.missing(_squadIdMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('balance_cents')) {
+      context.handle(
+          _balanceCentsMeta,
+          balanceCents.isAcceptableOrUnknown(
+              data['balance_cents']!, _balanceCentsMeta));
+    } else if (isInserting) {
+      context.missing(_balanceCentsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionUserId, squadId, userId};
+  @override
+  CachedBalance map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedBalance(
+      sessionUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}session_user_id'])!,
+      squadId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}squad_id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      balanceCents: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}balance_cents'])!,
+    );
+  }
+
+  @override
+  $CachedBalancesTable createAlias(String alias) {
+    return $CachedBalancesTable(attachedDatabase, alias);
+  }
+}
+
+class CachedBalance extends DataClass implements Insertable<CachedBalance> {
+  final String sessionUserId;
+  final String squadId;
+  final String userId;
+  final int balanceCents;
+  const CachedBalance(
+      {required this.sessionUserId,
+      required this.squadId,
+      required this.userId,
+      required this.balanceCents});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_user_id'] = Variable<String>(sessionUserId);
+    map['squad_id'] = Variable<String>(squadId);
+    map['user_id'] = Variable<String>(userId);
+    map['balance_cents'] = Variable<int>(balanceCents);
+    return map;
+  }
+
+  CachedBalancesCompanion toCompanion(bool nullToAbsent) {
+    return CachedBalancesCompanion(
+      sessionUserId: Value(sessionUserId),
+      squadId: Value(squadId),
+      userId: Value(userId),
+      balanceCents: Value(balanceCents),
+    );
+  }
+
+  factory CachedBalance.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedBalance(
+      sessionUserId: serializer.fromJson<String>(json['sessionUserId']),
+      squadId: serializer.fromJson<String>(json['squadId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      balanceCents: serializer.fromJson<int>(json['balanceCents']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionUserId': serializer.toJson<String>(sessionUserId),
+      'squadId': serializer.toJson<String>(squadId),
+      'userId': serializer.toJson<String>(userId),
+      'balanceCents': serializer.toJson<int>(balanceCents),
+    };
+  }
+
+  CachedBalance copyWith(
+          {String? sessionUserId,
+          String? squadId,
+          String? userId,
+          int? balanceCents}) =>
+      CachedBalance(
+        sessionUserId: sessionUserId ?? this.sessionUserId,
+        squadId: squadId ?? this.squadId,
+        userId: userId ?? this.userId,
+        balanceCents: balanceCents ?? this.balanceCents,
+      );
+  CachedBalance copyWithCompanion(CachedBalancesCompanion data) {
+    return CachedBalance(
+      sessionUserId: data.sessionUserId.present
+          ? data.sessionUserId.value
+          : this.sessionUserId,
+      squadId: data.squadId.present ? data.squadId.value : this.squadId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      balanceCents: data.balanceCents.present
+          ? data.balanceCents.value
+          : this.balanceCents,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedBalance(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('squadId: $squadId, ')
+          ..write('userId: $userId, ')
+          ..write('balanceCents: $balanceCents')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(sessionUserId, squadId, userId, balanceCents);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedBalance &&
+          other.sessionUserId == this.sessionUserId &&
+          other.squadId == this.squadId &&
+          other.userId == this.userId &&
+          other.balanceCents == this.balanceCents);
+}
+
+class CachedBalancesCompanion extends UpdateCompanion<CachedBalance> {
+  final Value<String> sessionUserId;
+  final Value<String> squadId;
+  final Value<String> userId;
+  final Value<int> balanceCents;
+  final Value<int> rowid;
+  const CachedBalancesCompanion({
+    this.sessionUserId = const Value.absent(),
+    this.squadId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.balanceCents = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedBalancesCompanion.insert({
+    required String sessionUserId,
+    required String squadId,
+    required String userId,
+    required int balanceCents,
+    this.rowid = const Value.absent(),
+  })  : sessionUserId = Value(sessionUserId),
+        squadId = Value(squadId),
+        userId = Value(userId),
+        balanceCents = Value(balanceCents);
+  static Insertable<CachedBalance> custom({
+    Expression<String>? sessionUserId,
+    Expression<String>? squadId,
+    Expression<String>? userId,
+    Expression<int>? balanceCents,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sessionUserId != null) 'session_user_id': sessionUserId,
+      if (squadId != null) 'squad_id': squadId,
+      if (userId != null) 'user_id': userId,
+      if (balanceCents != null) 'balance_cents': balanceCents,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedBalancesCompanion copyWith(
+      {Value<String>? sessionUserId,
+      Value<String>? squadId,
+      Value<String>? userId,
+      Value<int>? balanceCents,
+      Value<int>? rowid}) {
+    return CachedBalancesCompanion(
+      sessionUserId: sessionUserId ?? this.sessionUserId,
+      squadId: squadId ?? this.squadId,
+      userId: userId ?? this.userId,
+      balanceCents: balanceCents ?? this.balanceCents,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionUserId.present) {
+      map['session_user_id'] = Variable<String>(sessionUserId.value);
+    }
+    if (squadId.present) {
+      map['squad_id'] = Variable<String>(squadId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (balanceCents.present) {
+      map['balance_cents'] = Variable<int>(balanceCents.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedBalancesCompanion(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('squadId: $squadId, ')
+          ..write('userId: $userId, ')
+          ..write('balanceCents: $balanceCents, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CachedDebtTransfersTable extends CachedDebtTransfers
+    with TableInfo<$CachedDebtTransfersTable, CachedDebtTransfer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedDebtTransfersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionUserIdMeta =
+      const VerificationMeta('sessionUserId');
+  @override
+  late final GeneratedColumn<String> sessionUserId = GeneratedColumn<String>(
+      'session_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _squadIdMeta =
+      const VerificationMeta('squadId');
+  @override
+  late final GeneratedColumn<String> squadId = GeneratedColumn<String>(
+      'squad_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _positionMeta =
+      const VerificationMeta('position');
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+      'position', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _fromUserIdMeta =
+      const VerificationMeta('fromUserId');
+  @override
+  late final GeneratedColumn<String> fromUserId = GeneratedColumn<String>(
+      'from_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _toUserIdMeta =
+      const VerificationMeta('toUserId');
+  @override
+  late final GeneratedColumn<String> toUserId = GeneratedColumn<String>(
+      'to_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _amountCentsMeta =
+      const VerificationMeta('amountCents');
+  @override
+  late final GeneratedColumn<int> amountCents = GeneratedColumn<int>(
+      'amount_cents', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [sessionUserId, squadId, position, fromUserId, toUserId, amountCents];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_debt_transfers';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedDebtTransfer> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_user_id')) {
+      context.handle(
+          _sessionUserIdMeta,
+          sessionUserId.isAcceptableOrUnknown(
+              data['session_user_id']!, _sessionUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionUserIdMeta);
+    }
+    if (data.containsKey('squad_id')) {
+      context.handle(_squadIdMeta,
+          squadId.isAcceptableOrUnknown(data['squad_id']!, _squadIdMeta));
+    } else if (isInserting) {
+      context.missing(_squadIdMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(_positionMeta,
+          position.isAcceptableOrUnknown(data['position']!, _positionMeta));
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('from_user_id')) {
+      context.handle(
+          _fromUserIdMeta,
+          fromUserId.isAcceptableOrUnknown(
+              data['from_user_id']!, _fromUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_fromUserIdMeta);
+    }
+    if (data.containsKey('to_user_id')) {
+      context.handle(_toUserIdMeta,
+          toUserId.isAcceptableOrUnknown(data['to_user_id']!, _toUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_toUserIdMeta);
+    }
+    if (data.containsKey('amount_cents')) {
+      context.handle(
+          _amountCentsMeta,
+          amountCents.isAcceptableOrUnknown(
+              data['amount_cents']!, _amountCentsMeta));
+    } else if (isInserting) {
+      context.missing(_amountCentsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionUserId, squadId, position};
+  @override
+  CachedDebtTransfer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedDebtTransfer(
+      sessionUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}session_user_id'])!,
+      squadId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}squad_id'])!,
+      position: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}position'])!,
+      fromUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}from_user_id'])!,
+      toUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}to_user_id'])!,
+      amountCents: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}amount_cents'])!,
+    );
+  }
+
+  @override
+  $CachedDebtTransfersTable createAlias(String alias) {
+    return $CachedDebtTransfersTable(attachedDatabase, alias);
+  }
+}
+
+class CachedDebtTransfer extends DataClass
+    implements Insertable<CachedDebtTransfer> {
+  final String sessionUserId;
+  final String squadId;
+  final int position;
+  final String fromUserId;
+  final String toUserId;
+  final int amountCents;
+  const CachedDebtTransfer(
+      {required this.sessionUserId,
+      required this.squadId,
+      required this.position,
+      required this.fromUserId,
+      required this.toUserId,
+      required this.amountCents});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_user_id'] = Variable<String>(sessionUserId);
+    map['squad_id'] = Variable<String>(squadId);
+    map['position'] = Variable<int>(position);
+    map['from_user_id'] = Variable<String>(fromUserId);
+    map['to_user_id'] = Variable<String>(toUserId);
+    map['amount_cents'] = Variable<int>(amountCents);
+    return map;
+  }
+
+  CachedDebtTransfersCompanion toCompanion(bool nullToAbsent) {
+    return CachedDebtTransfersCompanion(
+      sessionUserId: Value(sessionUserId),
+      squadId: Value(squadId),
+      position: Value(position),
+      fromUserId: Value(fromUserId),
+      toUserId: Value(toUserId),
+      amountCents: Value(amountCents),
+    );
+  }
+
+  factory CachedDebtTransfer.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedDebtTransfer(
+      sessionUserId: serializer.fromJson<String>(json['sessionUserId']),
+      squadId: serializer.fromJson<String>(json['squadId']),
+      position: serializer.fromJson<int>(json['position']),
+      fromUserId: serializer.fromJson<String>(json['fromUserId']),
+      toUserId: serializer.fromJson<String>(json['toUserId']),
+      amountCents: serializer.fromJson<int>(json['amountCents']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionUserId': serializer.toJson<String>(sessionUserId),
+      'squadId': serializer.toJson<String>(squadId),
+      'position': serializer.toJson<int>(position),
+      'fromUserId': serializer.toJson<String>(fromUserId),
+      'toUserId': serializer.toJson<String>(toUserId),
+      'amountCents': serializer.toJson<int>(amountCents),
+    };
+  }
+
+  CachedDebtTransfer copyWith(
+          {String? sessionUserId,
+          String? squadId,
+          int? position,
+          String? fromUserId,
+          String? toUserId,
+          int? amountCents}) =>
+      CachedDebtTransfer(
+        sessionUserId: sessionUserId ?? this.sessionUserId,
+        squadId: squadId ?? this.squadId,
+        position: position ?? this.position,
+        fromUserId: fromUserId ?? this.fromUserId,
+        toUserId: toUserId ?? this.toUserId,
+        amountCents: amountCents ?? this.amountCents,
+      );
+  CachedDebtTransfer copyWithCompanion(CachedDebtTransfersCompanion data) {
+    return CachedDebtTransfer(
+      sessionUserId: data.sessionUserId.present
+          ? data.sessionUserId.value
+          : this.sessionUserId,
+      squadId: data.squadId.present ? data.squadId.value : this.squadId,
+      position: data.position.present ? data.position.value : this.position,
+      fromUserId:
+          data.fromUserId.present ? data.fromUserId.value : this.fromUserId,
+      toUserId: data.toUserId.present ? data.toUserId.value : this.toUserId,
+      amountCents:
+          data.amountCents.present ? data.amountCents.value : this.amountCents,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedDebtTransfer(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('squadId: $squadId, ')
+          ..write('position: $position, ')
+          ..write('fromUserId: $fromUserId, ')
+          ..write('toUserId: $toUserId, ')
+          ..write('amountCents: $amountCents')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      sessionUserId, squadId, position, fromUserId, toUserId, amountCents);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedDebtTransfer &&
+          other.sessionUserId == this.sessionUserId &&
+          other.squadId == this.squadId &&
+          other.position == this.position &&
+          other.fromUserId == this.fromUserId &&
+          other.toUserId == this.toUserId &&
+          other.amountCents == this.amountCents);
+}
+
+class CachedDebtTransfersCompanion extends UpdateCompanion<CachedDebtTransfer> {
+  final Value<String> sessionUserId;
+  final Value<String> squadId;
+  final Value<int> position;
+  final Value<String> fromUserId;
+  final Value<String> toUserId;
+  final Value<int> amountCents;
+  final Value<int> rowid;
+  const CachedDebtTransfersCompanion({
+    this.sessionUserId = const Value.absent(),
+    this.squadId = const Value.absent(),
+    this.position = const Value.absent(),
+    this.fromUserId = const Value.absent(),
+    this.toUserId = const Value.absent(),
+    this.amountCents = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedDebtTransfersCompanion.insert({
+    required String sessionUserId,
+    required String squadId,
+    required int position,
+    required String fromUserId,
+    required String toUserId,
+    required int amountCents,
+    this.rowid = const Value.absent(),
+  })  : sessionUserId = Value(sessionUserId),
+        squadId = Value(squadId),
+        position = Value(position),
+        fromUserId = Value(fromUserId),
+        toUserId = Value(toUserId),
+        amountCents = Value(amountCents);
+  static Insertable<CachedDebtTransfer> custom({
+    Expression<String>? sessionUserId,
+    Expression<String>? squadId,
+    Expression<int>? position,
+    Expression<String>? fromUserId,
+    Expression<String>? toUserId,
+    Expression<int>? amountCents,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sessionUserId != null) 'session_user_id': sessionUserId,
+      if (squadId != null) 'squad_id': squadId,
+      if (position != null) 'position': position,
+      if (fromUserId != null) 'from_user_id': fromUserId,
+      if (toUserId != null) 'to_user_id': toUserId,
+      if (amountCents != null) 'amount_cents': amountCents,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedDebtTransfersCompanion copyWith(
+      {Value<String>? sessionUserId,
+      Value<String>? squadId,
+      Value<int>? position,
+      Value<String>? fromUserId,
+      Value<String>? toUserId,
+      Value<int>? amountCents,
+      Value<int>? rowid}) {
+    return CachedDebtTransfersCompanion(
+      sessionUserId: sessionUserId ?? this.sessionUserId,
+      squadId: squadId ?? this.squadId,
+      position: position ?? this.position,
+      fromUserId: fromUserId ?? this.fromUserId,
+      toUserId: toUserId ?? this.toUserId,
+      amountCents: amountCents ?? this.amountCents,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionUserId.present) {
+      map['session_user_id'] = Variable<String>(sessionUserId.value);
+    }
+    if (squadId.present) {
+      map['squad_id'] = Variable<String>(squadId.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (fromUserId.present) {
+      map['from_user_id'] = Variable<String>(fromUserId.value);
+    }
+    if (toUserId.present) {
+      map['to_user_id'] = Variable<String>(toUserId.value);
+    }
+    if (amountCents.present) {
+      map['amount_cents'] = Variable<int>(amountCents.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedDebtTransfersCompanion(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('squadId: $squadId, ')
+          ..write('position: $position, ')
+          ..write('fromUserId: $fromUserId, ')
+          ..write('toUserId: $toUserId, ')
+          ..write('amountCents: $amountCents, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2355,6 +3538,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $CachedMeetingPointsTable(this);
   late final $PendingSyncOperationsTable pendingSyncOperations =
       $PendingSyncOperationsTable(this);
+  late final $CachedExpensesTable cachedExpenses = $CachedExpensesTable(this);
+  late final $CachedBalancesTable cachedBalances = $CachedBalancesTable(this);
+  late final $CachedDebtTransfersTable cachedDebtTransfers =
+      $CachedDebtTransfersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2365,7 +3552,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         cachedStages,
         cachedLocations,
         cachedMeetingPoints,
-        pendingSyncOperations
+        pendingSyncOperations,
+        cachedExpenses,
+        cachedBalances,
+        cachedDebtTransfers
       ];
 }
 
@@ -3595,6 +4785,616 @@ typedef $$PendingSyncOperationsTableProcessedTableManager
         ),
         PendingSyncOperation,
         PrefetchHooks Function()>;
+typedef $$CachedExpensesTableCreateCompanionBuilder = CachedExpensesCompanion
+    Function({
+  required String sessionUserId,
+  required String clientRequestId,
+  Value<String?> serverId,
+  required String squadId,
+  required String paidByUserId,
+  required String description,
+  required int amountCents,
+  required String participantsJson,
+  required DateTime createdAt,
+  required String syncState,
+  Value<int> rowid,
+});
+typedef $$CachedExpensesTableUpdateCompanionBuilder = CachedExpensesCompanion
+    Function({
+  Value<String> sessionUserId,
+  Value<String> clientRequestId,
+  Value<String?> serverId,
+  Value<String> squadId,
+  Value<String> paidByUserId,
+  Value<String> description,
+  Value<int> amountCents,
+  Value<String> participantsJson,
+  Value<DateTime> createdAt,
+  Value<String> syncState,
+  Value<int> rowid,
+});
+
+class $$CachedExpensesTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedExpensesTable> {
+  $$CachedExpensesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get clientRequestId => $composableBuilder(
+      column: $table.clientRequestId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get paidByUserId => $composableBuilder(
+      column: $table.paidByUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get amountCents => $composableBuilder(
+      column: $table.amountCents, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get participantsJson => $composableBuilder(
+      column: $table.participantsJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncState => $composableBuilder(
+      column: $table.syncState, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedExpensesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedExpensesTable> {
+  $$CachedExpensesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get clientRequestId => $composableBuilder(
+      column: $table.clientRequestId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get paidByUserId => $composableBuilder(
+      column: $table.paidByUserId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get amountCents => $composableBuilder(
+      column: $table.amountCents, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get participantsJson => $composableBuilder(
+      column: $table.participantsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncState => $composableBuilder(
+      column: $table.syncState, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedExpensesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedExpensesTable> {
+  $$CachedExpensesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get clientRequestId => $composableBuilder(
+      column: $table.clientRequestId, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<String> get squadId =>
+      $composableBuilder(column: $table.squadId, builder: (column) => column);
+
+  GeneratedColumn<String> get paidByUserId => $composableBuilder(
+      column: $table.paidByUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<int> get amountCents => $composableBuilder(
+      column: $table.amountCents, builder: (column) => column);
+
+  GeneratedColumn<String> get participantsJson => $composableBuilder(
+      column: $table.participantsJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => column);
+}
+
+class $$CachedExpensesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedExpensesTable,
+    CachedExpense,
+    $$CachedExpensesTableFilterComposer,
+    $$CachedExpensesTableOrderingComposer,
+    $$CachedExpensesTableAnnotationComposer,
+    $$CachedExpensesTableCreateCompanionBuilder,
+    $$CachedExpensesTableUpdateCompanionBuilder,
+    (
+      CachedExpense,
+      BaseReferences<_$AppDatabase, $CachedExpensesTable, CachedExpense>
+    ),
+    CachedExpense,
+    PrefetchHooks Function()> {
+  $$CachedExpensesTableTableManager(
+      _$AppDatabase db, $CachedExpensesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedExpensesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedExpensesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedExpensesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
+            Value<String> clientRequestId = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<String> squadId = const Value.absent(),
+            Value<String> paidByUserId = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<int> amountCents = const Value.absent(),
+            Value<String> participantsJson = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<String> syncState = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedExpensesCompanion(
+            sessionUserId: sessionUserId,
+            clientRequestId: clientRequestId,
+            serverId: serverId,
+            squadId: squadId,
+            paidByUserId: paidByUserId,
+            description: description,
+            amountCents: amountCents,
+            participantsJson: participantsJson,
+            createdAt: createdAt,
+            syncState: syncState,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String sessionUserId,
+            required String clientRequestId,
+            Value<String?> serverId = const Value.absent(),
+            required String squadId,
+            required String paidByUserId,
+            required String description,
+            required int amountCents,
+            required String participantsJson,
+            required DateTime createdAt,
+            required String syncState,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedExpensesCompanion.insert(
+            sessionUserId: sessionUserId,
+            clientRequestId: clientRequestId,
+            serverId: serverId,
+            squadId: squadId,
+            paidByUserId: paidByUserId,
+            description: description,
+            amountCents: amountCents,
+            participantsJson: participantsJson,
+            createdAt: createdAt,
+            syncState: syncState,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedExpensesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CachedExpensesTable,
+    CachedExpense,
+    $$CachedExpensesTableFilterComposer,
+    $$CachedExpensesTableOrderingComposer,
+    $$CachedExpensesTableAnnotationComposer,
+    $$CachedExpensesTableCreateCompanionBuilder,
+    $$CachedExpensesTableUpdateCompanionBuilder,
+    (
+      CachedExpense,
+      BaseReferences<_$AppDatabase, $CachedExpensesTable, CachedExpense>
+    ),
+    CachedExpense,
+    PrefetchHooks Function()>;
+typedef $$CachedBalancesTableCreateCompanionBuilder = CachedBalancesCompanion
+    Function({
+  required String sessionUserId,
+  required String squadId,
+  required String userId,
+  required int balanceCents,
+  Value<int> rowid,
+});
+typedef $$CachedBalancesTableUpdateCompanionBuilder = CachedBalancesCompanion
+    Function({
+  Value<String> sessionUserId,
+  Value<String> squadId,
+  Value<String> userId,
+  Value<int> balanceCents,
+  Value<int> rowid,
+});
+
+class $$CachedBalancesTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedBalancesTable> {
+  $$CachedBalancesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get balanceCents => $composableBuilder(
+      column: $table.balanceCents, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedBalancesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedBalancesTable> {
+  $$CachedBalancesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get balanceCents => $composableBuilder(
+      column: $table.balanceCents,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedBalancesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedBalancesTable> {
+  $$CachedBalancesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get squadId =>
+      $composableBuilder(column: $table.squadId, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<int> get balanceCents => $composableBuilder(
+      column: $table.balanceCents, builder: (column) => column);
+}
+
+class $$CachedBalancesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedBalancesTable,
+    CachedBalance,
+    $$CachedBalancesTableFilterComposer,
+    $$CachedBalancesTableOrderingComposer,
+    $$CachedBalancesTableAnnotationComposer,
+    $$CachedBalancesTableCreateCompanionBuilder,
+    $$CachedBalancesTableUpdateCompanionBuilder,
+    (
+      CachedBalance,
+      BaseReferences<_$AppDatabase, $CachedBalancesTable, CachedBalance>
+    ),
+    CachedBalance,
+    PrefetchHooks Function()> {
+  $$CachedBalancesTableTableManager(
+      _$AppDatabase db, $CachedBalancesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedBalancesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedBalancesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedBalancesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
+            Value<String> squadId = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<int> balanceCents = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedBalancesCompanion(
+            sessionUserId: sessionUserId,
+            squadId: squadId,
+            userId: userId,
+            balanceCents: balanceCents,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String sessionUserId,
+            required String squadId,
+            required String userId,
+            required int balanceCents,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedBalancesCompanion.insert(
+            sessionUserId: sessionUserId,
+            squadId: squadId,
+            userId: userId,
+            balanceCents: balanceCents,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedBalancesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CachedBalancesTable,
+    CachedBalance,
+    $$CachedBalancesTableFilterComposer,
+    $$CachedBalancesTableOrderingComposer,
+    $$CachedBalancesTableAnnotationComposer,
+    $$CachedBalancesTableCreateCompanionBuilder,
+    $$CachedBalancesTableUpdateCompanionBuilder,
+    (
+      CachedBalance,
+      BaseReferences<_$AppDatabase, $CachedBalancesTable, CachedBalance>
+    ),
+    CachedBalance,
+    PrefetchHooks Function()>;
+typedef $$CachedDebtTransfersTableCreateCompanionBuilder
+    = CachedDebtTransfersCompanion Function({
+  required String sessionUserId,
+  required String squadId,
+  required int position,
+  required String fromUserId,
+  required String toUserId,
+  required int amountCents,
+  Value<int> rowid,
+});
+typedef $$CachedDebtTransfersTableUpdateCompanionBuilder
+    = CachedDebtTransfersCompanion Function({
+  Value<String> sessionUserId,
+  Value<String> squadId,
+  Value<int> position,
+  Value<String> fromUserId,
+  Value<String> toUserId,
+  Value<int> amountCents,
+  Value<int> rowid,
+});
+
+class $$CachedDebtTransfersTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedDebtTransfersTable> {
+  $$CachedDebtTransfersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get position => $composableBuilder(
+      column: $table.position, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fromUserId => $composableBuilder(
+      column: $table.fromUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get toUserId => $composableBuilder(
+      column: $table.toUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get amountCents => $composableBuilder(
+      column: $table.amountCents, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedDebtTransfersTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedDebtTransfersTable> {
+  $$CachedDebtTransfersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get position => $composableBuilder(
+      column: $table.position, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fromUserId => $composableBuilder(
+      column: $table.fromUserId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get toUserId => $composableBuilder(
+      column: $table.toUserId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get amountCents => $composableBuilder(
+      column: $table.amountCents, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedDebtTransfersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedDebtTransfersTable> {
+  $$CachedDebtTransfersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get squadId =>
+      $composableBuilder(column: $table.squadId, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<String> get fromUserId => $composableBuilder(
+      column: $table.fromUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get toUserId =>
+      $composableBuilder(column: $table.toUserId, builder: (column) => column);
+
+  GeneratedColumn<int> get amountCents => $composableBuilder(
+      column: $table.amountCents, builder: (column) => column);
+}
+
+class $$CachedDebtTransfersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedDebtTransfersTable,
+    CachedDebtTransfer,
+    $$CachedDebtTransfersTableFilterComposer,
+    $$CachedDebtTransfersTableOrderingComposer,
+    $$CachedDebtTransfersTableAnnotationComposer,
+    $$CachedDebtTransfersTableCreateCompanionBuilder,
+    $$CachedDebtTransfersTableUpdateCompanionBuilder,
+    (
+      CachedDebtTransfer,
+      BaseReferences<_$AppDatabase, $CachedDebtTransfersTable,
+          CachedDebtTransfer>
+    ),
+    CachedDebtTransfer,
+    PrefetchHooks Function()> {
+  $$CachedDebtTransfersTableTableManager(
+      _$AppDatabase db, $CachedDebtTransfersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedDebtTransfersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedDebtTransfersTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedDebtTransfersTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
+            Value<String> squadId = const Value.absent(),
+            Value<int> position = const Value.absent(),
+            Value<String> fromUserId = const Value.absent(),
+            Value<String> toUserId = const Value.absent(),
+            Value<int> amountCents = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedDebtTransfersCompanion(
+            sessionUserId: sessionUserId,
+            squadId: squadId,
+            position: position,
+            fromUserId: fromUserId,
+            toUserId: toUserId,
+            amountCents: amountCents,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String sessionUserId,
+            required String squadId,
+            required int position,
+            required String fromUserId,
+            required String toUserId,
+            required int amountCents,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedDebtTransfersCompanion.insert(
+            sessionUserId: sessionUserId,
+            squadId: squadId,
+            position: position,
+            fromUserId: fromUserId,
+            toUserId: toUserId,
+            amountCents: amountCents,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedDebtTransfersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CachedDebtTransfersTable,
+    CachedDebtTransfer,
+    $$CachedDebtTransfersTableFilterComposer,
+    $$CachedDebtTransfersTableOrderingComposer,
+    $$CachedDebtTransfersTableAnnotationComposer,
+    $$CachedDebtTransfersTableCreateCompanionBuilder,
+    $$CachedDebtTransfersTableUpdateCompanionBuilder,
+    (
+      CachedDebtTransfer,
+      BaseReferences<_$AppDatabase, $CachedDebtTransfersTable,
+          CachedDebtTransfer>
+    ),
+    CachedDebtTransfer,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3611,4 +5411,10 @@ class $AppDatabaseManager {
       $$CachedMeetingPointsTableTableManager(_db, _db.cachedMeetingPoints);
   $$PendingSyncOperationsTableTableManager get pendingSyncOperations =>
       $$PendingSyncOperationsTableTableManager(_db, _db.pendingSyncOperations);
+  $$CachedExpensesTableTableManager get cachedExpenses =>
+      $$CachedExpensesTableTableManager(_db, _db.cachedExpenses);
+  $$CachedBalancesTableTableManager get cachedBalances =>
+      $$CachedBalancesTableTableManager(_db, _db.cachedBalances);
+  $$CachedDebtTransfersTableTableManager get cachedDebtTransfers =>
+      $$CachedDebtTransfersTableTableManager(_db, _db.cachedDebtTransfers);
 }

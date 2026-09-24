@@ -32,7 +32,8 @@ def test_cent_remainder_is_stable():
 
 
 def payload():
-    return dict(squad_id=A, paid_by_user_id=A, description='Transporte', amount='100.00',
+    return dict(squad_id=A, client_request_id=UUID(int=99), paid_by_user_id=A,
+                description='Transporte', amount='100.00',
                 participants=[{'user_id': A, 'share_amount': '33.34'},
                               {'user_id': B, 'share_amount': '33.33'},
                               {'user_id': C, 'share_amount': '33.33'}])
@@ -82,6 +83,8 @@ def test_ddl_is_sql_server_decimal():
         ddl = str(CreateTable(model.__table__).compile(dialect=mssql.dialect()))
         assert 'DECIMAL(18, 2)' in ddl
         assert model.__table__.c[column].type.asdecimal
+    expense_ddl = str(CreateTable(Expense.__table__).compile(dialect=mssql.dialect()))
+    assert 'client_request_id UNIQUEIDENTIFIER NOT NULL' in expense_ddl
 
 
 def test_production_requires_certificate_validation():

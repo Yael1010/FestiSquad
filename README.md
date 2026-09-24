@@ -37,12 +37,16 @@ En una instalación nueva, ejecutar en SQL Server y en este orden:
 ```text
 database/001_initial_schema.sql
 database/002_fund_balances.sql
+database/003_phase3_normalization_and_indexes.sql
+database/004_phase5_expense_idempotency.sql
 ```
 
-Si la base fue creada durante la Fase 2, ejecutar además la migración idempotente:
+Si la base fue creada durante una fase anterior, ejecutar las migraciones
+idempotentes que todavía no se hayan aplicado:
 
 ```text
 database/003_phase3_normalization_and_indexes.sql
+database/004_phase5_expense_idempotency.sql
 ```
 
 ## Inicio rápido Flutter
@@ -55,6 +59,11 @@ flutter run
 
 Flutter conserva localmente los squads con Drift/SQLite. Los tokens JWT se
 mantienen separados en el almacenamiento seguro del dispositivo.
+
+El fondo común conserva tickets y balances en caché, acepta divisiones iguales
+entre participantes seleccionados y reintenta los tickets creados sin conexión.
+Los importes viajan como cadenas decimales, se procesan con `Decimal` en FastAPI
+y se guardan como `DECIMAL(18,2)` en SQL Server.
 
 El mapa funciona en Android con permiso de ubicación bajo demanda. Para usar un
 festival real, registra su geometría en SQL Server y agrega

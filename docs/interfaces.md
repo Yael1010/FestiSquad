@@ -1,8 +1,9 @@
 # Interfaces de FestiSquad
 
-Implementación Flutter de bienvenida (`/login`), inicio (`/dashboard`) y unión
-al squad (`/join`). La aplicación utiliza Riverpod para estado e inyección de
-dependencias, Dio para la API y almacenamiento seguro para JWT.
+Implementación Flutter de bienvenida (`/login`), inicio (`/dashboard`), unión
+al squad (`/join`), mapa (`/map`) y fondo común (`/finances`). La aplicación
+utiliza Riverpod para estado e inyección de dependencias, Dio para la API y
+almacenamiento seguro para JWT.
 
 ## Recorrido funcional
 
@@ -15,6 +16,10 @@ dependencias, Dio para la API y almacenamiento seguro para JWT.
    `user_id` en las operaciones de squad.
 6. Si expira el access token, Dio intenta una sola renovación con el refresh
    token y repite la petición original.
+7. En Fondo común se registra el concepto, pagador, total y participantes. El
+   reparto igual conserva todos los centavos y las deudas se simplifican.
+8. Sin conexión, el ticket queda visible como pendiente y se reintenta con un
+   identificador idempotente para evitar duplicados.
 
 `Explorar demostración` se conserva para revisar el maquetado sin backend. Las
 acciones persistentes muestran un error controlado si no existe una sesión o no
@@ -23,8 +28,8 @@ hay conectividad.
 ## Alcance pendiente
 
 Google/Spotify OAuth, cámara QR y comunicación P2P todavía no están conectados.
-El QR es ilustrativo. El mapa, fondo y sugerencias del dashboard mantienen datos
-de ejemplo hasta sus fases correspondientes.
+El QR es ilustrativo. Las sugerencias musicales del dashboard mantienen datos
+de ejemplo hasta completar la fase del Clash Resolver.
 
 ## Verificación
 
