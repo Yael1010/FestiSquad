@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,13 +9,19 @@ class Settings(BaseSettings):
     app_name: str = "FestiSquad"
     environment: Literal["development", "test", "staging", "production"] = "development"
     jwt_secret_key: str = "change-me-in-production"
-    jwt_algorithm: str = "HS256"
+    jwt_algorithm: Literal["HS256"] = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_minutes: int = 60 * 24 * 7
     spotify_client_id: str = ""
     spotify_client_secret: str = ""
     spotify_redirect_uri: str = "http://127.0.0.1:8000/api/v1/spotify/callback"
     cors_origins: list[str] = []
+    performance_target_ms: int = Field(default=1500, ge=100, le=30000)
+    max_request_body_bytes: int = Field(
+        default=1_048_576,
+        ge=1024,
+        le=10_485_760,
+    )
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parents[2] / ".env",

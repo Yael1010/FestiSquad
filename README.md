@@ -59,6 +59,12 @@ flutter pub get
 flutter run
 ```
 
+Para un build release se debe proporcionar un endpoint HTTPS:
+
+```bash
+flutter build apk --dart-define=API_BASE_URL=https://api.example.com/api/v1
+```
+
 Flutter conserva localmente los squads con Drift/SQLite. Los tokens JWT se
 mantienen separados en el almacenamiento seguro del dispositivo.
 
@@ -79,6 +85,22 @@ festival real, registra su geometría en SQL Server y agrega
 `--dart-define=FESTIVAL_ID=<uuid>` al comando `flutter run`. Sin ese valor se
 muestra un plano de demostración. Ver [Fase 4](docs/phase-4-resilient-map.md)
 para los límites del modo web y del rastreo en segundo plano.
+
+## Calidad y RNF
+
+```bash
+cd backend
+pytest -q
+python scripts/benchmark_api.py --url http://127.0.0.1:8000/health/db
+
+cd ../mobile
+flutter analyze
+flutter test
+```
+
+La configuración de proxy TLS está en `deploy/nginx/festisquad.conf`. El
+procedimiento y las evidencias pendientes de ambiente físico están documentados
+en [Fase 7](docs/phase-7-quality-evidence.md).
 
 ## Alcance MVP
 

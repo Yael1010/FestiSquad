@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import db_probe
 from app.api.v1.router import api_router
 from app.core.database import dispose_engine
+from app.core.http_middleware import QualityMiddleware
 from app.core.settings import settings
 
 
@@ -21,7 +22,12 @@ def create_app() -> FastAPI:
         version="0.1.0",
         description="API modular para logística, ubicación, finanzas y recomendaciones musicales.",
         lifespan=lifespan,
+        docs_url=None if settings.environment == "production" else "/docs",
+        redoc_url=None if settings.environment == "production" else "/redoc",
+        openapi_url=None if settings.environment == "production" else "/openapi.json",
     )
+
+    app.add_middleware(QualityMiddleware, settings=settings)
 
     app.add_middleware(
         CORSMiddleware,

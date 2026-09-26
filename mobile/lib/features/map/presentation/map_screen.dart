@@ -89,6 +89,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   Future<void> _startTracking() async {
     if (_positions != null) return;
+    if (_squadId == null) {
+      _show('Selecciona un squad antes de compartir tu ubicación.');
+      return;
+    }
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
         _show('Activa la ubicación del dispositivo.');

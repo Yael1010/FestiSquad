@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'src/app.dart';
+import 'core/errors/app_error_boundary.dart';
 
 void main() {
-  runApp(const ProviderScope(child: FestiSquadApp()));
+  bootstrapFestiSquad();
 }

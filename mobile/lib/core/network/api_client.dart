@@ -3,10 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../security/token_storage.dart';
+import 'retry_policy.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
+  final baseUrl = validateApiBaseUrl(_apiBaseUrl, isRelease: kReleaseMode);
   return ApiClient(
-    baseUrl: _apiBaseUrl,
+    baseUrl: baseUrl,
     tokenStorage: ref.watch(tokenStorageProvider),
   );
 });
@@ -85,11 +87,38 @@ class ApiClient {
   }
 
   final Dio _dio;
+  final RetryPolicy _retryPolicy = const RetryPolicy();
 
-  Future<Response<dynamic>> get(String path) => _dio.get(path);
+  Future<Response<dynamic>> get(String path) => _retryPolicy.execute(
+        () => _dio.get(path),
+        shouldRetry: _isTransientGetFailure,
+      );
 
   Future<Response<dynamic>> post(String path, {Object? data}) =>
       _dio.post(path, data: data);
+}
+
+String validateApiBaseUrl(String baseUrl, {required bool isRelease}) {
+  final uri = Uri.tryParse(baseUrl);
+  if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+    throw ArgumentError.value(baseUrl, 'baseUrl', 'La URL de API no es válida');
+  }
+  if (isRelease && uri.scheme != 'https') {
+    throw StateError(
+        'API_BASE_URL debe usar HTTPS en una compilación release.');
+  }
+  return baseUrl;
+}
+
+bool _isTransientGetFailure(Object error) {
+  if (error is! DioException) return false;
+  if (error.type == DioExceptionType.connectionError ||
+      error.type == DioExceptionType.connectionTimeout ||
+      error.type == DioExceptionType.receiveTimeout ||
+      error.type == DioExceptionType.sendTimeout) {
+    return true;
+  }
+  return const {502, 503, 504}.contains(error.response?.statusCode);
 }
 
 String apiErrorMessage(Object error) {

@@ -10,6 +10,7 @@ __pycache__/
 .flutter-plugins-dependencies
 build/
 coverage/
+battery-phase7.txt
 
 # Environment
 .env
@@ -18,4 +19,3 @@ coverage/
 # IDE
 .idea/
 .vscode/
-
