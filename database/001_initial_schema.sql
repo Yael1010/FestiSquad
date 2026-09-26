@@ -56,6 +56,13 @@ CREATE TABLE genres (
     CONSTRAINT uq_genres_name UNIQUE (name)
 );
 
+CREATE TABLE artists (
+    id INT IDENTITY(1,1) NOT NULL,
+    name NVARCHAR(160) NOT NULL,
+    CONSTRAINT pk_artists PRIMARY KEY (id),
+    CONSTRAINT uq_artists_name UNIQUE (name)
+);
+
 CREATE TABLE schedule_items (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
     stage_id UNIQUEIDENTIFIER NOT NULL,
@@ -137,6 +144,17 @@ CREATE TABLE music_preferences (
     CONSTRAINT fk_music_preferences_genre FOREIGN KEY (genre_id) REFERENCES genres(id)
 );
 
+CREATE TABLE music_artist_preferences (
+    user_id UNIQUEIDENTIFIER NOT NULL,
+    artist_id INT NOT NULL,
+    source NVARCHAR(20) NOT NULL,
+    weight DECIMAL(5,2) NOT NULL DEFAULT 1.00,
+    CONSTRAINT pk_music_artist_preferences PRIMARY KEY (user_id, artist_id, source),
+    CONSTRAINT ck_music_artist_preferences_source CHECK (source IN ('manual', 'spotify')),
+    CONSTRAINT fk_music_artist_preferences_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_music_artist_preferences_artist FOREIGN KEY (artist_id) REFERENCES artists(id)
+);
+
 CREATE INDEX ix_locations_squad_user_recorded ON locations(squad_id, user_id, recorded_at DESC);
 CREATE INDEX ix_expenses_squad_created ON expenses(squad_id, created_at DESC);
 CREATE INDEX ix_schedule_items_stage_time ON schedule_items(stage_id, starts_at, ends_at);
@@ -145,3 +163,4 @@ CREATE INDEX ix_stages_festival ON stages(festival_id, name);
 CREATE INDEX ix_meeting_points_squad_created ON meeting_points(squad_id, created_at DESC);
 CREATE INDEX ix_expense_participants_user ON expense_participants(user_id, expense_id);
 CREATE INDEX ix_music_preferences_genre ON music_preferences(genre_id, user_id);
+CREATE INDEX ix_music_artist_preferences_artist ON music_artist_preferences(artist_id, user_id);

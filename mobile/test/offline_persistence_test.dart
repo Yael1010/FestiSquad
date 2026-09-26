@@ -69,6 +69,24 @@ void main() {
 
     expect(await database.readSquads('user-1'), isEmpty);
   });
+
+  test('broken local cache does not block remote squad operations', () async {
+    final brokenDatabase = _FailingAppDatabase();
+    addTearDown(brokenDatabase.close);
+    remote.squads = const [_squad];
+    final resilientRepository = OfflineFirstSquadRepository(
+      remote,
+      brokenDatabase,
+      TokenStorage(const FlutterSecureStorage()),
+    );
+
+    final loaded = await resilientRepository.loadMine();
+    final created = await resilientRepository.create('Noctámbulos');
+
+    expect(loaded.value.single.id, _squad.id);
+    expect(loaded.fromCache, isFalse);
+    expect(created.id, _squad.id);
+  });
 }
 
 const _squad = Squad(
@@ -95,4 +113,26 @@ class _FakeRemote implements SquadRemoteDataSource {
 
   @override
   Future<Squad> join(String code) async => _squad;
+}
+
+class _FailingAppDatabase extends AppDatabase {
+  _FailingAppDatabase() : super(NativeDatabase.memory());
+
+  @override
+  Future<List<CachedSquad>> readSquads(String sessionUserId) async {
+    throw StateError('cache unavailable');
+  }
+
+  @override
+  Future<void> replaceSquads(
+    String sessionUserId,
+    Iterable<CachedSquadsCompanion> values,
+  ) async {
+    throw StateError('cache unavailable');
+  }
+
+  @override
+  Future<void> upsertSquad(CachedSquadsCompanion value) async {
+    throw StateError('cache unavailable');
+  }
 }

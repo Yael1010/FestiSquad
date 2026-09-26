@@ -3525,6 +3525,382 @@ class CachedDebtTransfersCompanion extends UpdateCompanion<CachedDebtTransfer> {
   }
 }
 
+class $CachedClashStatesTable extends CachedClashStates
+    with TableInfo<$CachedClashStatesTable, CachedClashState> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedClashStatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionUserIdMeta =
+      const VerificationMeta('sessionUserId');
+  @override
+  late final GeneratedColumn<String> sessionUserId = GeneratedColumn<String>(
+      'session_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _squadIdMeta =
+      const VerificationMeta('squadId');
+  @override
+  late final GeneratedColumn<String> squadId = GeneratedColumn<String>(
+      'squad_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _preferencesJsonMeta =
+      const VerificationMeta('preferencesJson');
+  @override
+  late final GeneratedColumn<String> preferencesJson = GeneratedColumn<String>(
+      'preferences_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _conflictsJsonMeta =
+      const VerificationMeta('conflictsJson');
+  @override
+  late final GeneratedColumn<String> conflictsJson = GeneratedColumn<String>(
+      'conflicts_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _recommendationJsonMeta =
+      const VerificationMeta('recommendationJson');
+  @override
+  late final GeneratedColumn<String> recommendationJson =
+      GeneratedColumn<String>('recommendation_json', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        sessionUserId,
+        squadId,
+        preferencesJson,
+        conflictsJson,
+        recommendationJson,
+        cachedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_clash_states';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedClashState> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_user_id')) {
+      context.handle(
+          _sessionUserIdMeta,
+          sessionUserId.isAcceptableOrUnknown(
+              data['session_user_id']!, _sessionUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionUserIdMeta);
+    }
+    if (data.containsKey('squad_id')) {
+      context.handle(_squadIdMeta,
+          squadId.isAcceptableOrUnknown(data['squad_id']!, _squadIdMeta));
+    } else if (isInserting) {
+      context.missing(_squadIdMeta);
+    }
+    if (data.containsKey('preferences_json')) {
+      context.handle(
+          _preferencesJsonMeta,
+          preferencesJson.isAcceptableOrUnknown(
+              data['preferences_json']!, _preferencesJsonMeta));
+    } else if (isInserting) {
+      context.missing(_preferencesJsonMeta);
+    }
+    if (data.containsKey('conflicts_json')) {
+      context.handle(
+          _conflictsJsonMeta,
+          conflictsJson.isAcceptableOrUnknown(
+              data['conflicts_json']!, _conflictsJsonMeta));
+    } else if (isInserting) {
+      context.missing(_conflictsJsonMeta);
+    }
+    if (data.containsKey('recommendation_json')) {
+      context.handle(
+          _recommendationJsonMeta,
+          recommendationJson.isAcceptableOrUnknown(
+              data['recommendation_json']!, _recommendationJsonMeta));
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionUserId, squadId};
+  @override
+  CachedClashState map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedClashState(
+      sessionUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}session_user_id'])!,
+      squadId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}squad_id'])!,
+      preferencesJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}preferences_json'])!,
+      conflictsJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}conflicts_json'])!,
+      recommendationJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}recommendation_json']),
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+    );
+  }
+
+  @override
+  $CachedClashStatesTable createAlias(String alias) {
+    return $CachedClashStatesTable(attachedDatabase, alias);
+  }
+}
+
+class CachedClashState extends DataClass
+    implements Insertable<CachedClashState> {
+  final String sessionUserId;
+  final String squadId;
+  final String preferencesJson;
+  final String conflictsJson;
+  final String? recommendationJson;
+  final DateTime cachedAt;
+  const CachedClashState(
+      {required this.sessionUserId,
+      required this.squadId,
+      required this.preferencesJson,
+      required this.conflictsJson,
+      this.recommendationJson,
+      required this.cachedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_user_id'] = Variable<String>(sessionUserId);
+    map['squad_id'] = Variable<String>(squadId);
+    map['preferences_json'] = Variable<String>(preferencesJson);
+    map['conflicts_json'] = Variable<String>(conflictsJson);
+    if (!nullToAbsent || recommendationJson != null) {
+      map['recommendation_json'] = Variable<String>(recommendationJson);
+    }
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    return map;
+  }
+
+  CachedClashStatesCompanion toCompanion(bool nullToAbsent) {
+    return CachedClashStatesCompanion(
+      sessionUserId: Value(sessionUserId),
+      squadId: Value(squadId),
+      preferencesJson: Value(preferencesJson),
+      conflictsJson: Value(conflictsJson),
+      recommendationJson: recommendationJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recommendationJson),
+      cachedAt: Value(cachedAt),
+    );
+  }
+
+  factory CachedClashState.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedClashState(
+      sessionUserId: serializer.fromJson<String>(json['sessionUserId']),
+      squadId: serializer.fromJson<String>(json['squadId']),
+      preferencesJson: serializer.fromJson<String>(json['preferencesJson']),
+      conflictsJson: serializer.fromJson<String>(json['conflictsJson']),
+      recommendationJson:
+          serializer.fromJson<String?>(json['recommendationJson']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionUserId': serializer.toJson<String>(sessionUserId),
+      'squadId': serializer.toJson<String>(squadId),
+      'preferencesJson': serializer.toJson<String>(preferencesJson),
+      'conflictsJson': serializer.toJson<String>(conflictsJson),
+      'recommendationJson': serializer.toJson<String?>(recommendationJson),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+    };
+  }
+
+  CachedClashState copyWith(
+          {String? sessionUserId,
+          String? squadId,
+          String? preferencesJson,
+          String? conflictsJson,
+          Value<String?> recommendationJson = const Value.absent(),
+          DateTime? cachedAt}) =>
+      CachedClashState(
+        sessionUserId: sessionUserId ?? this.sessionUserId,
+        squadId: squadId ?? this.squadId,
+        preferencesJson: preferencesJson ?? this.preferencesJson,
+        conflictsJson: conflictsJson ?? this.conflictsJson,
+        recommendationJson: recommendationJson.present
+            ? recommendationJson.value
+            : this.recommendationJson,
+        cachedAt: cachedAt ?? this.cachedAt,
+      );
+  CachedClashState copyWithCompanion(CachedClashStatesCompanion data) {
+    return CachedClashState(
+      sessionUserId: data.sessionUserId.present
+          ? data.sessionUserId.value
+          : this.sessionUserId,
+      squadId: data.squadId.present ? data.squadId.value : this.squadId,
+      preferencesJson: data.preferencesJson.present
+          ? data.preferencesJson.value
+          : this.preferencesJson,
+      conflictsJson: data.conflictsJson.present
+          ? data.conflictsJson.value
+          : this.conflictsJson,
+      recommendationJson: data.recommendationJson.present
+          ? data.recommendationJson.value
+          : this.recommendationJson,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedClashState(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('squadId: $squadId, ')
+          ..write('preferencesJson: $preferencesJson, ')
+          ..write('conflictsJson: $conflictsJson, ')
+          ..write('recommendationJson: $recommendationJson, ')
+          ..write('cachedAt: $cachedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(sessionUserId, squadId, preferencesJson,
+      conflictsJson, recommendationJson, cachedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedClashState &&
+          other.sessionUserId == this.sessionUserId &&
+          other.squadId == this.squadId &&
+          other.preferencesJson == this.preferencesJson &&
+          other.conflictsJson == this.conflictsJson &&
+          other.recommendationJson == this.recommendationJson &&
+          other.cachedAt == this.cachedAt);
+}
+
+class CachedClashStatesCompanion extends UpdateCompanion<CachedClashState> {
+  final Value<String> sessionUserId;
+  final Value<String> squadId;
+  final Value<String> preferencesJson;
+  final Value<String> conflictsJson;
+  final Value<String?> recommendationJson;
+  final Value<DateTime> cachedAt;
+  final Value<int> rowid;
+  const CachedClashStatesCompanion({
+    this.sessionUserId = const Value.absent(),
+    this.squadId = const Value.absent(),
+    this.preferencesJson = const Value.absent(),
+    this.conflictsJson = const Value.absent(),
+    this.recommendationJson = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedClashStatesCompanion.insert({
+    required String sessionUserId,
+    required String squadId,
+    required String preferencesJson,
+    required String conflictsJson,
+    this.recommendationJson = const Value.absent(),
+    required DateTime cachedAt,
+    this.rowid = const Value.absent(),
+  })  : sessionUserId = Value(sessionUserId),
+        squadId = Value(squadId),
+        preferencesJson = Value(preferencesJson),
+        conflictsJson = Value(conflictsJson),
+        cachedAt = Value(cachedAt);
+  static Insertable<CachedClashState> custom({
+    Expression<String>? sessionUserId,
+    Expression<String>? squadId,
+    Expression<String>? preferencesJson,
+    Expression<String>? conflictsJson,
+    Expression<String>? recommendationJson,
+    Expression<DateTime>? cachedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sessionUserId != null) 'session_user_id': sessionUserId,
+      if (squadId != null) 'squad_id': squadId,
+      if (preferencesJson != null) 'preferences_json': preferencesJson,
+      if (conflictsJson != null) 'conflicts_json': conflictsJson,
+      if (recommendationJson != null) 'recommendation_json': recommendationJson,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedClashStatesCompanion copyWith(
+      {Value<String>? sessionUserId,
+      Value<String>? squadId,
+      Value<String>? preferencesJson,
+      Value<String>? conflictsJson,
+      Value<String?>? recommendationJson,
+      Value<DateTime>? cachedAt,
+      Value<int>? rowid}) {
+    return CachedClashStatesCompanion(
+      sessionUserId: sessionUserId ?? this.sessionUserId,
+      squadId: squadId ?? this.squadId,
+      preferencesJson: preferencesJson ?? this.preferencesJson,
+      conflictsJson: conflictsJson ?? this.conflictsJson,
+      recommendationJson: recommendationJson ?? this.recommendationJson,
+      cachedAt: cachedAt ?? this.cachedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionUserId.present) {
+      map['session_user_id'] = Variable<String>(sessionUserId.value);
+    }
+    if (squadId.present) {
+      map['squad_id'] = Variable<String>(squadId.value);
+    }
+    if (preferencesJson.present) {
+      map['preferences_json'] = Variable<String>(preferencesJson.value);
+    }
+    if (conflictsJson.present) {
+      map['conflicts_json'] = Variable<String>(conflictsJson.value);
+    }
+    if (recommendationJson.present) {
+      map['recommendation_json'] = Variable<String>(recommendationJson.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedClashStatesCompanion(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('squadId: $squadId, ')
+          ..write('preferencesJson: $preferencesJson, ')
+          ..write('conflictsJson: $conflictsJson, ')
+          ..write('recommendationJson: $recommendationJson, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3542,6 +3918,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CachedBalancesTable cachedBalances = $CachedBalancesTable(this);
   late final $CachedDebtTransfersTable cachedDebtTransfers =
       $CachedDebtTransfersTable(this);
+  late final $CachedClashStatesTable cachedClashStates =
+      $CachedClashStatesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3555,7 +3933,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         pendingSyncOperations,
         cachedExpenses,
         cachedBalances,
-        cachedDebtTransfers
+        cachedDebtTransfers,
+        cachedClashStates
       ];
 }
 
@@ -5395,6 +5774,202 @@ typedef $$CachedDebtTransfersTableProcessedTableManager = ProcessedTableManager<
     ),
     CachedDebtTransfer,
     PrefetchHooks Function()>;
+typedef $$CachedClashStatesTableCreateCompanionBuilder
+    = CachedClashStatesCompanion Function({
+  required String sessionUserId,
+  required String squadId,
+  required String preferencesJson,
+  required String conflictsJson,
+  Value<String?> recommendationJson,
+  required DateTime cachedAt,
+  Value<int> rowid,
+});
+typedef $$CachedClashStatesTableUpdateCompanionBuilder
+    = CachedClashStatesCompanion Function({
+  Value<String> sessionUserId,
+  Value<String> squadId,
+  Value<String> preferencesJson,
+  Value<String> conflictsJson,
+  Value<String?> recommendationJson,
+  Value<DateTime> cachedAt,
+  Value<int> rowid,
+});
+
+class $$CachedClashStatesTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedClashStatesTable> {
+  $$CachedClashStatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get preferencesJson => $composableBuilder(
+      column: $table.preferencesJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get conflictsJson => $composableBuilder(
+      column: $table.conflictsJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get recommendationJson => $composableBuilder(
+      column: $table.recommendationJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedClashStatesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedClashStatesTable> {
+  $$CachedClashStatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get preferencesJson => $composableBuilder(
+      column: $table.preferencesJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get conflictsJson => $composableBuilder(
+      column: $table.conflictsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get recommendationJson => $composableBuilder(
+      column: $table.recommendationJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedClashStatesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedClashStatesTable> {
+  $$CachedClashStatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get squadId =>
+      $composableBuilder(column: $table.squadId, builder: (column) => column);
+
+  GeneratedColumn<String> get preferencesJson => $composableBuilder(
+      column: $table.preferencesJson, builder: (column) => column);
+
+  GeneratedColumn<String> get conflictsJson => $composableBuilder(
+      column: $table.conflictsJson, builder: (column) => column);
+
+  GeneratedColumn<String> get recommendationJson => $composableBuilder(
+      column: $table.recommendationJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+}
+
+class $$CachedClashStatesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedClashStatesTable,
+    CachedClashState,
+    $$CachedClashStatesTableFilterComposer,
+    $$CachedClashStatesTableOrderingComposer,
+    $$CachedClashStatesTableAnnotationComposer,
+    $$CachedClashStatesTableCreateCompanionBuilder,
+    $$CachedClashStatesTableUpdateCompanionBuilder,
+    (
+      CachedClashState,
+      BaseReferences<_$AppDatabase, $CachedClashStatesTable, CachedClashState>
+    ),
+    CachedClashState,
+    PrefetchHooks Function()> {
+  $$CachedClashStatesTableTableManager(
+      _$AppDatabase db, $CachedClashStatesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedClashStatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedClashStatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedClashStatesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
+            Value<String> squadId = const Value.absent(),
+            Value<String> preferencesJson = const Value.absent(),
+            Value<String> conflictsJson = const Value.absent(),
+            Value<String?> recommendationJson = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedClashStatesCompanion(
+            sessionUserId: sessionUserId,
+            squadId: squadId,
+            preferencesJson: preferencesJson,
+            conflictsJson: conflictsJson,
+            recommendationJson: recommendationJson,
+            cachedAt: cachedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String sessionUserId,
+            required String squadId,
+            required String preferencesJson,
+            required String conflictsJson,
+            Value<String?> recommendationJson = const Value.absent(),
+            required DateTime cachedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedClashStatesCompanion.insert(
+            sessionUserId: sessionUserId,
+            squadId: squadId,
+            preferencesJson: preferencesJson,
+            conflictsJson: conflictsJson,
+            recommendationJson: recommendationJson,
+            cachedAt: cachedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedClashStatesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CachedClashStatesTable,
+    CachedClashState,
+    $$CachedClashStatesTableFilterComposer,
+    $$CachedClashStatesTableOrderingComposer,
+    $$CachedClashStatesTableAnnotationComposer,
+    $$CachedClashStatesTableCreateCompanionBuilder,
+    $$CachedClashStatesTableUpdateCompanionBuilder,
+    (
+      CachedClashState,
+      BaseReferences<_$AppDatabase, $CachedClashStatesTable, CachedClashState>
+    ),
+    CachedClashState,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5417,4 +5992,6 @@ class $AppDatabaseManager {
       $$CachedBalancesTableTableManager(_db, _db.cachedBalances);
   $$CachedDebtTransfersTableTableManager get cachedDebtTransfers =>
       $$CachedDebtTransfersTableTableManager(_db, _db.cachedDebtTransfers);
+  $$CachedClashStatesTableTableManager get cachedClashStates =>
+      $$CachedClashStatesTableTableManager(_db, _db.cachedClashStates);
 }

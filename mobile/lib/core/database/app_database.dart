@@ -118,6 +118,18 @@ class CachedDebtTransfers extends Table {
   Set<Column<Object>> get primaryKey => {sessionUserId, squadId, position};
 }
 
+class CachedClashStates extends Table {
+  TextColumn get sessionUserId => text()();
+  TextColumn get squadId => text()();
+  TextColumn get preferencesJson => text()();
+  TextColumn get conflictsJson => text()();
+  TextColumn get recommendationJson => text().nullable()();
+  DateTimeColumn get cachedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sessionUserId, squadId};
+}
+
 @DriftDatabase(
   tables: [
     CachedSquads,
@@ -129,6 +141,7 @@ class CachedDebtTransfers extends Table {
     CachedExpenses,
     CachedBalances,
     CachedDebtTransfers,
+    CachedClashStates,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -145,7 +158,7 @@ class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -166,6 +179,9 @@ class AppDatabase extends _$AppDatabase {
             await migrator.createTable(cachedExpenses);
             await migrator.createTable(cachedBalances);
             await migrator.createTable(cachedDebtTransfers);
+          }
+          if (from < 4) {
+            await migrator.createTable(cachedClashStates);
           }
         },
       );
@@ -458,6 +474,42 @@ class AppDatabase extends _$AppDatabase {
       PendingSyncOperationsCompanion.insert(
         resourceType: 'expense',
         operation: 'create',
+        payloadJson: payloadJson,
+        createdAt: DateTime.now().toUtc(),
+      ),
+    );
+  }
+
+  Future<CachedClashState?> readClashState(
+    String sessionUserId,
+    String squadId,
+  ) {
+    return (select(cachedClashStates)
+          ..where((row) =>
+              row.sessionUserId.equals(sessionUserId) &
+              row.squadId.equals(squadId)))
+        .getSingleOrNull();
+  }
+
+  Future<void> upsertClashState(CachedClashStatesCompanion value) {
+    return into(cachedClashStates).insertOnConflictUpdate(value);
+  }
+
+  Future<List<PendingSyncOperation>> readPendingMusicPreferences() {
+    return (select(pendingSyncOperations)
+          ..where((row) => row.resourceType.equals('music_preferences'))
+          ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]))
+        .get();
+  }
+
+  Future<void> queueMusicPreferences(String payloadJson) async {
+    for (final pending in await readPendingMusicPreferences()) {
+      await deletePendingOperation(pending.id);
+    }
+    await into(pendingSyncOperations).insert(
+      PendingSyncOperationsCompanion.insert(
+        resourceType: 'music_preferences',
+        operation: 'replace',
         payloadJson: payloadJson,
         createdAt: DateTime.now().toUtc(),
       ),

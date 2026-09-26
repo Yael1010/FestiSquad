@@ -1,7 +1,8 @@
 # Interfaces de FestiSquad
 
 Implementación Flutter de bienvenida (`/login`), inicio (`/dashboard`), unión
-al squad (`/join`), mapa (`/map`) y fondo común (`/finances`). La aplicación
+al squad (`/join`), mapa (`/map`), fondo común (`/finances`) y Clash Resolver
+(`/clash`). La aplicación
 utiliza Riverpod para estado e inyección de dependencias, Dio para la API y
 almacenamiento seguro para JWT.
 
@@ -20,6 +21,10 @@ almacenamiento seguro para JWT.
    reparto igual conserva todos los centavos y las deudas se simplifican.
 8. Sin conexión, el ticket queda visible como pendiente y se reintenta con un
    identificador idempotente para evitar duplicados.
+9. Clash Resolver carga empalmes de la agenda, combina las preferencias del
+   squad y explica por qué recomienda un escenario.
+10. Las preferencias manuales se guardan en Drift y se sincronizan al recuperar
+    la conexión. Spotify es opcional y nunca bloquea el flujo manual.
 
 `Explorar demostración` se conserva para revisar el maquetado sin backend. Las
 acciones persistentes muestran un error controlado si no existe una sesión o no
@@ -27,9 +32,9 @@ hay conectividad.
 
 ## Alcance pendiente
 
-Google/Spotify OAuth, cámara QR y comunicación P2P todavía no están conectados.
-El QR es ilustrativo. Las sugerencias musicales del dashboard mantienen datos
-de ejemplo hasta completar la fase del Clash Resolver.
+Google OAuth, cámara QR y comunicación P2P todavía no están conectados. El QR es
+ilustrativo. Spotify OAuth requiere credenciales de una aplicación de Spotify en
+el archivo `.env`; si no existen, la interfaz conserva el fallback manual.
 
 ## Verificación
 

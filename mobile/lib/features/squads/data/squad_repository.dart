@@ -80,7 +80,12 @@ class OfflineFirstSquadRepository implements SquadRepository {
   @override
   Future<OfflineData<List<Squad>>> loadMine() async {
     final userId = await _currentUserId();
-    final cachedRows = await _database.readSquads(userId);
+    List<CachedSquad> cachedRows = const [];
+    try {
+      cachedRows = await _database.readSquads(userId);
+    } catch (_) {
+      // Un caché local dañado o no disponible no debe bloquear la API.
+    }
     if (cachedRows.isNotEmpty) {
       unawaited(_refreshCache(userId));
       return OfflineData(
@@ -90,21 +95,21 @@ class OfflineFirstSquadRepository implements SquadRepository {
     }
 
     final remoteSquads = await _remote.listMine();
-    await _replaceCache(userId, remoteSquads);
+    await _tryReplaceCache(userId, remoteSquads);
     return OfflineData(remoteSquads, fromCache: false);
   }
 
   @override
   Future<Squad> create(String name) async {
     final squad = await _remote.create(name);
-    await _cacheOne(await _currentUserId(), squad);
+    await _tryCacheOne(await _currentUserId(), squad);
     return squad;
   }
 
   @override
   Future<Squad> join(String code) async {
     final squad = await _remote.join(code);
-    await _cacheOne(await _currentUserId(), squad);
+    await _tryCacheOne(await _currentUserId(), squad);
     return squad;
   }
 
@@ -119,7 +124,7 @@ class OfflineFirstSquadRepository implements SquadRepository {
   Future<void> _refreshCache(String userId) async {
     try {
       final remoteSquads = await _remote.listMine();
-      await _replaceCache(userId, remoteSquads);
+      await _tryReplaceCache(userId, remoteSquads);
     } catch (_) {
       // El caché vigente sigue siendo utilizable; se reintentará al recargar.
     }
@@ -133,10 +138,26 @@ class OfflineFirstSquadRepository implements SquadRepository {
     );
   }
 
+  Future<void> _tryReplaceCache(String userId, List<Squad> squads) async {
+    try {
+      await _replaceCache(userId, squads);
+    } catch (_) {
+      // La respuesta remota sigue siendo válida aunque falle IndexedDB/SQLite.
+    }
+  }
+
   Future<void> _cacheOne(String userId, Squad squad) {
     return _database.upsertSquad(
       _toCache(userId, squad, DateTime.now().toUtc()),
     );
+  }
+
+  Future<void> _tryCacheOne(String userId, Squad squad) async {
+    try {
+      await _cacheOne(userId, squad);
+    } catch (_) {
+      // Crear o unirse al squad no depende de que el caché local esté disponible.
+    }
   }
 
   CachedSquadsCompanion _toCache(

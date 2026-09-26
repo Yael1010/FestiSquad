@@ -17,6 +17,13 @@ def test_schedule_genres_are_normalized():
     assert "create table schedule_item_genres" in INITIAL_SCHEMA
 
 
+def test_phase6_artist_preferences_are_normalized():
+    assert "create table artists" in INITIAL_SCHEMA
+    assert "create table music_artist_preferences" in INITIAL_SCHEMA
+    assert "artist_id int not null" in INITIAL_SCHEMA
+    assert "source nvarchar(20) not null" in INITIAL_SCHEMA
+
+
 def test_schedule_does_not_duplicate_festival_dependency():
     schedule_block = INITIAL_SCHEMA.split("create table schedule_items", 1)[1]
     schedule_block = schedule_block.split("create table schedule_item_genres", 1)[0]

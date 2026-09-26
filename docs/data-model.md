@@ -13,6 +13,8 @@ erDiagram
     GENRES ||--o{ SCHEDULE_ITEM_GENRES : describes
     USERS ||--o{ MUSIC_PREFERENCES : selects
     GENRES ||--o{ MUSIC_PREFERENCES : categorizes
+    USERS ||--o{ MUSIC_ARTIST_PREFERENCES : selects
+    ARTISTS ||--o{ MUSIC_ARTIST_PREFERENCES : categorizes
     SQUADS ||--o{ LOCATIONS : tracks
     USERS ||--o{ LOCATIONS : reports
     SQUADS ||--o{ MEETING_POINTS : defines
@@ -33,6 +35,9 @@ erDiagram
   `schedule_item -> stage -> festival` duplicada en la misma fila.
 - Las preferencias musicales relacionan usuarios con géneros mediante claves, sin
   repetir el nombre textual del género.
+- Los artistas favoritos están normalizados en `artists` y se relacionan con
+  usuarios mediante `music_artist_preferences`, diferenciando origen manual y
+  Spotify.
 - Los balances financieros se calculan en la vista `fund_balances`; no se guarda
   un saldo derivado que pudiera quedar desactualizado.
 - Cada gasto conserva un `client_request_id` único para que los reintentos de la
@@ -49,5 +54,6 @@ participantes de gastos.
 
 Para una base creada durante la Fase 2 se deben ejecutar, en orden,
 `database/003_phase3_normalization_and_indexes.sql` y
-`database/004_phase5_expense_idempotency.sql`. Estos scripts normalizan los datos,
-agregan índices y habilitan la idempotencia de gastos sin recrear la base.
+`database/004_phase5_expense_idempotency.sql`. Después se aplica
+`database/005_phase6_music_preferences.sql` para artistas y preferencias. Estos
+scripts normalizan los datos y agregan índices sin recrear la base.

@@ -28,7 +28,7 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - [x] Fase 4: mapa resiliente implementado en Android y web; la medición física
   de batería queda como evidencia de aceptación de RNF en la fase 7.
 - [x] Fase 5: fondo común, tickets offline, balances exactos y deudas cruzadas.
-- [ ] Fase 6: Clash Resolver y Spotify.
+- [x] Fase 6: Clash Resolver, Spotify OAuth y fallback manual offline-first.
 - [ ] Fase 7: validación integral de requisitos no funcionales.
 
 ## APIs Iniciales
@@ -46,7 +46,9 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - `GET /api/v1/expenses/squad/{squad_id}/balances`
 - `GET /api/v1/clash-resolver/conflicts`
 - `POST /api/v1/clash-resolver/recommendation`
+- `POST /api/v1/spotify/authorize`
 - `POST /api/v1/spotify/connect`
+- `GET /api/v1/preferences/music`
 - `POST /api/v1/preferences/music/manual`
 
 ## Entregables
