@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/festi_widgets.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../auth/presentation/login_screen.dart';
 import '../application/squad_controller.dart';
 import 'squad_preview.dart';
 
@@ -115,24 +116,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       return;
     }
 
-    final logout = await showDialog<bool>(
+    final action = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Sesión activa'),
         content: Text('Usuario ${session.userId}'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cerrar'),
+          IconButton(
+            tooltip: 'Vincular Google',
+            onPressed: () => Navigator.pop(context, 'google'),
+            icon: const Text(
+              'G',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Vincular Spotify',
+            onPressed: () => Navigator.pop(context, 'spotify'),
+            icon: const Icon(Icons.graphic_eq),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(context, 'logout'),
             child: const Text('Cerrar sesión'),
           ),
         ],
       ),
     );
-    if (logout != true) return;
+    if (action == 'google' || action == 'spotify') {
+      if (mounted) showSocialAuthSheet(context, action!, link: true);
+      return;
+    }
+    if (action != 'logout') return;
     await ref.read(authControllerProvider.notifier).logout();
     if (mounted) context.go('/login');
   }
@@ -253,8 +267,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         final cards = [
                           FestiCard(
                               glow: true,
-                              onTap: () => showFeatureInfo(context, squad.name,
-                                  '${squad.members} integrantes en la vista de demostración. La presencia en línea requiere conectar el servicio de squads.'),
+                              onTap: () {
+                                if (squad.id == null) {
+                                  showFeatureInfo(
+                                    context,
+                                    squad.name,
+                                    'Crea o selecciona un squad para consultar sus integrantes.',
+                                  );
+                                  return;
+                                }
+                                context.push(
+                                  '/squads/${squad.id}?name=${Uri.encodeQueryComponent(squad.name)}&code=${squad.code ?? '------'}',
+                                );
+                              },
                               padding: const EdgeInsets.all(17),
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,

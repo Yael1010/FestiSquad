@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
@@ -27,6 +28,16 @@ abstract interface class SquadRepository {
   Future<Squad> create(String name);
 
   Future<Squad> join(String code);
+
+  Future<OfflineData<List<SquadMemberProfile>>> loadMembers(String squadId);
+
+  Future<void> updateRole(String squadId, String userId, String role);
+
+  Future<void> removeMember(String squadId, String userId);
+
+  Future<void> transferOwnership(String squadId, String userId);
+
+  Future<void> deleteSquad(String squadId);
 }
 
 abstract interface class SquadRemoteDataSource {
@@ -35,6 +46,16 @@ abstract interface class SquadRemoteDataSource {
   Future<Squad> create(String name);
 
   Future<Squad> join(String code);
+
+  Future<List<SquadMemberProfile>> listMembers(String squadId);
+
+  Future<void> updateRole(String squadId, String userId, String role);
+
+  Future<void> removeMember(String squadId, String userId);
+
+  Future<void> transferOwnership(String squadId, String userId);
+
+  Future<void> deleteSquad(String squadId);
 }
 
 class ApiSquadRemoteDataSource implements SquadRemoteDataSource {
@@ -63,6 +84,39 @@ class ApiSquadRemoteDataSource implements SquadRemoteDataSource {
       data: {'code': code.trim().toUpperCase()},
     );
     return _parse(response.data);
+  }
+
+  @override
+  Future<List<SquadMemberProfile>> listMembers(String squadId) async {
+    final response = await _api.get('/squads/$squadId/members');
+    return (response.data as List)
+        .map((item) => SquadMemberProfile.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> updateRole(String squadId, String userId, String role) async {
+    await _api.patch(
+      '/squads/$squadId/members/$userId',
+      data: {'role': role},
+    );
+  }
+
+  @override
+  Future<void> removeMember(String squadId, String userId) async {
+    await _api.delete('/squads/$squadId/members/$userId');
+  }
+
+  @override
+  Future<void> transferOwnership(String squadId, String userId) async {
+    await _api.post('/squads/$squadId/owner/$userId');
+  }
+
+  @override
+  Future<void> deleteSquad(String squadId) async {
+    await _api.delete('/squads/$squadId');
   }
 
   Squad _parse(dynamic data) {
@@ -113,6 +167,58 @@ class OfflineFirstSquadRepository implements SquadRepository {
     return squad;
   }
 
+  @override
+  Future<OfflineData<List<SquadMemberProfile>>> loadMembers(
+      String squadId) async {
+    final userId = await _currentUserId();
+    List<CachedSquadMember> cached = const [];
+    try {
+      cached = await _database.readSquadMembers(userId, squadId);
+    } catch (_) {
+      // El detalle remoto sigue disponible si el caché local falla.
+    }
+    if (cached.isNotEmpty) {
+      unawaited(_refreshMembersSilently(userId, squadId));
+      return OfflineData(
+        cached.map(_memberFromCache).toList(growable: false),
+        fromCache: true,
+      );
+    }
+    final members = await _remote.listMembers(squadId);
+    await _tryCacheMembers(userId, squadId, members);
+    return OfflineData(members, fromCache: false);
+  }
+
+  @override
+  Future<void> updateRole(String squadId, String userId, String role) async {
+    await _remote.updateRole(squadId, userId, role);
+    await _refreshMembers(await _currentUserId(), squadId);
+  }
+
+  @override
+  Future<void> removeMember(String squadId, String userId) async {
+    await _remote.removeMember(squadId, userId);
+    final sessionUserId = await _currentUserId();
+    if (sessionUserId == userId) {
+      await _database.deleteSquadCache(sessionUserId, squadId);
+    } else {
+      await _refreshMembers(sessionUserId, squadId);
+    }
+  }
+
+  @override
+  Future<void> transferOwnership(String squadId, String userId) async {
+    await _remote.transferOwnership(squadId, userId);
+    await _refreshMembers(await _currentUserId(), squadId);
+  }
+
+  @override
+  Future<void> deleteSquad(String squadId) async {
+    await _remote.deleteSquad(squadId);
+    final userId = await _currentUserId();
+    await _database.deleteSquadCache(userId, squadId);
+  }
+
   Future<String> _currentUserId() async {
     final session = await _tokens.readSession();
     if (session == null) {
@@ -127,6 +233,50 @@ class OfflineFirstSquadRepository implements SquadRepository {
       await _tryReplaceCache(userId, remoteSquads);
     } catch (_) {
       // El caché vigente sigue siendo utilizable; se reintentará al recargar.
+    }
+  }
+
+  Future<void> _refreshMembers(String userId, String squadId) async {
+    final members = await _remote.listMembers(squadId);
+    await _tryCacheMembers(userId, squadId, members);
+  }
+
+  Future<void> _refreshMembersSilently(String userId, String squadId) async {
+    try {
+      await _refreshMembers(userId, squadId);
+    } catch (_) {
+      // El detalle almacenado sigue disponible cuando falla la red.
+    }
+  }
+
+  Future<void> _tryCacheMembers(
+    String userId,
+    String squadId,
+    List<SquadMemberProfile> members,
+  ) async {
+    try {
+      final cachedAt = DateTime.now().toUtc();
+      await _database.replaceSquadMembers(
+        userId,
+        squadId,
+        members.map(
+          (member) => CachedSquadMembersCompanion.insert(
+            sessionUserId: userId,
+            squadId: squadId,
+            userId: member.userId,
+            name: member.name,
+            avatarUrl: Value(member.avatarUrl),
+            role: member.role,
+            joinedAt: member.joinedAt.toUtc(),
+            lastLocationAt: Value(member.lastLocationAt?.toUtc()),
+            isOwner: member.isOwner,
+            isCurrentUser: member.isCurrentUser,
+            cachedAt: cachedAt,
+          ),
+        ),
+      );
+    } catch (_) {
+      // Los perfiles remotos siguen siendo válidos aunque falle el caché.
     }
   }
 
@@ -187,6 +337,19 @@ class OfflineFirstSquadRepository implements SquadRepository {
           .cast<String>()
           .toList(growable: false),
       currentUserRole: row.currentUserRole,
+    );
+  }
+
+  SquadMemberProfile _memberFromCache(CachedSquadMember row) {
+    return SquadMemberProfile(
+      userId: row.userId,
+      name: row.name,
+      avatarUrl: row.avatarUrl,
+      role: row.role,
+      joinedAt: row.joinedAt.toLocal(),
+      lastLocationAt: row.lastLocationAt?.toLocal(),
+      isOwner: row.isOwner,
+      isCurrentUser: row.isCurrentUser,
     );
   }
 }

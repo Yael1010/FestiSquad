@@ -40,6 +40,7 @@ database/002_fund_balances.sql
 database/003_phase3_normalization_and_indexes.sql
 database/004_phase5_expense_idempotency.sql
 database/005_phase6_music_preferences.sql
+database/007_phase8_social_auth.sql
 ```
 
 Si la base fue creada durante una fase anterior, ejecutar las migraciones
@@ -49,6 +50,7 @@ idempotentes que todavía no se hayan aplicado:
 database/003_phase3_normalization_and_indexes.sql
 database/004_phase5_expense_idempotency.sql
 database/005_phase6_music_preferences.sql
+database/007_phase8_social_auth.sql
 ```
 
 ## Inicio rápido Flutter
@@ -68,6 +70,12 @@ flutter build apk --dart-define=API_BASE_URL=https://api.example.com/api/v1
 Flutter conserva localmente los squads con Drift/SQLite. Los tokens JWT se
 mantienen separados en el almacenamiento seguro del dispositivo.
 
+La tarjeta del squad activo abre su lista de integrantes. Los administradores
+pueden gestionar roles y expulsiones; el propietario también puede transferir
+la propiedad o eliminar el squad. Los perfiles se conservan en caché para su
+consulta sin red. Consulta [Fase 9](docs/phase-9-squad-members.md) para las
+reglas de autorización.
+
 El fondo común conserva tickets y balances en caché, acepta divisiones iguales
 entre participantes seleccionados y reintenta los tickets creados sin conexión.
 Los importes viajan como cadenas decimales, se procesan con `Decimal` en FastAPI
@@ -79,6 +87,14 @@ registra como callback `http://127.0.0.1:8000/api/v1/spotify/callback` y complet
 `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` y `SPOTIFY_REDIRECT_URI` en
 `backend/.env`. Los tokens de Spotify se usan para importar gustos y no se
 persisten.
+
+El acceso social utiliza callbacks independientes. Registra en Google Cloud
+`http://127.0.0.1:8000/api/v1/auth/social/google/callback` y agrega en Spotify
+`http://127.0.0.1:8000/api/v1/auth/social/spotify/callback`, conservando también
+el callback musical anterior. Configura las variables `GOOGLE_*` y
+`SPOTIFY_LOGIN_REDIRECT_URI` descritas en `backend/.env.example`. Consulta
+[Fase 8](docs/phase-8-social-auth.md) para el procedimiento y el modelo de
+vinculación.
 
 El mapa funciona en Android con permiso de ubicación bajo demanda. Para usar un
 festival real, registra su geometría en SQL Server y agrega
@@ -96,6 +112,9 @@ python scripts/benchmark_api.py --url http://127.0.0.1:8000/health/db
 cd ../mobile
 flutter analyze
 flutter test
+
+cd ..
+powershell -ExecutionPolicy Bypass -File tools/check_secrets.ps1
 ```
 
 La configuración de proxy TLS está en `deploy/nginx/festisquad.conf`. El
@@ -104,7 +123,7 @@ en [Fase 7](docs/phase-7-quality-evidence.md).
 
 ## Alcance MVP
 
-- Registro, login y sesión JWT.
+- Registro, login tradicional y acceso social con Google o Spotify.
 - Creación y unión a squads mediante código privado.
 - Mapa offline-first con última ubicación conocida y throttling GPS.
 - Fondo común con cálculo exacto de deudas cruzadas.

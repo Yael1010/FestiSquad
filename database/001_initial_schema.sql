@@ -155,6 +155,40 @@ CREATE TABLE music_artist_preferences (
     CONSTRAINT fk_music_artist_preferences_artist FOREIGN KEY (artist_id) REFERENCES artists(id)
 );
 
+CREATE TABLE external_accounts (
+    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
+    user_id UNIQUEIDENTIFIER NOT NULL,
+    provider NVARCHAR(20) NOT NULL,
+    provider_user_id NVARCHAR(255) NOT NULL,
+    provider_email NVARCHAR(255) NULL,
+    avatar_url NVARCHAR(1000) NULL,
+    created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT pk_external_accounts PRIMARY KEY (id),
+    CONSTRAINT uq_external_accounts_provider_user UNIQUE (provider, provider_user_id),
+    CONSTRAINT uq_external_accounts_user_provider UNIQUE (user_id, provider),
+    CONSTRAINT ck_external_accounts_provider CHECK (provider IN ('google', 'spotify')),
+    CONSTRAINT fk_external_accounts_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE social_auth_flows (
+    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
+    provider NVARCHAR(20) NOT NULL,
+    flow_token_hash NVARCHAR(64) NOT NULL,
+    status NVARCHAR(20) NOT NULL DEFAULT 'pending',
+    requested_user_id UNIQUEIDENTIFIER NULL,
+    user_id UNIQUEIDENTIFIER NULL,
+    error_code NVARCHAR(80) NULL,
+    expires_at DATETIME2 NOT NULL,
+    consumed_at DATETIME2 NULL,
+    created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT pk_social_auth_flows PRIMARY KEY (id),
+    CONSTRAINT uq_social_auth_flows_token UNIQUE (flow_token_hash),
+    CONSTRAINT ck_social_auth_flows_provider CHECK (provider IN ('google', 'spotify')),
+    CONSTRAINT ck_social_auth_flows_status CHECK (status IN ('pending', 'completed', 'failed', 'consumed')),
+    CONSTRAINT fk_social_auth_flows_requested_user FOREIGN KEY (requested_user_id) REFERENCES users(id),
+    CONSTRAINT fk_social_auth_flows_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 CREATE INDEX ix_locations_squad_user_recorded ON locations(squad_id, user_id, recorded_at DESC);
 CREATE INDEX ix_expenses_squad_created ON expenses(squad_id, created_at DESC);
 CREATE INDEX ix_schedule_items_stage_time ON schedule_items(stage_id, starts_at, ends_at);
@@ -164,3 +198,5 @@ CREATE INDEX ix_meeting_points_squad_created ON meeting_points(squad_id, created
 CREATE INDEX ix_expense_participants_user ON expense_participants(user_id, expense_id);
 CREATE INDEX ix_music_preferences_genre ON music_preferences(genre_id, user_id);
 CREATE INDEX ix_music_artist_preferences_artist ON music_artist_preferences(artist_id, user_id);
+CREATE INDEX ix_external_accounts_user ON external_accounts(user_id);
+CREATE INDEX ix_social_auth_flows_expires ON social_auth_flows(expires_at);

@@ -19,6 +19,12 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 5. Fondo común con deudas cruzadas y precisión decimal.
 6. Clash Resolver con Spotify OAuth 2.0 y fallback manual.
 7. Seguridad, rendimiento, tolerancia a fallos, batería y evidencias de calidad.
+8. Autenticación social y vinculación de cuentas con Google y Spotify.
+9. Gestión completa de miembros, perfiles y roles de squads.
+10. Catálogo, administración y mapas de festivales reales.
+11. Experiencia completa del Fondo Común y liquidación de pagos.
+12. Clash Resolver con agendas reales, votación y decisión grupal.
+13. Rediseño integral, accesibilidad, pruebas end-to-end y entrega.
 
 ## Estado de avance
 
@@ -32,15 +38,33 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - [x] Fase 7: controles de seguridad, rendimiento, tolerancia a fallos y batería
   implementados con pruebas automatizadas. La medición física de batería y el
   benchmark contra el despliegue quedan como evidencias manuales de aceptación.
+- [x] Fase 8: Google y Spotify como proveedores de identidad, vinculación desde
+  una sesión existente y tickets de intercambio de un solo uso, validados con
+  las credenciales locales del ambiente de desarrollo.
+- [x] Fase 9: gestión completa de miembros, perfiles y roles de squads, con
+  autorización en backend y caché offline-first en Flutter.
+- [ ] Fase 10: catálogo y mapas de festivales reales.
+- [ ] Fase 11: experiencia completa del Fondo Común.
+- [ ] Fase 12: Clash Resolver conectado a agendas reales.
+- [ ] Fase 13: mejora integral de interfaces y estabilización de entrega.
 
 ## APIs Iniciales
 
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
 - `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/social/{provider}/start`
+- `POST /api/v1/auth/social/{provider}/link`
+- `GET /api/v1/auth/social/{provider}/callback`
+- `POST /api/v1/auth/social/session`
 - `POST /api/v1/squads`
 - `POST /api/v1/squads/join`
 - `GET /api/v1/squads/{squad_id}`
+- `GET /api/v1/squads/{squad_id}/members`
+- `PATCH /api/v1/squads/{squad_id}/members/{user_id}`
+- `DELETE /api/v1/squads/{squad_id}/members/{user_id}`
+- `POST /api/v1/squads/{squad_id}/owner/{user_id}`
+- `DELETE /api/v1/squads/{squad_id}`
 - `POST /api/v1/locations`
 - `GET /api/v1/locations/squad/{squad_id}/latest`
 - `POST /api/v1/expenses`

@@ -172,6 +172,24 @@ class _FakeSquadRepository implements SquadRepository {
   Future<Squad> join(String code) async => squad;
 
   @override
+  Future<void> deleteSquad(String squadId) async {}
+
+  @override
+  Future<OfflineData<List<SquadMemberProfile>>> loadMembers(
+    String squadId,
+  ) async =>
+      const OfflineData([], fromCache: false);
+
+  @override
+  Future<void> removeMember(String squadId, String userId) async {}
+
+  @override
+  Future<void> transferOwnership(String squadId, String userId) async {}
+
+  @override
+  Future<void> updateRole(String squadId, String userId, String role) async {}
+
+  @override
   Future<OfflineData<List<Squad>>> loadMine() async =>
       const OfflineData([squad], fromCache: false);
 }

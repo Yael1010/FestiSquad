@@ -96,6 +96,11 @@ class ApiClient {
 
   Future<Response<dynamic>> post(String path, {Object? data}) =>
       _dio.post(path, data: data);
+
+  Future<Response<dynamic>> patch(String path, {Object? data}) =>
+      _dio.patch(path, data: data);
+
+  Future<Response<dynamic>> delete(String path) => _dio.delete(path);
 }
 
 String validateApiBaseUrl(String baseUrl, {required bool isRelease}) {

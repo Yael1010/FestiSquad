@@ -130,6 +130,23 @@ class CachedClashStates extends Table {
   Set<Column<Object>> get primaryKey => {sessionUserId, squadId};
 }
 
+class CachedSquadMembers extends Table {
+  TextColumn get sessionUserId => text()();
+  TextColumn get squadId => text()();
+  TextColumn get userId => text()();
+  TextColumn get name => text().withLength(min: 1, max: 120)();
+  TextColumn get avatarUrl => text().nullable()();
+  TextColumn get role => text()();
+  DateTimeColumn get joinedAt => dateTime()();
+  DateTimeColumn get lastLocationAt => dateTime().nullable()();
+  BoolColumn get isOwner => boolean()();
+  BoolColumn get isCurrentUser => boolean()();
+  DateTimeColumn get cachedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sessionUserId, squadId, userId};
+}
+
 @DriftDatabase(
   tables: [
     CachedSquads,
@@ -142,6 +159,7 @@ class CachedClashStates extends Table {
     CachedBalances,
     CachedDebtTransfers,
     CachedClashStates,
+    CachedSquadMembers,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -158,7 +176,7 @@ class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -182,6 +200,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await migrator.createTable(cachedClashStates);
+          }
+          if (from < 5) {
+            await migrator.createTable(cachedSquadMembers);
           }
         },
       );
@@ -493,6 +514,54 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> upsertClashState(CachedClashStatesCompanion value) {
     return into(cachedClashStates).insertOnConflictUpdate(value);
+  }
+
+  Future<List<CachedSquadMember>> readSquadMembers(
+    String sessionUserId,
+    String squadId,
+  ) {
+    return (select(cachedSquadMembers)
+          ..where((row) =>
+              row.sessionUserId.equals(sessionUserId) &
+              row.squadId.equals(squadId))
+          ..orderBy([
+            (row) => OrderingTerm.desc(row.isOwner),
+            (row) => OrderingTerm.asc(row.joinedAt),
+          ]))
+        .get();
+  }
+
+  Future<void> replaceSquadMembers(
+    String sessionUserId,
+    String squadId,
+    Iterable<CachedSquadMembersCompanion> values,
+  ) {
+    return transaction(() async {
+      await (delete(cachedSquadMembers)
+            ..where((row) =>
+                row.sessionUserId.equals(sessionUserId) &
+                row.squadId.equals(squadId)))
+          .go();
+      final rows = values.toList(growable: false);
+      if (rows.isNotEmpty) {
+        await batch((batch) => batch.insertAll(cachedSquadMembers, rows));
+      }
+    });
+  }
+
+  Future<void> deleteSquadCache(String sessionUserId, String squadId) {
+    return transaction(() async {
+      await (delete(cachedSquadMembers)
+            ..where((row) =>
+                row.sessionUserId.equals(sessionUserId) &
+                row.squadId.equals(squadId)))
+          .go();
+      await (delete(cachedSquads)
+            ..where((row) =>
+                row.sessionUserId.equals(sessionUserId) &
+                row.id.equals(squadId)))
+          .go();
+    });
   }
 
   Future<List<PendingSyncOperation>> readPendingMusicPreferences() {

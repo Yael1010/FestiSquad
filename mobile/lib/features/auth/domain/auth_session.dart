@@ -17,3 +17,45 @@ class AuthSession {
     );
   }
 }
+
+class SocialAuthAttempt {
+  const SocialAuthAttempt({
+    required this.provider,
+    required this.authorizationUrl,
+    required this.flowToken,
+  });
+
+  final String provider;
+  final String authorizationUrl;
+  final String flowToken;
+
+  factory SocialAuthAttempt.fromJson(Map<String, dynamic> json) {
+    return SocialAuthAttempt(
+      provider: json['provider'] as String,
+      authorizationUrl: json['authorization_url'] as String,
+      flowToken: json['flow_token'] as String,
+    );
+  }
+}
+
+enum SocialAuthStatus { pending, completed, failed }
+
+class SocialAuthResult {
+  const SocialAuthResult({required this.status, this.session, this.error});
+
+  final SocialAuthStatus status;
+  final AuthSession? session;
+  final String? error;
+
+  factory SocialAuthResult.fromJson(Map<String, dynamic> json) {
+    final status = SocialAuthStatus.values.byName(json['status'] as String);
+    final sessionData = json['session'];
+    return SocialAuthResult(
+      status: status,
+      session: sessionData is Map
+          ? AuthSession.fromJson(Map<String, dynamic>.from(sessionData))
+          : null,
+      error: json['error'] as String?,
+    );
+  }
+}

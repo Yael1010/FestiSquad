@@ -87,6 +87,35 @@ void main() {
     expect(loaded.fromCache, isFalse);
     expect(created.id, _squad.id);
   });
+
+  test('squad members are cached and remain available offline', () async {
+    final joinedAt = DateTime.utc(2026, 9, 20, 18);
+    remote.members = [
+      SquadMemberProfile(
+        userId: 'user-1',
+        name: 'Yael',
+        role: 'admin',
+        joinedAt: joinedAt,
+        lastLocationAt: DateTime.utc(2026, 9, 27, 20),
+        isOwner: true,
+        isCurrentUser: true,
+      ),
+    ];
+
+    final online = await repository.loadMembers(_squad.id);
+    remote.failure = StateError('offline');
+    final offline = await repository.loadMembers(_squad.id);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(online.fromCache, isFalse);
+    expect(offline.fromCache, isTrue);
+    expect(offline.value.single.name, 'Yael');
+    expect(offline.value.single.isOwner, isTrue);
+    expect(
+      await database.readSquadMembers('user-1', _squad.id),
+      hasLength(1),
+    );
+  });
 }
 
 const _squad = Squad(
@@ -100,7 +129,13 @@ const _squad = Squad(
 
 class _FakeRemote implements SquadRemoteDataSource {
   List<Squad> squads = const [];
+  List<SquadMemberProfile> members = const [];
   Object? failure;
+
+  @override
+  Future<void> deleteSquad(String squadId) async {
+    if (failure case final error?) throw error;
+  }
 
   @override
   Future<List<Squad>> listMine() async {
@@ -113,6 +148,27 @@ class _FakeRemote implements SquadRemoteDataSource {
 
   @override
   Future<Squad> join(String code) async => _squad;
+
+  @override
+  Future<List<SquadMemberProfile>> listMembers(String squadId) async {
+    if (failure case final error?) throw error;
+    return members;
+  }
+
+  @override
+  Future<void> removeMember(String squadId, String userId) async {
+    if (failure case final error?) throw error;
+  }
+
+  @override
+  Future<void> transferOwnership(String squadId, String userId) async {
+    if (failure case final error?) throw error;
+  }
+
+  @override
+  Future<void> updateRole(String squadId, String userId, String role) async {
+    if (failure case final error?) throw error;
+  }
 }
 
 class _FailingAppDatabase extends AppDatabase {

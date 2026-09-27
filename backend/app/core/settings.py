@@ -15,6 +15,14 @@ class Settings(BaseSettings):
     spotify_client_id: str = ""
     spotify_client_secret: str = ""
     spotify_redirect_uri: str = "http://127.0.0.1:8000/api/v1/spotify/callback"
+    spotify_login_redirect_uri: str = (
+        "http://127.0.0.1:8000/api/v1/auth/social/spotify/callback"
+    )
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = (
+        "http://127.0.0.1:8000/api/v1/auth/social/google/callback"
+    )
     cors_origins: list[str] = []
     performance_target_ms: int = Field(default=1500, ge=100, le=30000)
     max_request_body_bytes: int = Field(
@@ -35,6 +43,10 @@ class Settings(BaseSettings):
             raise ValueError(
                 "SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET deben configurarse juntos"
             )
+        if bool(self.google_client_id) != bool(self.google_client_secret):
+            raise ValueError(
+                "GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET deben configurarse juntos"
+            )
         if self.environment in ("staging", "production"):
             if self.jwt_secret_key == "change-me-in-production" or len(self.jwt_secret_key) < 32:
                 raise ValueError("JWT_SECRET_KEY debe tener al menos 32 caracteres seguros")
@@ -42,6 +54,14 @@ class Settings(BaseSettings):
                 raise ValueError("CORS_ORIGINS es obligatorio fuera de desarrollo")
             if self.spotify_client_id and not self.spotify_redirect_uri.startswith("https://"):
                 raise ValueError("SPOTIFY_REDIRECT_URI debe usar HTTPS fuera de desarrollo")
+            if self.spotify_client_id and not self.spotify_login_redirect_uri.startswith(
+                "https://"
+            ):
+                raise ValueError(
+                    "SPOTIFY_LOGIN_REDIRECT_URI debe usar HTTPS fuera de desarrollo"
+                )
+            if self.google_client_id and not self.google_redirect_uri.startswith("https://"):
+                raise ValueError("GOOGLE_REDIRECT_URI debe usar HTTPS fuera de desarrollo")
         return self
 
 

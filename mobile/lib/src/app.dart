@@ -11,6 +11,7 @@ import '../features/finances/presentation/finances_screen.dart';
 import '../features/map/presentation/map_screen.dart';
 import '../features/squads/presentation/dashboard_screen.dart';
 import '../features/squads/presentation/join_squad_screen.dart';
+import '../features/squads/presentation/squad_members_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier(0);
@@ -33,6 +34,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (context, state) => const DashboardScreen()),
       GoRoute(
           path: '/join', builder: (context, state) => const JoinSquadScreen()),
+      GoRoute(
+        path: '/squads/:squadId',
+        builder: (context, state) => SquadMembersScreen(
+          squadId: state.pathParameters['squadId']!,
+          name: state.uri.queryParameters['name'] ?? 'Mi squad',
+          code: state.uri.queryParameters['code'] ?? '------',
+        ),
+      ),
       GoRoute(path: '/map', builder: (context, state) => const MapScreen()),
       GoRoute(
           path: '/finances',

@@ -5,6 +5,8 @@
 ```mermaid
 erDiagram
     USERS ||--o{ SQUADS : owns
+    USERS ||--o{ EXTERNAL_ACCOUNTS : links
+    USERS ||--o{ SOCIAL_AUTH_FLOWS : completes
     USERS ||--o{ SQUAD_MEMBERS : joins
     SQUADS ||--o{ SQUAD_MEMBERS : contains
     FESTIVALS ||--o{ STAGES : has
@@ -42,6 +44,10 @@ erDiagram
   un saldo derivado que pudiera quedar desactualizado.
 - Cada gasto conserva un `client_request_id` único para que los reintentos de la
   cola offline sean idempotentes y no creen tickets duplicados.
+- `external_accounts` separa la identidad de Google o Spotify del usuario local;
+  la pareja proveedor/identificador externo y usuario/proveedor son únicas.
+- `social_auth_flows` conserva solamente el hash del ticket temporal. Sus filas
+  expiran y no almacenan credenciales ni tokens emitidos por terceros.
 - Todos los importes usan `DECIMAL(18,2)`. `FLOAT` y `REAL` están prohibidos para
   dinero.
 
@@ -56,4 +62,6 @@ Para una base creada durante la Fase 2 se deben ejecutar, en orden,
 `database/003_phase3_normalization_and_indexes.sql` y
 `database/004_phase5_expense_idempotency.sql`. Después se aplica
 `database/005_phase6_music_preferences.sql` para artistas y preferencias. Estos
-scripts normalizan los datos y agregan índices sin recrear la base.
+scripts normalizan los datos y agregan índices sin recrear la base. Finalmente,
+`database/007_phase8_social_auth.sql` agrega identidades externas y flujos OAuth
+de un solo uso.

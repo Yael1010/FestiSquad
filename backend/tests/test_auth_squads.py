@@ -10,11 +10,16 @@ from app.domains.auth.db_models import User
 from app.domains.auth.schemas import LoginRequest
 from app.domains.auth.service import AuthService, password_context
 from app.domains.squads.db_models import Squad, SquadMember
-from app.domains.squads.schemas import SquadCreateRequest, SquadJoinRequest
+from app.domains.squads.schemas import (
+    SquadCreateRequest,
+    SquadJoinRequest,
+    SquadRoleUpdateRequest,
+)
 from app.domains.squads.service import SquadService
 
 USER_ID = UUID("00000000-0000-0000-0000-000000000001")
 SQUAD_ID = UUID("00000000-0000-0000-0000-000000000002")
+MEMBER_ID = UUID("00000000-0000-0000-0000-000000000003")
 
 
 def make_user() -> User:
@@ -132,3 +137,106 @@ def test_list_only_returns_current_user_squads():
 
     assert [item.id for item in result] == [str(SQUAD_ID)]
     assert result[0].member_ids == [str(USER_ID)]
+
+
+def _membership_lookup(squad: Squad, memberships: dict[UUID, SquadMember]):
+    def lookup(model, key):
+        if model is Squad:
+            return squad
+        if model is SquadMember:
+            return memberships.get(key[1])
+        return None
+
+    return lookup
+
+
+def test_regular_member_cannot_change_roles():
+    db = MagicMock(spec=Session)
+    actor = make_user()
+    squad = Squad(
+        id=SQUAD_ID,
+        name="Headliners",
+        code="A1B2C3",
+        owner_user_id=MEMBER_ID,
+    )
+    memberships = {
+        USER_ID: SquadMember(squad_id=SQUAD_ID, user_id=USER_ID, role="member"),
+        MEMBER_ID: SquadMember(squad_id=SQUAD_ID, user_id=MEMBER_ID, role="admin"),
+    }
+    db.get.side_effect = _membership_lookup(squad, memberships)
+
+    with pytest.raises(PermissionError):
+        SquadService().update_role(db, SQUAD_ID, MEMBER_ID, "member", actor)
+
+    db.commit.assert_not_called()
+
+
+def test_owner_role_cannot_be_demoted():
+    db = MagicMock(spec=Session)
+    owner = make_user()
+    squad = Squad(
+        id=SQUAD_ID,
+        name="Headliners",
+        code="A1B2C3",
+        owner_user_id=USER_ID,
+    )
+    memberships = {
+        USER_ID: SquadMember(squad_id=SQUAD_ID, user_id=USER_ID, role="admin"),
+    }
+    db.get.side_effect = _membership_lookup(squad, memberships)
+
+    with pytest.raises(ValueError, match="owner_role_locked"):
+        SquadService().update_role(db, SQUAD_ID, USER_ID, "member", owner)
+
+    db.commit.assert_not_called()
+
+
+def test_owner_can_transfer_ownership_to_another_member():
+    db = MagicMock(spec=Session)
+    owner = make_user()
+    squad = Squad(
+        id=SQUAD_ID,
+        name="Headliners",
+        code="A1B2C3",
+        owner_user_id=USER_ID,
+    )
+    old_owner = SquadMember(squad_id=SQUAD_ID, user_id=USER_ID, role="admin")
+    new_owner = SquadMember(squad_id=SQUAD_ID, user_id=MEMBER_ID, role="member")
+    db.get.side_effect = _membership_lookup(
+        squad,
+        {USER_ID: old_owner, MEMBER_ID: new_owner},
+    )
+
+    SquadService().transfer_ownership(db, SQUAD_ID, MEMBER_ID, owner)
+
+    assert squad.owner_user_id == MEMBER_ID
+    assert new_owner.role == "admin"
+    assert old_owner.role == "admin"
+    db.commit.assert_called_once()
+
+
+def test_non_owner_member_can_leave_squad():
+    db = MagicMock(spec=Session)
+    member = make_user()
+    squad = Squad(
+        id=SQUAD_ID,
+        name="Headliners",
+        code="A1B2C3",
+        owner_user_id=MEMBER_ID,
+    )
+    membership = SquadMember(
+        squad_id=SQUAD_ID,
+        user_id=USER_ID,
+        role="member",
+    )
+    db.get.side_effect = _membership_lookup(squad, {USER_ID: membership})
+
+    SquadService().remove_member(db, SQUAD_ID, USER_ID, member)
+
+    db.delete.assert_called_once_with(membership)
+    db.commit.assert_called_once()
+
+
+def test_role_update_rejects_unknown_roles():
+    with pytest.raises(ValidationError):
+        SquadRoleUpdateRequest(role="owner")

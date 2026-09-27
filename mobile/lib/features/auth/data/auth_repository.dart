@@ -23,6 +23,13 @@ abstract interface class AuthRepository {
     required String password,
   });
 
+  Future<SocialAuthAttempt> startSocial(
+    String provider, {
+    bool link = false,
+  });
+
+  Future<SocialAuthResult> finishSocial(String flowToken);
+
   Future<AuthSession?> restore();
 
   Future<void> logout();
@@ -60,6 +67,31 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<SocialAuthAttempt> startSocial(
+    String provider, {
+    bool link = false,
+  }) async {
+    final action = link ? 'link' : 'start';
+    final response = await _api.post('/auth/social/$provider/$action');
+    return SocialAuthAttempt.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
+
+  @override
+  Future<SocialAuthResult> finishSocial(String flowToken) async {
+    final response = await _api.post(
+      '/auth/social/session',
+      data: {'flow_token': flowToken},
+    );
+    final result = SocialAuthResult.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+    if (result.session != null) await _persist(result.session!);
+    return result;
+  }
+
+  @override
   Future<AuthSession?> restore() async {
     final stored = await _storage.readSession();
     if (stored == null) return null;
@@ -77,13 +109,15 @@ class ApiAuthRepository implements AuthRepository {
     final session = AuthSession.fromJson(
       Map<String, dynamic>.from(data as Map),
     );
-    await _storage.writeSession(
-      StoredSession(
-        userId: session.userId,
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-      ),
-    );
+    await _persist(session);
     return session;
   }
+
+  Future<void> _persist(AuthSession session) => _storage.writeSession(
+        StoredSession(
+          userId: session.userId,
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken,
+        ),
+      );
 }

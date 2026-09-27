@@ -2,7 +2,8 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.venv/
+.venv*/
+venv*/
 
 # Flutter/Dart
 .dart_tool/
@@ -14,7 +15,23 @@ battery-phase7.txt
 
 # Environment
 .env
+.env.*
+!.env.example
+!.env.*.example
 *.local
+secrets/
+credentials/
+client_secret*.json
+service-account*.json
+google-services.json
+GoogleService-Info.plist
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+key.properties
 
 # IDE
 .idea/

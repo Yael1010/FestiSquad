@@ -87,6 +87,9 @@ class AuthService:
             ),
         )
 
+    def issue_session(self, user_id: UUID | str) -> AuthResponse:
+        return self._issue_session(str(user_id))
+
     def _create_token(self, user_id: str, token_type: str, minutes: int) -> str:
         now = datetime.now(timezone.utc)
         payload = {

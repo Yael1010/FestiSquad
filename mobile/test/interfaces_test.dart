@@ -150,6 +150,24 @@ class _FakeAuthRepository implements AuthRepository {
   Future<void> logout() async {}
 
   @override
+  Future<SocialAuthAttempt> startSocial(
+    String provider, {
+    bool link = false,
+  }) async =>
+      SocialAuthAttempt(
+        provider: provider,
+        authorizationUrl: 'https://example.com/oauth',
+        flowToken: List.filled(48, 'a').join(),
+      );
+
+  @override
+  Future<SocialAuthResult> finishSocial(String flowToken) async =>
+      const SocialAuthResult(
+        status: SocialAuthStatus.completed,
+        session: session,
+      );
+
+  @override
   Future<AuthSession> register({
     required String name,
     required String email,
@@ -162,6 +180,24 @@ class _FakeAuthRepository implements AuthRepository {
 }
 
 class _FakeSquadRepository implements SquadRepository {
+  @override
+  Future<void> deleteSquad(String squadId) async {}
+
+  @override
+  Future<OfflineData<List<SquadMemberProfile>>> loadMembers(
+    String squadId,
+  ) async =>
+      const OfflineData([], fromCache: false);
+
+  @override
+  Future<void> removeMember(String squadId, String userId) async {}
+
+  @override
+  Future<void> transferOwnership(String squadId, String userId) async {}
+
+  @override
+  Future<void> updateRole(String squadId, String userId, String role) async {}
+
   @override
   Future<OfflineData<List<Squad>>> loadMine() async =>
       const OfflineData([], fromCache: false);

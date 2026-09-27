@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/festi_widgets.dart';
 import '../application/auth_controller.dart';
+import '../domain/auth_session.dart';
+
+void showSocialAuthSheet(
+  BuildContext context,
+  String provider, {
+  bool link = false,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    isDismissible: false,
+    builder: (_) => SocialAuthSheet(provider: provider, link: link),
+  );
+}
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -14,6 +30,10 @@ class LoginScreen extends StatelessWidget {
         isScrollControlled: true,
         useSafeArea: true,
         builder: (_) => _AccountSheet(register: register));
+  }
+
+  void _social(BuildContext context, String provider) {
+    showSocialAuthSheet(context, provider);
   }
 
   @override
@@ -131,10 +151,8 @@ class LoginScreen extends StatelessWidget {
                                                         const Color(0xFF102141),
                                                     minimumSize:
                                                         const Size(0, 56)),
-                                                onPressed: () => showFeatureInfo(
-                                                    context,
-                                                    'Google',
-                                                    'El acceso con Google estará disponible cuando se configure OAuth. Puedes explorar la vista de demostración.'),
+                                                onPressed: () =>
+                                                    _social(context, 'google'),
                                                 icon: const Text('G',
                                                     style: TextStyle(
                                                         fontSize: 24,
@@ -143,9 +161,10 @@ class LoginScreen extends StatelessWidget {
                                                         color:
                                                             FestiColors.blue)),
                                                 label: const Text(
-                                                    'REGISTRARSE CON GOOGLE',
-                                                    style:
-                                                        TextStyle(fontWeight: FontWeight.w800))),
+                                                    'CONTINUAR CON GOOGLE',
+                                                    style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w800))),
                                             const SizedBox(height: 14),
                                             FilledButton.icon(
                                                 style: FilledButton.styleFrom(
@@ -155,14 +174,12 @@ class LoginScreen extends StatelessWidget {
                                                         Colors.white,
                                                     minimumSize:
                                                         const Size(0, 56)),
-                                                onPressed: () => showFeatureInfo(
-                                                    context,
-                                                    'Spotify',
-                                                    'La conexión con Spotify requiere configurar OAuth. Todavía no hay una cuenta vinculada.'),
+                                                onPressed: () =>
+                                                    _social(context, 'spotify'),
                                                 icon: const Icon(
                                                     Icons.graphic_eq),
                                                 label: const Text(
-                                                    'REGISTRARSE CON SPOTIFY',
+                                                    'CONTINUAR CON SPOTIFY',
                                                     style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.w800))),
@@ -226,6 +243,196 @@ class LoginScreen extends StatelessWidget {
                           )))),
         ),
       );
+}
+
+class SocialAuthSheet extends ConsumerStatefulWidget {
+  const SocialAuthSheet({
+    required this.provider,
+    this.link = false,
+    super.key,
+  });
+
+  final String provider;
+  final bool link;
+
+  @override
+  ConsumerState<SocialAuthSheet> createState() => _SocialAuthSheetState();
+}
+
+class _SocialAuthSheetState extends ConsumerState<SocialAuthSheet>
+    with WidgetsBindingObserver {
+  SocialAuthAttempt? _attempt;
+  bool _starting = true;
+  bool _checking = false;
+  String? _message;
+
+  String get _providerName =>
+      widget.provider == 'google' ? 'Google' : 'Spotify';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    Future<void>.microtask(_start);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _attempt != null) {
+      Future<void>.delayed(
+        const Duration(milliseconds: 350),
+        () => mounted ? _check(silent: true) : null,
+      );
+    }
+  }
+
+  Future<void> _start() async {
+    setState(() {
+      _starting = true;
+      _message = null;
+    });
+    try {
+      final attempt = await ref
+          .read(authControllerProvider.notifier)
+          .startSocial(widget.provider, link: widget.link);
+      if (!mounted) return;
+      setState(() => _attempt = attempt);
+      final opened = await launchUrl(
+        Uri.parse(attempt.authorizationUrl),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && mounted) {
+        setState(() => _message = 'No se pudo abrir $_providerName.');
+      }
+    } on AuthRequestException catch (error) {
+      if (mounted) setState(() => _message = error.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _message = 'No se pudo abrir $_providerName.');
+      }
+    } finally {
+      if (mounted) setState(() => _starting = false);
+    }
+  }
+
+  Future<void> _check({bool silent = false}) async {
+    final attempt = _attempt;
+    if (attempt == null || _checking) return;
+    setState(() {
+      _checking = true;
+      if (!silent) _message = null;
+    });
+    try {
+      final result = await ref
+          .read(authControllerProvider.notifier)
+          .finishSocial(attempt.flowToken);
+      if (!mounted) return;
+      switch (result.status) {
+        case SocialAuthStatus.completed:
+          Navigator.of(context).pop();
+          context.go('/dashboard');
+        case SocialAuthStatus.pending:
+          if (!silent) {
+            setState(() => _message =
+                'La autorización sigue pendiente. Termínala en $_providerName.');
+          }
+        case SocialAuthStatus.failed:
+          setState(() => _message = _socialError(result.error));
+      }
+    } on AuthRequestException catch (error) {
+      if (mounted) setState(() => _message = error.message);
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
+  }
+
+  String _socialError(String? code) {
+    return switch (code) {
+      'authorization_denied' => 'La autorización fue cancelada.',
+      'email_requires_account_link' =>
+        'Ese correo ya tiene una cuenta. Inicia sesión con contraseña para vincularla.',
+      'provider_profile_incomplete' =>
+        '$_providerName no compartió un correo electrónico.',
+      'flow_expired' => 'El intento expiró. Inicia uno nuevo.',
+      _ => 'No fue posible completar el acceso con $_providerName.',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.link
+                      ? 'Vincular $_providerName'
+                      : 'Acceso con $_providerName',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Cerrar',
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+          if (widget.link) ...[
+            const SizedBox(height: 4),
+            const Text(
+              'Vincula este proveedor con tu cuenta actual.',
+              style: TextStyle(color: FestiColors.cyan),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Text(
+            _starting
+                ? 'Preparando la conexión segura...'
+                : 'Completa la autorización en $_providerName y vuelve a FestiSquad.',
+            style: const TextStyle(color: FestiColors.muted),
+          ),
+          if (_starting || _checking) ...[
+            const SizedBox(height: 24),
+            const LinearProgressIndicator(),
+          ],
+          if (_message != null) ...[
+            const SizedBox(height: 18),
+            Text(
+              _message!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: _attempt == null || _checking ? null : () => _check(),
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('YA AUTORICÉ'),
+          ),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: _starting ? null : _start,
+            icon: const Icon(Icons.open_in_new),
+            label: Text('ABRIR $_providerName DE NUEVO'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _FestiLogo extends StatelessWidget {

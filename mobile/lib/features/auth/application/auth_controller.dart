@@ -47,6 +47,27 @@ class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
     );
   }
 
+  Future<SocialAuthAttempt> startSocial(
+    String provider, {
+    bool link = false,
+  }) async {
+    try {
+      return await _repository.startSocial(provider, link: link);
+    } catch (error) {
+      throw AuthRequestException(apiErrorMessage(error));
+    }
+  }
+
+  Future<SocialAuthResult> finishSocial(String flowToken) async {
+    try {
+      final result = await _repository.finishSocial(flowToken);
+      if (result.session != null) state = AsyncValue.data(result.session);
+      return result;
+    } catch (error) {
+      throw AuthRequestException(apiErrorMessage(error));
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     state = const AsyncValue.data(null);

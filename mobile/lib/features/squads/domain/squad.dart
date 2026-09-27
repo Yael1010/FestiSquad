@@ -26,3 +26,42 @@ class Squad {
     );
   }
 }
+
+class SquadMemberProfile {
+  const SquadMemberProfile({
+    required this.userId,
+    required this.name,
+    required this.role,
+    required this.joinedAt,
+    required this.isOwner,
+    required this.isCurrentUser,
+    this.avatarUrl,
+    this.lastLocationAt,
+  });
+
+  final String userId;
+  final String name;
+  final String? avatarUrl;
+  final String role;
+  final DateTime joinedAt;
+  final DateTime? lastLocationAt;
+  final bool isOwner;
+  final bool isCurrentUser;
+
+  factory SquadMemberProfile.fromJson(Map<String, dynamic> json) {
+    return SquadMemberProfile(
+      userId: json['user_id'] as String,
+      name: json['name'] as String,
+      avatarUrl: json['avatar_url'] as String?,
+      role: json['role'] as String,
+      joinedAt: DateTime.parse(json['joined_at'] as String).toLocal(),
+      lastLocationAt: json['last_location_at'] == null
+          ? null
+          : DateTime.parse(json['last_location_at'] as String).toLocal(),
+      isOwner: json['is_owner'] as bool,
+      isCurrentUser: json['is_current_user'] as bool,
+    );
+  }
+
+  bool get isAdmin => role == 'admin';
+}

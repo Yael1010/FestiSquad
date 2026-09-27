@@ -3901,6 +3901,583 @@ class CachedClashStatesCompanion extends UpdateCompanion<CachedClashState> {
   }
 }
 
+class $CachedSquadMembersTable extends CachedSquadMembers
+    with TableInfo<$CachedSquadMembersTable, CachedSquadMember> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedSquadMembersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionUserIdMeta =
+      const VerificationMeta('sessionUserId');
+  @override
+  late final GeneratedColumn<String> sessionUserId = GeneratedColumn<String>(
+      'session_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _squadIdMeta =
+      const VerificationMeta('squadId');
+  @override
+  late final GeneratedColumn<String> squadId = GeneratedColumn<String>(
+      'squad_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 120),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _avatarUrlMeta =
+      const VerificationMeta('avatarUrl');
+  @override
+  late final GeneratedColumn<String> avatarUrl = GeneratedColumn<String>(
+      'avatar_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+      'role', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _joinedAtMeta =
+      const VerificationMeta('joinedAt');
+  @override
+  late final GeneratedColumn<DateTime> joinedAt = GeneratedColumn<DateTime>(
+      'joined_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _lastLocationAtMeta =
+      const VerificationMeta('lastLocationAt');
+  @override
+  late final GeneratedColumn<DateTime> lastLocationAt =
+      GeneratedColumn<DateTime>('last_location_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _isOwnerMeta =
+      const VerificationMeta('isOwner');
+  @override
+  late final GeneratedColumn<bool> isOwner = GeneratedColumn<bool>(
+      'is_owner', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_owner" IN (0, 1))'));
+  static const VerificationMeta _isCurrentUserMeta =
+      const VerificationMeta('isCurrentUser');
+  @override
+  late final GeneratedColumn<bool> isCurrentUser = GeneratedColumn<bool>(
+      'is_current_user', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_current_user" IN (0, 1))'));
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        sessionUserId,
+        squadId,
+        userId,
+        name,
+        avatarUrl,
+        role,
+        joinedAt,
+        lastLocationAt,
+        isOwner,
+        isCurrentUser,
+        cachedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_squad_members';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedSquadMember> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_user_id')) {
+      context.handle(
+          _sessionUserIdMeta,
+          sessionUserId.isAcceptableOrUnknown(
+              data['session_user_id']!, _sessionUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionUserIdMeta);
+    }
+    if (data.containsKey('squad_id')) {
+      context.handle(_squadIdMeta,
+          squadId.isAcceptableOrUnknown(data['squad_id']!, _squadIdMeta));
+    } else if (isInserting) {
+      context.missing(_squadIdMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('avatar_url')) {
+      context.handle(_avatarUrlMeta,
+          avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta));
+    }
+    if (data.containsKey('role')) {
+      context.handle(
+          _roleMeta, role.isAcceptableOrUnknown(data['role']!, _roleMeta));
+    } else if (isInserting) {
+      context.missing(_roleMeta);
+    }
+    if (data.containsKey('joined_at')) {
+      context.handle(_joinedAtMeta,
+          joinedAt.isAcceptableOrUnknown(data['joined_at']!, _joinedAtMeta));
+    } else if (isInserting) {
+      context.missing(_joinedAtMeta);
+    }
+    if (data.containsKey('last_location_at')) {
+      context.handle(
+          _lastLocationAtMeta,
+          lastLocationAt.isAcceptableOrUnknown(
+              data['last_location_at']!, _lastLocationAtMeta));
+    }
+    if (data.containsKey('is_owner')) {
+      context.handle(_isOwnerMeta,
+          isOwner.isAcceptableOrUnknown(data['is_owner']!, _isOwnerMeta));
+    } else if (isInserting) {
+      context.missing(_isOwnerMeta);
+    }
+    if (data.containsKey('is_current_user')) {
+      context.handle(
+          _isCurrentUserMeta,
+          isCurrentUser.isAcceptableOrUnknown(
+              data['is_current_user']!, _isCurrentUserMeta));
+    } else if (isInserting) {
+      context.missing(_isCurrentUserMeta);
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionUserId, squadId, userId};
+  @override
+  CachedSquadMember map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedSquadMember(
+      sessionUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}session_user_id'])!,
+      squadId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}squad_id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      avatarUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}avatar_url']),
+      role: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}role'])!,
+      joinedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}joined_at'])!,
+      lastLocationAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_location_at']),
+      isOwner: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_owner'])!,
+      isCurrentUser: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_current_user'])!,
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+    );
+  }
+
+  @override
+  $CachedSquadMembersTable createAlias(String alias) {
+    return $CachedSquadMembersTable(attachedDatabase, alias);
+  }
+}
+
+class CachedSquadMember extends DataClass
+    implements Insertable<CachedSquadMember> {
+  final String sessionUserId;
+  final String squadId;
+  final String userId;
+  final String name;
+  final String? avatarUrl;
+  final String role;
+  final DateTime joinedAt;
+  final DateTime? lastLocationAt;
+  final bool isOwner;
+  final bool isCurrentUser;
+  final DateTime cachedAt;
+  const CachedSquadMember(
+      {required this.sessionUserId,
+      required this.squadId,
+      required this.userId,
+      required this.name,
+      this.avatarUrl,
+      required this.role,
+      required this.joinedAt,
+      this.lastLocationAt,
+      required this.isOwner,
+      required this.isCurrentUser,
+      required this.cachedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_user_id'] = Variable<String>(sessionUserId);
+    map['squad_id'] = Variable<String>(squadId);
+    map['user_id'] = Variable<String>(userId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || avatarUrl != null) {
+      map['avatar_url'] = Variable<String>(avatarUrl);
+    }
+    map['role'] = Variable<String>(role);
+    map['joined_at'] = Variable<DateTime>(joinedAt);
+    if (!nullToAbsent || lastLocationAt != null) {
+      map['last_location_at'] = Variable<DateTime>(lastLocationAt);
+    }
+    map['is_owner'] = Variable<bool>(isOwner);
+    map['is_current_user'] = Variable<bool>(isCurrentUser);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    return map;
+  }
+
+  CachedSquadMembersCompanion toCompanion(bool nullToAbsent) {
+    return CachedSquadMembersCompanion(
+      sessionUserId: Value(sessionUserId),
+      squadId: Value(squadId),
+      userId: Value(userId),
+      name: Value(name),
+      avatarUrl: avatarUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarUrl),
+      role: Value(role),
+      joinedAt: Value(joinedAt),
+      lastLocationAt: lastLocationAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastLocationAt),
+      isOwner: Value(isOwner),
+      isCurrentUser: Value(isCurrentUser),
+      cachedAt: Value(cachedAt),
+    );
+  }
+
+  factory CachedSquadMember.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedSquadMember(
+      sessionUserId: serializer.fromJson<String>(json['sessionUserId']),
+      squadId: serializer.fromJson<String>(json['squadId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      name: serializer.fromJson<String>(json['name']),
+      avatarUrl: serializer.fromJson<String?>(json['avatarUrl']),
+      role: serializer.fromJson<String>(json['role']),
+      joinedAt: serializer.fromJson<DateTime>(json['joinedAt']),
+      lastLocationAt: serializer.fromJson<DateTime?>(json['lastLocationAt']),
+      isOwner: serializer.fromJson<bool>(json['isOwner']),
+      isCurrentUser: serializer.fromJson<bool>(json['isCurrentUser']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionUserId': serializer.toJson<String>(sessionUserId),
+      'squadId': serializer.toJson<String>(squadId),
+      'userId': serializer.toJson<String>(userId),
+      'name': serializer.toJson<String>(name),
+      'avatarUrl': serializer.toJson<String?>(avatarUrl),
+      'role': serializer.toJson<String>(role),
+      'joinedAt': serializer.toJson<DateTime>(joinedAt),
+      'lastLocationAt': serializer.toJson<DateTime?>(lastLocationAt),
+      'isOwner': serializer.toJson<bool>(isOwner),
+      'isCurrentUser': serializer.toJson<bool>(isCurrentUser),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+    };
+  }
+
+  CachedSquadMember copyWith(
+          {String? sessionUserId,
+          String? squadId,
+          String? userId,
+          String? name,
+          Value<String?> avatarUrl = const Value.absent(),
+          String? role,
+          DateTime? joinedAt,
+          Value<DateTime?> lastLocationAt = const Value.absent(),
+          bool? isOwner,
+          bool? isCurrentUser,
+          DateTime? cachedAt}) =>
+      CachedSquadMember(
+        sessionUserId: sessionUserId ?? this.sessionUserId,
+        squadId: squadId ?? this.squadId,
+        userId: userId ?? this.userId,
+        name: name ?? this.name,
+        avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
+        role: role ?? this.role,
+        joinedAt: joinedAt ?? this.joinedAt,
+        lastLocationAt:
+            lastLocationAt.present ? lastLocationAt.value : this.lastLocationAt,
+        isOwner: isOwner ?? this.isOwner,
+        isCurrentUser: isCurrentUser ?? this.isCurrentUser,
+        cachedAt: cachedAt ?? this.cachedAt,
+      );
+  CachedSquadMember copyWithCompanion(CachedSquadMembersCompanion data) {
+    return CachedSquadMember(
+      sessionUserId: data.sessionUserId.present
+          ? data.sessionUserId.value
+          : this.sessionUserId,
+      squadId: data.squadId.present ? data.squadId.value : this.squadId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      name: data.name.present ? data.name.value : this.name,
+      avatarUrl: data.avatarUrl.present ? data.avatarUrl.value : this.avatarUrl,
+      role: data.role.present ? data.role.value : this.role,
+      joinedAt: data.joinedAt.present ? data.joinedAt.value : this.joinedAt,
+      lastLocationAt: data.lastLocationAt.present
+          ? data.lastLocationAt.value
+          : this.lastLocationAt,
+      isOwner: data.isOwner.present ? data.isOwner.value : this.isOwner,
+      isCurrentUser: data.isCurrentUser.present
+          ? data.isCurrentUser.value
+          : this.isCurrentUser,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedSquadMember(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('squadId: $squadId, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('avatarUrl: $avatarUrl, ')
+          ..write('role: $role, ')
+          ..write('joinedAt: $joinedAt, ')
+          ..write('lastLocationAt: $lastLocationAt, ')
+          ..write('isOwner: $isOwner, ')
+          ..write('isCurrentUser: $isCurrentUser, ')
+          ..write('cachedAt: $cachedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      sessionUserId,
+      squadId,
+      userId,
+      name,
+      avatarUrl,
+      role,
+      joinedAt,
+      lastLocationAt,
+      isOwner,
+      isCurrentUser,
+      cachedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedSquadMember &&
+          other.sessionUserId == this.sessionUserId &&
+          other.squadId == this.squadId &&
+          other.userId == this.userId &&
+          other.name == this.name &&
+          other.avatarUrl == this.avatarUrl &&
+          other.role == this.role &&
+          other.joinedAt == this.joinedAt &&
+          other.lastLocationAt == this.lastLocationAt &&
+          other.isOwner == this.isOwner &&
+          other.isCurrentUser == this.isCurrentUser &&
+          other.cachedAt == this.cachedAt);
+}
+
+class CachedSquadMembersCompanion extends UpdateCompanion<CachedSquadMember> {
+  final Value<String> sessionUserId;
+  final Value<String> squadId;
+  final Value<String> userId;
+  final Value<String> name;
+  final Value<String?> avatarUrl;
+  final Value<String> role;
+  final Value<DateTime> joinedAt;
+  final Value<DateTime?> lastLocationAt;
+  final Value<bool> isOwner;
+  final Value<bool> isCurrentUser;
+  final Value<DateTime> cachedAt;
+  final Value<int> rowid;
+  const CachedSquadMembersCompanion({
+    this.sessionUserId = const Value.absent(),
+    this.squadId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.avatarUrl = const Value.absent(),
+    this.role = const Value.absent(),
+    this.joinedAt = const Value.absent(),
+    this.lastLocationAt = const Value.absent(),
+    this.isOwner = const Value.absent(),
+    this.isCurrentUser = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedSquadMembersCompanion.insert({
+    required String sessionUserId,
+    required String squadId,
+    required String userId,
+    required String name,
+    this.avatarUrl = const Value.absent(),
+    required String role,
+    required DateTime joinedAt,
+    this.lastLocationAt = const Value.absent(),
+    required bool isOwner,
+    required bool isCurrentUser,
+    required DateTime cachedAt,
+    this.rowid = const Value.absent(),
+  })  : sessionUserId = Value(sessionUserId),
+        squadId = Value(squadId),
+        userId = Value(userId),
+        name = Value(name),
+        role = Value(role),
+        joinedAt = Value(joinedAt),
+        isOwner = Value(isOwner),
+        isCurrentUser = Value(isCurrentUser),
+        cachedAt = Value(cachedAt);
+  static Insertable<CachedSquadMember> custom({
+    Expression<String>? sessionUserId,
+    Expression<String>? squadId,
+    Expression<String>? userId,
+    Expression<String>? name,
+    Expression<String>? avatarUrl,
+    Expression<String>? role,
+    Expression<DateTime>? joinedAt,
+    Expression<DateTime>? lastLocationAt,
+    Expression<bool>? isOwner,
+    Expression<bool>? isCurrentUser,
+    Expression<DateTime>? cachedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sessionUserId != null) 'session_user_id': sessionUserId,
+      if (squadId != null) 'squad_id': squadId,
+      if (userId != null) 'user_id': userId,
+      if (name != null) 'name': name,
+      if (avatarUrl != null) 'avatar_url': avatarUrl,
+      if (role != null) 'role': role,
+      if (joinedAt != null) 'joined_at': joinedAt,
+      if (lastLocationAt != null) 'last_location_at': lastLocationAt,
+      if (isOwner != null) 'is_owner': isOwner,
+      if (isCurrentUser != null) 'is_current_user': isCurrentUser,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedSquadMembersCompanion copyWith(
+      {Value<String>? sessionUserId,
+      Value<String>? squadId,
+      Value<String>? userId,
+      Value<String>? name,
+      Value<String?>? avatarUrl,
+      Value<String>? role,
+      Value<DateTime>? joinedAt,
+      Value<DateTime?>? lastLocationAt,
+      Value<bool>? isOwner,
+      Value<bool>? isCurrentUser,
+      Value<DateTime>? cachedAt,
+      Value<int>? rowid}) {
+    return CachedSquadMembersCompanion(
+      sessionUserId: sessionUserId ?? this.sessionUserId,
+      squadId: squadId ?? this.squadId,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      role: role ?? this.role,
+      joinedAt: joinedAt ?? this.joinedAt,
+      lastLocationAt: lastLocationAt ?? this.lastLocationAt,
+      isOwner: isOwner ?? this.isOwner,
+      isCurrentUser: isCurrentUser ?? this.isCurrentUser,
+      cachedAt: cachedAt ?? this.cachedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionUserId.present) {
+      map['session_user_id'] = Variable<String>(sessionUserId.value);
+    }
+    if (squadId.present) {
+      map['squad_id'] = Variable<String>(squadId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (avatarUrl.present) {
+      map['avatar_url'] = Variable<String>(avatarUrl.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
+    if (joinedAt.present) {
+      map['joined_at'] = Variable<DateTime>(joinedAt.value);
+    }
+    if (lastLocationAt.present) {
+      map['last_location_at'] = Variable<DateTime>(lastLocationAt.value);
+    }
+    if (isOwner.present) {
+      map['is_owner'] = Variable<bool>(isOwner.value);
+    }
+    if (isCurrentUser.present) {
+      map['is_current_user'] = Variable<bool>(isCurrentUser.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedSquadMembersCompanion(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('squadId: $squadId, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('avatarUrl: $avatarUrl, ')
+          ..write('role: $role, ')
+          ..write('joinedAt: $joinedAt, ')
+          ..write('lastLocationAt: $lastLocationAt, ')
+          ..write('isOwner: $isOwner, ')
+          ..write('isCurrentUser: $isCurrentUser, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3920,6 +4497,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $CachedDebtTransfersTable(this);
   late final $CachedClashStatesTable cachedClashStates =
       $CachedClashStatesTable(this);
+  late final $CachedSquadMembersTable cachedSquadMembers =
+      $CachedSquadMembersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3934,7 +4513,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         cachedExpenses,
         cachedBalances,
         cachedDebtTransfers,
-        cachedClashStates
+        cachedClashStates,
+        cachedSquadMembers
       ];
 }
 
@@ -5970,6 +6550,275 @@ typedef $$CachedClashStatesTableProcessedTableManager = ProcessedTableManager<
     ),
     CachedClashState,
     PrefetchHooks Function()>;
+typedef $$CachedSquadMembersTableCreateCompanionBuilder
+    = CachedSquadMembersCompanion Function({
+  required String sessionUserId,
+  required String squadId,
+  required String userId,
+  required String name,
+  Value<String?> avatarUrl,
+  required String role,
+  required DateTime joinedAt,
+  Value<DateTime?> lastLocationAt,
+  required bool isOwner,
+  required bool isCurrentUser,
+  required DateTime cachedAt,
+  Value<int> rowid,
+});
+typedef $$CachedSquadMembersTableUpdateCompanionBuilder
+    = CachedSquadMembersCompanion Function({
+  Value<String> sessionUserId,
+  Value<String> squadId,
+  Value<String> userId,
+  Value<String> name,
+  Value<String?> avatarUrl,
+  Value<String> role,
+  Value<DateTime> joinedAt,
+  Value<DateTime?> lastLocationAt,
+  Value<bool> isOwner,
+  Value<bool> isCurrentUser,
+  Value<DateTime> cachedAt,
+  Value<int> rowid,
+});
+
+class $$CachedSquadMembersTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedSquadMembersTable> {
+  $$CachedSquadMembersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get avatarUrl => $composableBuilder(
+      column: $table.avatarUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get role => $composableBuilder(
+      column: $table.role, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get joinedAt => $composableBuilder(
+      column: $table.joinedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastLocationAt => $composableBuilder(
+      column: $table.lastLocationAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isOwner => $composableBuilder(
+      column: $table.isOwner, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isCurrentUser => $composableBuilder(
+      column: $table.isCurrentUser, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedSquadMembersTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedSquadMembersTable> {
+  $$CachedSquadMembersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get avatarUrl => $composableBuilder(
+      column: $table.avatarUrl, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get role => $composableBuilder(
+      column: $table.role, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get joinedAt => $composableBuilder(
+      column: $table.joinedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastLocationAt => $composableBuilder(
+      column: $table.lastLocationAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isOwner => $composableBuilder(
+      column: $table.isOwner, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isCurrentUser => $composableBuilder(
+      column: $table.isCurrentUser,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedSquadMembersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedSquadMembersTable> {
+  $$CachedSquadMembersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get squadId =>
+      $composableBuilder(column: $table.squadId, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get avatarUrl =>
+      $composableBuilder(column: $table.avatarUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get joinedAt =>
+      $composableBuilder(column: $table.joinedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastLocationAt => $composableBuilder(
+      column: $table.lastLocationAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isOwner =>
+      $composableBuilder(column: $table.isOwner, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCurrentUser => $composableBuilder(
+      column: $table.isCurrentUser, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+}
+
+class $$CachedSquadMembersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedSquadMembersTable,
+    CachedSquadMember,
+    $$CachedSquadMembersTableFilterComposer,
+    $$CachedSquadMembersTableOrderingComposer,
+    $$CachedSquadMembersTableAnnotationComposer,
+    $$CachedSquadMembersTableCreateCompanionBuilder,
+    $$CachedSquadMembersTableUpdateCompanionBuilder,
+    (
+      CachedSquadMember,
+      BaseReferences<_$AppDatabase, $CachedSquadMembersTable, CachedSquadMember>
+    ),
+    CachedSquadMember,
+    PrefetchHooks Function()> {
+  $$CachedSquadMembersTableTableManager(
+      _$AppDatabase db, $CachedSquadMembersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedSquadMembersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedSquadMembersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedSquadMembersTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
+            Value<String> squadId = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> avatarUrl = const Value.absent(),
+            Value<String> role = const Value.absent(),
+            Value<DateTime> joinedAt = const Value.absent(),
+            Value<DateTime?> lastLocationAt = const Value.absent(),
+            Value<bool> isOwner = const Value.absent(),
+            Value<bool> isCurrentUser = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedSquadMembersCompanion(
+            sessionUserId: sessionUserId,
+            squadId: squadId,
+            userId: userId,
+            name: name,
+            avatarUrl: avatarUrl,
+            role: role,
+            joinedAt: joinedAt,
+            lastLocationAt: lastLocationAt,
+            isOwner: isOwner,
+            isCurrentUser: isCurrentUser,
+            cachedAt: cachedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String sessionUserId,
+            required String squadId,
+            required String userId,
+            required String name,
+            Value<String?> avatarUrl = const Value.absent(),
+            required String role,
+            required DateTime joinedAt,
+            Value<DateTime?> lastLocationAt = const Value.absent(),
+            required bool isOwner,
+            required bool isCurrentUser,
+            required DateTime cachedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedSquadMembersCompanion.insert(
+            sessionUserId: sessionUserId,
+            squadId: squadId,
+            userId: userId,
+            name: name,
+            avatarUrl: avatarUrl,
+            role: role,
+            joinedAt: joinedAt,
+            lastLocationAt: lastLocationAt,
+            isOwner: isOwner,
+            isCurrentUser: isCurrentUser,
+            cachedAt: cachedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedSquadMembersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CachedSquadMembersTable,
+    CachedSquadMember,
+    $$CachedSquadMembersTableFilterComposer,
+    $$CachedSquadMembersTableOrderingComposer,
+    $$CachedSquadMembersTableAnnotationComposer,
+    $$CachedSquadMembersTableCreateCompanionBuilder,
+    $$CachedSquadMembersTableUpdateCompanionBuilder,
+    (
+      CachedSquadMember,
+      BaseReferences<_$AppDatabase, $CachedSquadMembersTable, CachedSquadMember>
+    ),
+    CachedSquadMember,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5994,4 +6843,6 @@ class $AppDatabaseManager {
       $$CachedDebtTransfersTableTableManager(_db, _db.cachedDebtTransfers);
   $$CachedClashStatesTableTableManager get cachedClashStates =>
       $$CachedClashStatesTableTableManager(_db, _db.cachedClashStates);
+  $$CachedSquadMembersTableTableManager get cachedSquadMembers =>
+      $$CachedSquadMembersTableTableManager(_db, _db.cachedSquadMembers);
 }
