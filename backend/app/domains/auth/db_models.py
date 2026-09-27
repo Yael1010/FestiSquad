@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, Unicode, UniqueConstraint, text
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Index, Unicode, UniqueConstraint, text
 from sqlalchemy.dialects.mssql import DATETIME2, UNIQUEIDENTIFIER
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,6 +20,12 @@ class User(Base):
     name: Mapped[str] = mapped_column(Unicode(120))
     email: Mapped[str] = mapped_column(Unicode(255), unique=True)
     password_hash: Mapped[str] = mapped_column(Unicode(255))
+    is_platform_admin: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("0"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DATETIME2,
         server_default=text("SYSUTCDATETIME()"),

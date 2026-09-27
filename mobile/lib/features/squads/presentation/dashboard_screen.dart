@@ -17,7 +17,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String _query = '';
   static const _searchItems = [
-    ('Escenario Corona', '/map', 'escenarios mapa corona'),
+    ('Festivales y escenarios', '/festivals', 'escenarios mapa festival'),
     ('Mi squad · Amigos', '/join', 'amigos squad'),
     ('Fondo común · Compras', '/finances', 'compras finanzas fondo'),
   ];
@@ -400,7 +400,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               FestiCard(
                   glow: true,
                   padding: EdgeInsets.zero,
-                  onTap: () => context.push('/map'),
+                  onTap: () => context.push('/festivals'),
                   child: SizedBox(
                       height: 206 *
                           (MediaQuery.textScalerOf(context).scale(14) / 14)
@@ -427,13 +427,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     StatusPill('VISTA PREVIA')
                                   ]),
                                   Spacer(),
-                                  Text('Corona Capital 2026',
+                                  Text('Catálogo de festivales',
                                       style: TextStyle(
                                           fontSize: 21,
                                           fontWeight: FontWeight.w800)),
                                   SizedBox(height: 8),
-                                  Text(
-                                      'Encuentra a tu squad y tu próximo escenario',
+                                  Text('Selecciona el recinto y abre su mapa',
                                       style: TextStyle(
                                           color: FestiColors.cyan,
                                           fontSize: 12)),
@@ -505,8 +504,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             selectedIndex: 0,
             onDestinationSelected: (index) {
               if (index != 0) {
-                context
-                    .push(['/dashboard', '/map', '/finances', '/clash'][index]);
+                context.push(
+                    ['/dashboard', '/festivals', '/finances', '/clash'][index]);
               }
             },
             destinations: const [

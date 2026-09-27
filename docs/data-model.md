@@ -48,6 +48,11 @@ erDiagram
   la pareja proveedor/identificador externo y usuario/proveedor son únicas.
 - `social_auth_flows` conserva solamente el hash del ticket temporal. Sus filas
   expiran y no almacenan credenciales ni tokens emitidos por terceros.
+- `users.is_platform_admin` separa la administración global del catálogo de
+  los roles internos de cada squad.
+- `festivals` conserva recinto, ciudad, país, zona horaria, URLs editoriales y
+  estado de publicación; sus escenarios mantienen la geometría GeoJSON.
+- El archivado lógico de festivales preserva agendas y referencias históricas.
 - Todos los importes usan `DECIMAL(18,2)`. `FLOAT` y `REAL` están prohibidos para
   dinero.
 
@@ -64,4 +69,5 @@ Para una base creada durante la Fase 2 se deben ejecutar, en orden,
 `database/005_phase6_music_preferences.sql` para artistas y preferencias. Estos
 scripts normalizan los datos y agregan índices sin recrear la base. Finalmente,
 `database/007_phase8_social_auth.sql` agrega identidades externas y flujos OAuth
-de un solo uso.
+de un solo uso. `database/008_phase10_festival_catalog.sql` añade la
+administración global y los metadatos indexados del catálogo.

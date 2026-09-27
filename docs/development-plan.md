@@ -43,7 +43,8 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
   las credenciales locales del ambiente de desarrollo.
 - [x] Fase 9: gestión completa de miembros, perfiles y roles de squads, con
   autorización en backend y caché offline-first en Flutter.
-- [ ] Fase 10: catálogo y mapas de festivales reales.
+- [x] Fase 10: catálogo offline-first, administración protegida y selección de
+  mapas reales mediante geometría GeoJSON validada.
 - [ ] Fase 11: experiencia completa del Fondo Común.
 - [ ] Fase 12: Clash Resolver conectado a agendas reales.
 - [ ] Fase 13: mejora integral de interfaces y estabilización de entrega.
@@ -65,6 +66,11 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - `DELETE /api/v1/squads/{squad_id}/members/{user_id}`
 - `POST /api/v1/squads/{squad_id}/owner/{user_id}`
 - `DELETE /api/v1/squads/{squad_id}`
+- `GET /api/v1/festivals`
+- `GET /api/v1/festivals/{festival_id}`
+- `POST /api/v1/festivals`
+- `PATCH /api/v1/festivals/{festival_id}`
+- `POST /api/v1/festivals/{festival_id}/stages`
 - `POST /api/v1/locations`
 - `GET /api/v1/locations/squad/{squad_id}/latest`
 - `POST /api/v1/expenses`

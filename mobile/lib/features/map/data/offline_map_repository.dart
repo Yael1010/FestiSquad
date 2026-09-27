@@ -30,9 +30,12 @@ class OfflineMapRepository {
   final AppDatabase _database;
   final TokenStorage _tokens;
 
-  Future<FestivalMapSnapshot> load(String? squadId) async {
+  Future<FestivalMapSnapshot> load(
+    String? squadId, {
+    String? festivalId,
+  }) async {
     final session = await _tokens.readSession();
-    final festival = await _loadFestival();
+    final festival = await _loadFestival(festivalId);
     if (session == null || squadId == null) {
       return FestivalMapSnapshot(
         festival: festival,
@@ -195,15 +198,16 @@ class OfflineMapRepository {
     });
   }
 
-  Future<FestivalMap> _loadFestival() async {
-    if (configuredFestivalId == 'demo-festival') {
+  Future<FestivalMap> _loadFestival(String? festivalId) async {
+    final selectedFestivalId = festivalId ?? configuredFestivalId;
+    if (selectedFestivalId == 'demo-festival') {
       final json = jsonDecode(
         await rootBundle.loadString('assets/map/demo_festival.json'),
       ) as Map<String, dynamic>;
       return FestivalMap.fromJson(json, isDemo: true);
     }
     try {
-      final response = await _api.get('/festivals/$configuredFestivalId');
+      final response = await _api.get('/festivals/$selectedFestivalId');
       final json = Map<String, dynamic>.from(response.data as Map);
       final map = FestivalMap.fromJson(json);
       await _database.upsertFestival(CachedFestivalsCompanion.insert(
@@ -230,9 +234,9 @@ class OfflineMapRepository {
       return map;
     } on DioException catch (error) {
       if (!_isNetworkFailure(error)) rethrow;
-      final cached = await _database.readFestival(configuredFestivalId);
+      final cached = await _database.readFestival(selectedFestivalId);
       if (cached == null) rethrow;
-      final stages = await _database.readStages(configuredFestivalId);
+      final stages = await _database.readStages(selectedFestivalId);
       return FestivalMap(
         id: cached.id,
         name: cached.name,

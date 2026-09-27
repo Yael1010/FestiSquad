@@ -34,8 +34,8 @@
 - iOS no está generado en el repositorio actual. Su configuración de permisos y
   `UIBackgroundModes` deberá agregarse cuando esa plataforma entre al alcance.
 - El plano de demostración no corresponde a la geometría oficial de un festival.
-  Para un recinto real, cargar `festivals` y `stages` en SQL Server y ejecutar
-  Flutter con `--dart-define=FESTIVAL_ID=<uuid>`.
+  La fase 10 agrega un catálogo para seleccionar mapas cargados por un
+  administrador; `FESTIVAL_ID` queda únicamente como alternativa de desarrollo.
 - Las ubicaciones usan el canal HTTP local del emulador solo en desarrollo.
   En despliegue debe configurarse HTTPS/TLS y validarse el certificado.
 

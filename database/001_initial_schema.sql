@@ -4,6 +4,7 @@ CREATE TABLE users (
     name NVARCHAR(120) NOT NULL,
     email NVARCHAR(255) NOT NULL,
     password_hash NVARCHAR(255) NOT NULL,
+    is_platform_admin BIT NOT NULL DEFAULT 0,
     created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT uq_users_email UNIQUE (email)
@@ -34,10 +35,20 @@ CREATE TABLE squad_members (
 CREATE TABLE festivals (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
     name NVARCHAR(160) NOT NULL,
+    venue_name NVARCHAR(160) NOT NULL,
+    city NVARCHAR(120) NOT NULL,
+    country_code CHAR(2) NOT NULL DEFAULT 'MX',
+    timezone NVARCHAR(64) NOT NULL DEFAULT 'America/Mexico_City',
     starts_at DATETIME2 NOT NULL,
     ends_at DATETIME2 NOT NULL,
     boundary_geojson NVARCHAR(MAX) NOT NULL,
-    CONSTRAINT pk_festivals PRIMARY KEY (id)
+    image_url NVARCHAR(1000) NULL,
+    official_url NVARCHAR(1000) NULL,
+    status NVARCHAR(20) NOT NULL DEFAULT 'draft',
+    updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT pk_festivals PRIMARY KEY (id),
+    CONSTRAINT ck_festivals_dates CHECK (ends_at > starts_at),
+    CONSTRAINT ck_festivals_status CHECK (status IN ('draft', 'published', 'archived'))
 );
 
 CREATE TABLE stages (
@@ -194,6 +205,7 @@ CREATE INDEX ix_expenses_squad_created ON expenses(squad_id, created_at DESC);
 CREATE INDEX ix_schedule_items_stage_time ON schedule_items(stage_id, starts_at, ends_at);
 CREATE INDEX ix_squad_members_user ON squad_members(user_id, squad_id);
 CREATE INDEX ix_stages_festival ON stages(festival_id, name);
+CREATE INDEX ix_festivals_status_starts ON festivals(status, starts_at);
 CREATE INDEX ix_meeting_points_squad_created ON meeting_points(squad_id, created_at DESC);
 CREATE INDEX ix_expense_participants_user ON expense_participants(user_id, expense_id);
 CREATE INDEX ix_music_preferences_genre ON music_preferences(genre_id, user_id);

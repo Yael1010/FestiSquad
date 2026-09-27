@@ -13,7 +13,9 @@ import '../domain/festival_map.dart';
 import 'widgets/map_canvas.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
-  const MapScreen({super.key});
+  const MapScreen({super.key, this.festivalId});
+
+  final String? festivalId;
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
@@ -72,8 +74,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Future<void> _load() async {
     if (mounted) setState(() => _loading = true);
     try {
-      final result =
-          await ref.read(offlineMapRepositoryProvider).load(_squadId);
+      final result = await ref.read(offlineMapRepositoryProvider).load(
+            _squadId,
+            festivalId: widget.festivalId,
+          );
       if (!mounted) return;
       setState(() {
         _snapshot = result;

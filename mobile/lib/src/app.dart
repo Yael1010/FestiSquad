@@ -8,6 +8,8 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/clash_resolver/presentation/clash_resolver_screen.dart';
 import '../features/finances/presentation/finances_screen.dart';
+import '../features/festivals/presentation/festival_admin_screen.dart';
+import '../features/festivals/presentation/festival_catalog_screen.dart';
 import '../features/map/presentation/map_screen.dart';
 import '../features/squads/presentation/dashboard_screen.dart';
 import '../features/squads/presentation/join_squad_screen.dart';
@@ -42,7 +44,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           code: state.uri.queryParameters['code'] ?? '------',
         ),
       ),
-      GoRoute(path: '/map', builder: (context, state) => const MapScreen()),
+      GoRoute(
+        path: '/festivals',
+        builder: (context, state) => const FestivalCatalogScreen(),
+      ),
+      GoRoute(
+        path: '/festivals/admin',
+        builder: (context, state) => const FestivalAdminScreen(),
+      ),
+      GoRoute(
+        path: '/map',
+        builder: (context, state) => MapScreen(
+          festivalId: state.uri.queryParameters['festivalId'],
+        ),
+      ),
       GoRoute(
           path: '/finances',
           builder: (context, state) => const FinancesScreen()),

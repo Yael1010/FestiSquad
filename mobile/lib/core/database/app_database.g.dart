@@ -1077,6 +1077,660 @@ class CachedStagesCompanion extends UpdateCompanion<CachedStage> {
   }
 }
 
+class $CachedFestivalSummariesTable extends CachedFestivalSummaries
+    with TableInfo<$CachedFestivalSummariesTable, CachedFestivalSummary> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedFestivalSummariesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 160),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _venueNameMeta =
+      const VerificationMeta('venueName');
+  @override
+  late final GeneratedColumn<String> venueName = GeneratedColumn<String>(
+      'venue_name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 160),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _cityMeta = const VerificationMeta('city');
+  @override
+  late final GeneratedColumn<String> city = GeneratedColumn<String>(
+      'city', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 120),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _countryCodeMeta =
+      const VerificationMeta('countryCode');
+  @override
+  late final GeneratedColumn<String> countryCode = GeneratedColumn<String>(
+      'country_code', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 2, maxTextLength: 2),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _timezoneMeta =
+      const VerificationMeta('timezone');
+  @override
+  late final GeneratedColumn<String> timezone = GeneratedColumn<String>(
+      'timezone', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startsAtMeta =
+      const VerificationMeta('startsAt');
+  @override
+  late final GeneratedColumn<DateTime> startsAt = GeneratedColumn<DateTime>(
+      'starts_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _endsAtMeta = const VerificationMeta('endsAt');
+  @override
+  late final GeneratedColumn<DateTime> endsAt = GeneratedColumn<DateTime>(
+      'ends_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _imageUrlMeta =
+      const VerificationMeta('imageUrl');
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+      'image_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _officialUrlMeta =
+      const VerificationMeta('officialUrl');
+  @override
+  late final GeneratedColumn<String> officialUrl = GeneratedColumn<String>(
+      'official_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _stageCountMeta =
+      const VerificationMeta('stageCount');
+  @override
+  late final GeneratedColumn<int> stageCount = GeneratedColumn<int>(
+      'stage_count', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        venueName,
+        city,
+        countryCode,
+        timezone,
+        startsAt,
+        endsAt,
+        imageUrl,
+        officialUrl,
+        status,
+        stageCount,
+        cachedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_festival_summaries';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CachedFestivalSummary> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('venue_name')) {
+      context.handle(_venueNameMeta,
+          venueName.isAcceptableOrUnknown(data['venue_name']!, _venueNameMeta));
+    } else if (isInserting) {
+      context.missing(_venueNameMeta);
+    }
+    if (data.containsKey('city')) {
+      context.handle(
+          _cityMeta, city.isAcceptableOrUnknown(data['city']!, _cityMeta));
+    } else if (isInserting) {
+      context.missing(_cityMeta);
+    }
+    if (data.containsKey('country_code')) {
+      context.handle(
+          _countryCodeMeta,
+          countryCode.isAcceptableOrUnknown(
+              data['country_code']!, _countryCodeMeta));
+    } else if (isInserting) {
+      context.missing(_countryCodeMeta);
+    }
+    if (data.containsKey('timezone')) {
+      context.handle(_timezoneMeta,
+          timezone.isAcceptableOrUnknown(data['timezone']!, _timezoneMeta));
+    } else if (isInserting) {
+      context.missing(_timezoneMeta);
+    }
+    if (data.containsKey('starts_at')) {
+      context.handle(_startsAtMeta,
+          startsAt.isAcceptableOrUnknown(data['starts_at']!, _startsAtMeta));
+    } else if (isInserting) {
+      context.missing(_startsAtMeta);
+    }
+    if (data.containsKey('ends_at')) {
+      context.handle(_endsAtMeta,
+          endsAt.isAcceptableOrUnknown(data['ends_at']!, _endsAtMeta));
+    } else if (isInserting) {
+      context.missing(_endsAtMeta);
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(_imageUrlMeta,
+          imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta));
+    }
+    if (data.containsKey('official_url')) {
+      context.handle(
+          _officialUrlMeta,
+          officialUrl.isAcceptableOrUnknown(
+              data['official_url']!, _officialUrlMeta));
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('stage_count')) {
+      context.handle(
+          _stageCountMeta,
+          stageCount.isAcceptableOrUnknown(
+              data['stage_count']!, _stageCountMeta));
+    } else if (isInserting) {
+      context.missing(_stageCountMeta);
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedFestivalSummary map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedFestivalSummary(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      venueName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}venue_name'])!,
+      city: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}city'])!,
+      countryCode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}country_code'])!,
+      timezone: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}timezone'])!,
+      startsAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}starts_at'])!,
+      endsAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}ends_at'])!,
+      imageUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image_url']),
+      officialUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}official_url']),
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      stageCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}stage_count'])!,
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+    );
+  }
+
+  @override
+  $CachedFestivalSummariesTable createAlias(String alias) {
+    return $CachedFestivalSummariesTable(attachedDatabase, alias);
+  }
+}
+
+class CachedFestivalSummary extends DataClass
+    implements Insertable<CachedFestivalSummary> {
+  final String id;
+  final String name;
+  final String venueName;
+  final String city;
+  final String countryCode;
+  final String timezone;
+  final DateTime startsAt;
+  final DateTime endsAt;
+  final String? imageUrl;
+  final String? officialUrl;
+  final String status;
+  final int stageCount;
+  final DateTime cachedAt;
+  const CachedFestivalSummary(
+      {required this.id,
+      required this.name,
+      required this.venueName,
+      required this.city,
+      required this.countryCode,
+      required this.timezone,
+      required this.startsAt,
+      required this.endsAt,
+      this.imageUrl,
+      this.officialUrl,
+      required this.status,
+      required this.stageCount,
+      required this.cachedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['venue_name'] = Variable<String>(venueName);
+    map['city'] = Variable<String>(city);
+    map['country_code'] = Variable<String>(countryCode);
+    map['timezone'] = Variable<String>(timezone);
+    map['starts_at'] = Variable<DateTime>(startsAt);
+    map['ends_at'] = Variable<DateTime>(endsAt);
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    if (!nullToAbsent || officialUrl != null) {
+      map['official_url'] = Variable<String>(officialUrl);
+    }
+    map['status'] = Variable<String>(status);
+    map['stage_count'] = Variable<int>(stageCount);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    return map;
+  }
+
+  CachedFestivalSummariesCompanion toCompanion(bool nullToAbsent) {
+    return CachedFestivalSummariesCompanion(
+      id: Value(id),
+      name: Value(name),
+      venueName: Value(venueName),
+      city: Value(city),
+      countryCode: Value(countryCode),
+      timezone: Value(timezone),
+      startsAt: Value(startsAt),
+      endsAt: Value(endsAt),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      officialUrl: officialUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(officialUrl),
+      status: Value(status),
+      stageCount: Value(stageCount),
+      cachedAt: Value(cachedAt),
+    );
+  }
+
+  factory CachedFestivalSummary.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedFestivalSummary(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      venueName: serializer.fromJson<String>(json['venueName']),
+      city: serializer.fromJson<String>(json['city']),
+      countryCode: serializer.fromJson<String>(json['countryCode']),
+      timezone: serializer.fromJson<String>(json['timezone']),
+      startsAt: serializer.fromJson<DateTime>(json['startsAt']),
+      endsAt: serializer.fromJson<DateTime>(json['endsAt']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      officialUrl: serializer.fromJson<String?>(json['officialUrl']),
+      status: serializer.fromJson<String>(json['status']),
+      stageCount: serializer.fromJson<int>(json['stageCount']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'venueName': serializer.toJson<String>(venueName),
+      'city': serializer.toJson<String>(city),
+      'countryCode': serializer.toJson<String>(countryCode),
+      'timezone': serializer.toJson<String>(timezone),
+      'startsAt': serializer.toJson<DateTime>(startsAt),
+      'endsAt': serializer.toJson<DateTime>(endsAt),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'officialUrl': serializer.toJson<String?>(officialUrl),
+      'status': serializer.toJson<String>(status),
+      'stageCount': serializer.toJson<int>(stageCount),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+    };
+  }
+
+  CachedFestivalSummary copyWith(
+          {String? id,
+          String? name,
+          String? venueName,
+          String? city,
+          String? countryCode,
+          String? timezone,
+          DateTime? startsAt,
+          DateTime? endsAt,
+          Value<String?> imageUrl = const Value.absent(),
+          Value<String?> officialUrl = const Value.absent(),
+          String? status,
+          int? stageCount,
+          DateTime? cachedAt}) =>
+      CachedFestivalSummary(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        venueName: venueName ?? this.venueName,
+        city: city ?? this.city,
+        countryCode: countryCode ?? this.countryCode,
+        timezone: timezone ?? this.timezone,
+        startsAt: startsAt ?? this.startsAt,
+        endsAt: endsAt ?? this.endsAt,
+        imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+        officialUrl: officialUrl.present ? officialUrl.value : this.officialUrl,
+        status: status ?? this.status,
+        stageCount: stageCount ?? this.stageCount,
+        cachedAt: cachedAt ?? this.cachedAt,
+      );
+  CachedFestivalSummary copyWithCompanion(
+      CachedFestivalSummariesCompanion data) {
+    return CachedFestivalSummary(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      venueName: data.venueName.present ? data.venueName.value : this.venueName,
+      city: data.city.present ? data.city.value : this.city,
+      countryCode:
+          data.countryCode.present ? data.countryCode.value : this.countryCode,
+      timezone: data.timezone.present ? data.timezone.value : this.timezone,
+      startsAt: data.startsAt.present ? data.startsAt.value : this.startsAt,
+      endsAt: data.endsAt.present ? data.endsAt.value : this.endsAt,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      officialUrl:
+          data.officialUrl.present ? data.officialUrl.value : this.officialUrl,
+      status: data.status.present ? data.status.value : this.status,
+      stageCount:
+          data.stageCount.present ? data.stageCount.value : this.stageCount,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedFestivalSummary(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('venueName: $venueName, ')
+          ..write('city: $city, ')
+          ..write('countryCode: $countryCode, ')
+          ..write('timezone: $timezone, ')
+          ..write('startsAt: $startsAt, ')
+          ..write('endsAt: $endsAt, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('officialUrl: $officialUrl, ')
+          ..write('status: $status, ')
+          ..write('stageCount: $stageCount, ')
+          ..write('cachedAt: $cachedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      name,
+      venueName,
+      city,
+      countryCode,
+      timezone,
+      startsAt,
+      endsAt,
+      imageUrl,
+      officialUrl,
+      status,
+      stageCount,
+      cachedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedFestivalSummary &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.venueName == this.venueName &&
+          other.city == this.city &&
+          other.countryCode == this.countryCode &&
+          other.timezone == this.timezone &&
+          other.startsAt == this.startsAt &&
+          other.endsAt == this.endsAt &&
+          other.imageUrl == this.imageUrl &&
+          other.officialUrl == this.officialUrl &&
+          other.status == this.status &&
+          other.stageCount == this.stageCount &&
+          other.cachedAt == this.cachedAt);
+}
+
+class CachedFestivalSummariesCompanion
+    extends UpdateCompanion<CachedFestivalSummary> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> venueName;
+  final Value<String> city;
+  final Value<String> countryCode;
+  final Value<String> timezone;
+  final Value<DateTime> startsAt;
+  final Value<DateTime> endsAt;
+  final Value<String?> imageUrl;
+  final Value<String?> officialUrl;
+  final Value<String> status;
+  final Value<int> stageCount;
+  final Value<DateTime> cachedAt;
+  final Value<int> rowid;
+  const CachedFestivalSummariesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.venueName = const Value.absent(),
+    this.city = const Value.absent(),
+    this.countryCode = const Value.absent(),
+    this.timezone = const Value.absent(),
+    this.startsAt = const Value.absent(),
+    this.endsAt = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.officialUrl = const Value.absent(),
+    this.status = const Value.absent(),
+    this.stageCount = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedFestivalSummariesCompanion.insert({
+    required String id,
+    required String name,
+    required String venueName,
+    required String city,
+    required String countryCode,
+    required String timezone,
+    required DateTime startsAt,
+    required DateTime endsAt,
+    this.imageUrl = const Value.absent(),
+    this.officialUrl = const Value.absent(),
+    required String status,
+    required int stageCount,
+    required DateTime cachedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        venueName = Value(venueName),
+        city = Value(city),
+        countryCode = Value(countryCode),
+        timezone = Value(timezone),
+        startsAt = Value(startsAt),
+        endsAt = Value(endsAt),
+        status = Value(status),
+        stageCount = Value(stageCount),
+        cachedAt = Value(cachedAt);
+  static Insertable<CachedFestivalSummary> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? venueName,
+    Expression<String>? city,
+    Expression<String>? countryCode,
+    Expression<String>? timezone,
+    Expression<DateTime>? startsAt,
+    Expression<DateTime>? endsAt,
+    Expression<String>? imageUrl,
+    Expression<String>? officialUrl,
+    Expression<String>? status,
+    Expression<int>? stageCount,
+    Expression<DateTime>? cachedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (venueName != null) 'venue_name': venueName,
+      if (city != null) 'city': city,
+      if (countryCode != null) 'country_code': countryCode,
+      if (timezone != null) 'timezone': timezone,
+      if (startsAt != null) 'starts_at': startsAt,
+      if (endsAt != null) 'ends_at': endsAt,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (officialUrl != null) 'official_url': officialUrl,
+      if (status != null) 'status': status,
+      if (stageCount != null) 'stage_count': stageCount,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedFestivalSummariesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<String>? venueName,
+      Value<String>? city,
+      Value<String>? countryCode,
+      Value<String>? timezone,
+      Value<DateTime>? startsAt,
+      Value<DateTime>? endsAt,
+      Value<String?>? imageUrl,
+      Value<String?>? officialUrl,
+      Value<String>? status,
+      Value<int>? stageCount,
+      Value<DateTime>? cachedAt,
+      Value<int>? rowid}) {
+    return CachedFestivalSummariesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      venueName: venueName ?? this.venueName,
+      city: city ?? this.city,
+      countryCode: countryCode ?? this.countryCode,
+      timezone: timezone ?? this.timezone,
+      startsAt: startsAt ?? this.startsAt,
+      endsAt: endsAt ?? this.endsAt,
+      imageUrl: imageUrl ?? this.imageUrl,
+      officialUrl: officialUrl ?? this.officialUrl,
+      status: status ?? this.status,
+      stageCount: stageCount ?? this.stageCount,
+      cachedAt: cachedAt ?? this.cachedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (venueName.present) {
+      map['venue_name'] = Variable<String>(venueName.value);
+    }
+    if (city.present) {
+      map['city'] = Variable<String>(city.value);
+    }
+    if (countryCode.present) {
+      map['country_code'] = Variable<String>(countryCode.value);
+    }
+    if (timezone.present) {
+      map['timezone'] = Variable<String>(timezone.value);
+    }
+    if (startsAt.present) {
+      map['starts_at'] = Variable<DateTime>(startsAt.value);
+    }
+    if (endsAt.present) {
+      map['ends_at'] = Variable<DateTime>(endsAt.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    if (officialUrl.present) {
+      map['official_url'] = Variable<String>(officialUrl.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (stageCount.present) {
+      map['stage_count'] = Variable<int>(stageCount.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedFestivalSummariesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('venueName: $venueName, ')
+          ..write('city: $city, ')
+          ..write('countryCode: $countryCode, ')
+          ..write('timezone: $timezone, ')
+          ..write('startsAt: $startsAt, ')
+          ..write('endsAt: $endsAt, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('officialUrl: $officialUrl, ')
+          ..write('status: $status, ')
+          ..write('stageCount: $stageCount, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CachedLocationsTable extends CachedLocations
     with TableInfo<$CachedLocationsTable, CachedLocation> {
   @override
@@ -4485,6 +5139,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CachedFestivalsTable cachedFestivals =
       $CachedFestivalsTable(this);
   late final $CachedStagesTable cachedStages = $CachedStagesTable(this);
+  late final $CachedFestivalSummariesTable cachedFestivalSummaries =
+      $CachedFestivalSummariesTable(this);
   late final $CachedLocationsTable cachedLocations =
       $CachedLocationsTable(this);
   late final $CachedMeetingPointsTable cachedMeetingPoints =
@@ -4507,6 +5163,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         cachedSquads,
         cachedFestivals,
         cachedStages,
+        cachedFestivalSummaries,
         cachedLocations,
         cachedMeetingPoints,
         pendingSyncOperations,
@@ -5091,6 +5748,306 @@ typedef $$CachedStagesTableProcessedTableManager = ProcessedTableManager<
     ),
     CachedStage,
     PrefetchHooks Function()>;
+typedef $$CachedFestivalSummariesTableCreateCompanionBuilder
+    = CachedFestivalSummariesCompanion Function({
+  required String id,
+  required String name,
+  required String venueName,
+  required String city,
+  required String countryCode,
+  required String timezone,
+  required DateTime startsAt,
+  required DateTime endsAt,
+  Value<String?> imageUrl,
+  Value<String?> officialUrl,
+  required String status,
+  required int stageCount,
+  required DateTime cachedAt,
+  Value<int> rowid,
+});
+typedef $$CachedFestivalSummariesTableUpdateCompanionBuilder
+    = CachedFestivalSummariesCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> venueName,
+  Value<String> city,
+  Value<String> countryCode,
+  Value<String> timezone,
+  Value<DateTime> startsAt,
+  Value<DateTime> endsAt,
+  Value<String?> imageUrl,
+  Value<String?> officialUrl,
+  Value<String> status,
+  Value<int> stageCount,
+  Value<DateTime> cachedAt,
+  Value<int> rowid,
+});
+
+class $$CachedFestivalSummariesTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedFestivalSummariesTable> {
+  $$CachedFestivalSummariesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get venueName => $composableBuilder(
+      column: $table.venueName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get city => $composableBuilder(
+      column: $table.city, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get countryCode => $composableBuilder(
+      column: $table.countryCode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get timezone => $composableBuilder(
+      column: $table.timezone, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startsAt => $composableBuilder(
+      column: $table.startsAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get endsAt => $composableBuilder(
+      column: $table.endsAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get officialUrl => $composableBuilder(
+      column: $table.officialUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stageCount => $composableBuilder(
+      column: $table.stageCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedFestivalSummariesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedFestivalSummariesTable> {
+  $$CachedFestivalSummariesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get venueName => $composableBuilder(
+      column: $table.venueName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get city => $composableBuilder(
+      column: $table.city, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get countryCode => $composableBuilder(
+      column: $table.countryCode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get timezone => $composableBuilder(
+      column: $table.timezone, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get startsAt => $composableBuilder(
+      column: $table.startsAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get endsAt => $composableBuilder(
+      column: $table.endsAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get officialUrl => $composableBuilder(
+      column: $table.officialUrl, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stageCount => $composableBuilder(
+      column: $table.stageCount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedFestivalSummariesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedFestivalSummariesTable> {
+  $$CachedFestivalSummariesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get venueName =>
+      $composableBuilder(column: $table.venueName, builder: (column) => column);
+
+  GeneratedColumn<String> get city =>
+      $composableBuilder(column: $table.city, builder: (column) => column);
+
+  GeneratedColumn<String> get countryCode => $composableBuilder(
+      column: $table.countryCode, builder: (column) => column);
+
+  GeneratedColumn<String> get timezone =>
+      $composableBuilder(column: $table.timezone, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startsAt =>
+      $composableBuilder(column: $table.startsAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endsAt =>
+      $composableBuilder(column: $table.endsAt, builder: (column) => column);
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get officialUrl => $composableBuilder(
+      column: $table.officialUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get stageCount => $composableBuilder(
+      column: $table.stageCount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+}
+
+class $$CachedFestivalSummariesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedFestivalSummariesTable,
+    CachedFestivalSummary,
+    $$CachedFestivalSummariesTableFilterComposer,
+    $$CachedFestivalSummariesTableOrderingComposer,
+    $$CachedFestivalSummariesTableAnnotationComposer,
+    $$CachedFestivalSummariesTableCreateCompanionBuilder,
+    $$CachedFestivalSummariesTableUpdateCompanionBuilder,
+    (
+      CachedFestivalSummary,
+      BaseReferences<_$AppDatabase, $CachedFestivalSummariesTable,
+          CachedFestivalSummary>
+    ),
+    CachedFestivalSummary,
+    PrefetchHooks Function()> {
+  $$CachedFestivalSummariesTableTableManager(
+      _$AppDatabase db, $CachedFestivalSummariesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedFestivalSummariesTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedFestivalSummariesTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedFestivalSummariesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> venueName = const Value.absent(),
+            Value<String> city = const Value.absent(),
+            Value<String> countryCode = const Value.absent(),
+            Value<String> timezone = const Value.absent(),
+            Value<DateTime> startsAt = const Value.absent(),
+            Value<DateTime> endsAt = const Value.absent(),
+            Value<String?> imageUrl = const Value.absent(),
+            Value<String?> officialUrl = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<int> stageCount = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedFestivalSummariesCompanion(
+            id: id,
+            name: name,
+            venueName: venueName,
+            city: city,
+            countryCode: countryCode,
+            timezone: timezone,
+            startsAt: startsAt,
+            endsAt: endsAt,
+            imageUrl: imageUrl,
+            officialUrl: officialUrl,
+            status: status,
+            stageCount: stageCount,
+            cachedAt: cachedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required String venueName,
+            required String city,
+            required String countryCode,
+            required String timezone,
+            required DateTime startsAt,
+            required DateTime endsAt,
+            Value<String?> imageUrl = const Value.absent(),
+            Value<String?> officialUrl = const Value.absent(),
+            required String status,
+            required int stageCount,
+            required DateTime cachedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedFestivalSummariesCompanion.insert(
+            id: id,
+            name: name,
+            venueName: venueName,
+            city: city,
+            countryCode: countryCode,
+            timezone: timezone,
+            startsAt: startsAt,
+            endsAt: endsAt,
+            imageUrl: imageUrl,
+            officialUrl: officialUrl,
+            status: status,
+            stageCount: stageCount,
+            cachedAt: cachedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedFestivalSummariesTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $CachedFestivalSummariesTable,
+        CachedFestivalSummary,
+        $$CachedFestivalSummariesTableFilterComposer,
+        $$CachedFestivalSummariesTableOrderingComposer,
+        $$CachedFestivalSummariesTableAnnotationComposer,
+        $$CachedFestivalSummariesTableCreateCompanionBuilder,
+        $$CachedFestivalSummariesTableUpdateCompanionBuilder,
+        (
+          CachedFestivalSummary,
+          BaseReferences<_$AppDatabase, $CachedFestivalSummariesTable,
+              CachedFestivalSummary>
+        ),
+        CachedFestivalSummary,
+        PrefetchHooks Function()>;
 typedef $$CachedLocationsTableCreateCompanionBuilder = CachedLocationsCompanion
     Function({
   Value<String> sessionUserId,
@@ -6829,6 +7786,9 @@ class $AppDatabaseManager {
       $$CachedFestivalsTableTableManager(_db, _db.cachedFestivals);
   $$CachedStagesTableTableManager get cachedStages =>
       $$CachedStagesTableTableManager(_db, _db.cachedStages);
+  $$CachedFestivalSummariesTableTableManager get cachedFestivalSummaries =>
+      $$CachedFestivalSummariesTableTableManager(
+          _db, _db.cachedFestivalSummaries);
   $$CachedLocationsTableTableManager get cachedLocations =>
       $$CachedLocationsTableTableManager(_db, _db.cachedLocations);
   $$CachedMeetingPointsTableTableManager get cachedMeetingPoints =>

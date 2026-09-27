@@ -203,7 +203,10 @@ class _StaticMapRepository extends OfflineMapRepository {
         );
 
   @override
-  Future<FestivalMapSnapshot> load(String? squadId) async {
+  Future<FestivalMapSnapshot> load(
+    String? squadId, {
+    String? festivalId,
+  }) async {
     return const FestivalMapSnapshot(
       festival: FestivalMap(
         id: 'demo',

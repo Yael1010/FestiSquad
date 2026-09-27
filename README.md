@@ -41,6 +41,7 @@ database/003_phase3_normalization_and_indexes.sql
 database/004_phase5_expense_idempotency.sql
 database/005_phase6_music_preferences.sql
 database/007_phase8_social_auth.sql
+database/008_phase10_festival_catalog.sql
 ```
 
 Si la base fue creada durante una fase anterior, ejecutar las migraciones
@@ -51,6 +52,7 @@ database/003_phase3_normalization_and_indexes.sql
 database/004_phase5_expense_idempotency.sql
 database/005_phase6_music_preferences.sql
 database/007_phase8_social_auth.sql
+database/008_phase10_festival_catalog.sql
 ```
 
 ## Inicio rápido Flutter
@@ -96,11 +98,12 @@ el callback musical anterior. Configura las variables `GOOGLE_*` y
 [Fase 8](docs/phase-8-social-auth.md) para el procedimiento y el modelo de
 vinculación.
 
-El mapa funciona en Android con permiso de ubicación bajo demanda. Para usar un
-festival real, registra su geometría en SQL Server y agrega
-`--dart-define=FESTIVAL_ID=<uuid>` al comando `flutter run`. Sin ese valor se
-muestra un plano de demostración. Ver [Fase 4](docs/phase-4-resilient-map.md)
-para los límites del modo web y del rastreo en segundo plano.
+El mapa funciona en Android con permiso de ubicación bajo demanda. El catálogo
+permite seleccionar festivales publicados y conserva sus geometrías para uso
+sin conexión. La carga administrativa y el formato GeoJSON se documentan en
+[Fase 10](docs/phase-10-festival-catalog.md). Ver también
+[Fase 4](docs/phase-4-resilient-map.md) para los límites del modo web y del
+rastreo en segundo plano.
 
 ## Calidad y RNF
 

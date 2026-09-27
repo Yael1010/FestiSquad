@@ -42,6 +42,25 @@ class CachedStages extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+class CachedFestivalSummaries extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().withLength(min: 1, max: 160)();
+  TextColumn get venueName => text().withLength(min: 1, max: 160)();
+  TextColumn get city => text().withLength(min: 1, max: 120)();
+  TextColumn get countryCode => text().withLength(min: 2, max: 2)();
+  TextColumn get timezone => text()();
+  DateTimeColumn get startsAt => dateTime()();
+  DateTimeColumn get endsAt => dateTime()();
+  TextColumn get imageUrl => text().nullable()();
+  TextColumn get officialUrl => text().nullable()();
+  TextColumn get status => text()();
+  IntColumn get stageCount => integer()();
+  DateTimeColumn get cachedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 class CachedLocations extends Table {
   TextColumn get sessionUserId => text().withDefault(const Constant(''))();
   TextColumn get squadId => text()();
@@ -152,6 +171,7 @@ class CachedSquadMembers extends Table {
     CachedSquads,
     CachedFestivals,
     CachedStages,
+    CachedFestivalSummaries,
     CachedLocations,
     CachedMeetingPoints,
     PendingSyncOperations,
@@ -176,7 +196,7 @@ class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -203,6 +223,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 5) {
             await migrator.createTable(cachedSquadMembers);
+          }
+          if (from < 6) {
+            await migrator.createTable(cachedFestivalSummaries);
           }
         },
       );
@@ -306,6 +329,24 @@ class AppDatabase extends _$AppDatabase {
     return (select(cachedStages)
           ..where((row) => row.festivalId.equals(festivalId)))
         .get();
+  }
+
+  Future<List<CachedFestivalSummary>> readFestivalCatalog() {
+    return (select(cachedFestivalSummaries)
+          ..orderBy([(row) => OrderingTerm.asc(row.startsAt)]))
+        .get();
+  }
+
+  Future<void> replaceFestivalCatalog(
+    Iterable<CachedFestivalSummariesCompanion> values,
+  ) {
+    return transaction(() async {
+      await delete(cachedFestivalSummaries).go();
+      final rows = values.toList(growable: false);
+      if (rows.isNotEmpty) {
+        await batch((batch) => batch.insertAll(cachedFestivalSummaries, rows));
+      }
+    });
   }
 
   Future<void> upsertLocation(CachedLocationsCompanion value) {
