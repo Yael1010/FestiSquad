@@ -137,6 +137,22 @@ class CachedDebtTransfers extends Table {
   Set<Column<Object>> get primaryKey => {sessionUserId, squadId, position};
 }
 
+class CachedSettlements extends Table {
+  TextColumn get sessionUserId => text()();
+  TextColumn get clientRequestId => text()();
+  TextColumn get serverId => text().nullable()();
+  TextColumn get squadId => text()();
+  TextColumn get fromUserId => text()();
+  TextColumn get toUserId => text()();
+  IntColumn get amountCents => integer()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  TextColumn get syncState => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {sessionUserId, clientRequestId};
+}
+
 class CachedClashStates extends Table {
   TextColumn get sessionUserId => text()();
   TextColumn get squadId => text()();
@@ -178,6 +194,7 @@ class CachedSquadMembers extends Table {
     CachedExpenses,
     CachedBalances,
     CachedDebtTransfers,
+    CachedSettlements,
     CachedClashStates,
     CachedSquadMembers,
   ],
@@ -196,7 +213,7 @@ class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -226,6 +243,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 6) {
             await migrator.createTable(cachedFestivalSummaries);
+          }
+          if (from < 7) {
+            await migrator.createTable(cachedSettlements);
           }
         },
       );
@@ -535,6 +555,80 @@ class AppDatabase extends _$AppDatabase {
     await into(pendingSyncOperations).insert(
       PendingSyncOperationsCompanion.insert(
         resourceType: 'expense',
+        operation: 'create',
+        payloadJson: payloadJson,
+        createdAt: DateTime.now().toUtc(),
+      ),
+    );
+  }
+
+  Future<List<CachedSettlement>> readSettlements(
+    String sessionUserId,
+    String squadId,
+  ) {
+    return (select(cachedSettlements)
+          ..where((row) =>
+              row.sessionUserId.equals(sessionUserId) &
+              row.squadId.equals(squadId))
+          ..orderBy([(row) => OrderingTerm.desc(row.createdAt)]))
+        .get();
+  }
+
+  Future<void> replaceSyncedSettlements(
+    String sessionUserId,
+    String squadId,
+    Iterable<CachedSettlementsCompanion> values,
+  ) {
+    return transaction(() async {
+      await (delete(cachedSettlements)
+            ..where((row) =>
+                row.sessionUserId.equals(sessionUserId) &
+                row.squadId.equals(squadId) &
+                row.syncState.equals('synced')))
+          .go();
+      final rows = values.toList(growable: false);
+      if (rows.isNotEmpty) {
+        await batch((batch) => batch.insertAll(
+              cachedSettlements,
+              rows,
+              mode: InsertMode.insertOrReplace,
+            ));
+      }
+    });
+  }
+
+  Future<void> upsertSettlement(CachedSettlementsCompanion value) {
+    return into(cachedSettlements).insertOnConflictUpdate(value);
+  }
+
+  Future<void> deleteSettlement(
+    String sessionUserId,
+    String clientRequestId,
+  ) async {
+    await (delete(cachedSettlements)
+          ..where((row) =>
+              row.sessionUserId.equals(sessionUserId) &
+              row.clientRequestId.equals(clientRequestId)))
+        .go();
+  }
+
+  Future<List<PendingSyncOperation>> readPendingSettlements() {
+    return (select(pendingSyncOperations)
+          ..where((row) => row.resourceType.equals('settlement'))
+          ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]))
+        .get();
+  }
+
+  Future<void> queueSettlement(String payloadJson) async {
+    final payload = jsonDecode(payloadJson) as Map<String, dynamic>;
+    final clientRequestId = payload['client_request_id'] as String;
+    for (final pending in await readPendingSettlements()) {
+      final queued = jsonDecode(pending.payloadJson) as Map<String, dynamic>;
+      if (queued['client_request_id'] == clientRequestId) return;
+    }
+    await into(pendingSyncOperations).insert(
+      PendingSyncOperationsCompanion.insert(
+        resourceType: 'settlement',
         operation: 'create',
         payloadJson: payloadJson,
         createdAt: DateTime.now().toUtc(),

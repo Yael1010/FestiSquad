@@ -96,15 +96,91 @@ class DebtTransfer {
   final Money amount;
 }
 
+class SettlementDraft {
+  const SettlementDraft({
+    required this.clientRequestId,
+    required this.squadId,
+    required this.fromUserId,
+    required this.toUserId,
+    required this.amount,
+    this.note,
+  });
+
+  final String clientRequestId;
+  final String squadId;
+  final String fromUserId;
+  final String toUserId;
+  final Money amount;
+  final String? note;
+
+  Map<String, dynamic> toJson() => {
+        'client_request_id': clientRequestId,
+        'squad_id': squadId,
+        'from_user_id': fromUserId,
+        'to_user_id': toUserId,
+        'amount': amount.toDecimalString(),
+        'note': note,
+      };
+
+  factory SettlementDraft.fromJson(Map<String, dynamic> json) =>
+      SettlementDraft(
+        clientRequestId: json['client_request_id'] as String,
+        squadId: json['squad_id'] as String,
+        fromUserId: json['from_user_id'] as String,
+        toUserId: json['to_user_id'] as String,
+        amount: Money.parse(json['amount'].toString(), allowNegative: false),
+        note: json['note'] as String?,
+      );
+}
+
+class SquadSettlement {
+  const SquadSettlement({
+    required this.id,
+    required this.clientRequestId,
+    required this.squadId,
+    required this.fromUserId,
+    required this.toUserId,
+    required this.amount,
+    required this.createdAt,
+    required this.pendingSync,
+    this.note,
+  });
+
+  final String id;
+  final String clientRequestId;
+  final String squadId;
+  final String fromUserId;
+  final String toUserId;
+  final Money amount;
+  final String? note;
+  final DateTime createdAt;
+  final bool pendingSync;
+
+  factory SquadSettlement.fromJson(Map<String, dynamic> json) =>
+      SquadSettlement(
+        id: json['id'] as String,
+        clientRequestId: json['client_request_id'] as String,
+        squadId: json['squad_id'] as String,
+        fromUserId: json['from_user_id'] as String,
+        toUserId: json['to_user_id'] as String,
+        amount: Money.parse(json['amount'].toString(), allowNegative: false),
+        note: json['note'] as String?,
+        createdAt: DateTime.parse(json['created_at'] as String),
+        pendingSync: false,
+      );
+}
+
 class FinanceSnapshot {
   const FinanceSnapshot({
     required this.expenses,
+    required this.settlements,
     required this.netBalances,
     required this.transfers,
     required this.fromCache,
   });
 
   final List<SquadExpense> expenses;
+  final List<SquadSettlement> settlements;
   final Map<String, Money> netBalances;
   final List<DebtTransfer> transfers;
   final bool fromCache;

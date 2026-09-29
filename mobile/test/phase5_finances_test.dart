@@ -71,6 +71,52 @@ void main() {
     expect(result.transfers.single.fromUserId, userB);
     expect(await database.readPendingExpenses(), hasLength(1));
   });
+
+  test('offline settlement is cached and reduces both open balances', () async {
+    FlutterSecureStorage.setMockInitialValues({
+      'auth_user_id': userB,
+      'auth_access_token': 'access',
+      'auth_refresh_token': 'refresh',
+    });
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    final remote = _FakeFinanceRemote()..offline = true;
+    final repository = FinanceRepository(
+      remote,
+      database,
+      TokenStorage(const FlutterSecureStorage()),
+    );
+    await repository.create(
+      ExpenseDraft(
+        clientRequestId: requestId,
+        squadId: squadId,
+        paidByUserId: userA,
+        description: 'Taxi',
+        amount: Money.parse('100.00'),
+        participants: const [
+          ExpenseShare(userId: userA, amount: Money.fromCents(5000)),
+          ExpenseShare(userId: userB, amount: Money.fromCents(5000)),
+        ],
+      ),
+    );
+
+    final result = await repository.createSettlement(
+      SettlementDraft(
+        clientRequestId: '00000000-0000-0000-0000-000000000199',
+        squadId: squadId,
+        fromUserId: userB,
+        toUserId: userA,
+        amount: Money.parse('20.00'),
+        note: 'Transferencia',
+      ),
+    );
+
+    expect(result.settlements.single.pendingSync, isTrue);
+    expect(result.netBalances[userA]!.cents, 3000);
+    expect(result.netBalances[userB]!.cents, -3000);
+    expect(result.transfers.single.amount.cents, 3000);
+    expect(await database.readPendingSettlements(), hasLength(1));
+  });
 }
 
 class _FakeFinanceRemote implements FinanceRemoteDataSource {
@@ -110,7 +156,29 @@ class _FakeFinanceRemote implements FinanceRemoteDataSource {
   }
 
   @override
+  Future<SquadSettlement> createSettlement(SettlementDraft draft) async {
+    if (offline) _failure();
+    return SquadSettlement(
+      id: '00000000-0000-0000-0000-000000000200',
+      clientRequestId: draft.clientRequestId,
+      squadId: draft.squadId,
+      fromUserId: draft.fromUserId,
+      toUserId: draft.toUserId,
+      amount: draft.amount,
+      note: draft.note,
+      createdAt: DateTime.utc(2026, 9, 29),
+      pendingSync: false,
+    );
+  }
+
+  @override
   Future<List<SquadExpense>> expenses(String squadId) async {
+    if (offline) _failure();
+    return const [];
+  }
+
+  @override
+  Future<List<SquadSettlement>> settlements(String squadId) async {
     if (offline) _failure();
     return const [];
   }

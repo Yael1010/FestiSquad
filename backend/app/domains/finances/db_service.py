@@ -5,11 +5,18 @@ from uuid import UUID, uuid4
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
-from app.domains.finances.db_models import Expense, ExpenseParticipant, SquadMember
+from app.domains.finances.db_models import (
+    Expense,
+    ExpenseParticipant,
+    Settlement,
+    SquadMember,
+)
 from app.domains.finances.db_schemas import (
     BalanceOutput,
     ExpenseInput,
     ExpenseOutput,
+    SettlementInput,
+    SettlementOutput,
     ShareInput,
 )
 from app.domains.finances.exact_money import suggest_transfers
@@ -113,6 +120,92 @@ class DatabaseFinanceService:
         self, db: Session, squad_id: UUID, actor_id: UUID
     ) -> BalanceOutput:
         self._require_member(db, squad_id, actor_id)
+        balances = self._balance_map(db, squad_id)
+        return BalanceOutput(
+            squad_id=squad_id,
+            net_balances=balances,
+            suggested_transfers=suggest_transfers(balances),
+        )
+
+    def create_settlement(
+        self,
+        db: Session,
+        payload: SettlementInput,
+        actor_id: UUID,
+    ) -> SettlementOutput:
+        payload = SettlementInput.model_validate(payload.model_dump())
+        members = self._member_ids(db, payload.squad_id)
+        if actor_id not in members:
+            raise PermissionError('El actor no pertenece al squad')
+        if actor_id != payload.from_user_id:
+            raise PermissionError('Solo quien paga puede registrar la liquidación')
+
+        existing = db.scalar(
+            select(Settlement).where(
+                Settlement.client_request_id == payload.client_request_id
+            )
+        )
+        if existing is not None:
+            if (
+                existing.squad_id != payload.squad_id
+                or existing.from_user_id != payload.from_user_id
+                or existing.to_user_id != payload.to_user_id
+                or existing.amount != payload.amount
+                or existing.note != payload.note
+            ):
+                raise ValueError('La operación repetida no coincide con el pago original')
+            return self._settlement_output(existing)
+
+        if {payload.from_user_id, payload.to_user_id} - members:
+            raise ValueError('Pagador y receptor deben pertenecer al squad')
+
+        balances = self._balance_map(db, payload.squad_id)
+        debt = -balances.get(payload.from_user_id, Decimal('0.00'))
+        credit = balances.get(payload.to_user_id, Decimal('0.00'))
+        maximum = min(debt, credit)
+        if maximum <= Decimal('0.00'):
+            raise ValueError('No existe una deuda pendiente entre estos saldos')
+        if payload.amount > maximum:
+            raise ValueError(f'El pago no puede exceder {maximum:.2f} MXN')
+
+        settlement = Settlement(
+            id=uuid4(),
+            squad_id=payload.squad_id,
+            client_request_id=payload.client_request_id,
+            from_user_id=payload.from_user_id,
+            to_user_id=payload.to_user_id,
+            amount=payload.amount,
+            note=payload.note,
+        )
+        try:
+            db.add(settlement)
+            db.commit()
+            db.refresh(settlement)
+        except Exception:
+            db.rollback()
+            raise
+        return self._settlement_output(settlement)
+
+    def list_settlements(
+        self,
+        db: Session,
+        squad_id: UUID,
+        actor_id: UUID,
+        *,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[SettlementOutput]:
+        self._require_member(db, squad_id, actor_id)
+        rows = db.scalars(
+            select(Settlement)
+            .where(Settlement.squad_id == squad_id)
+            .order_by(Settlement.created_at.desc(), Settlement.id.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return [self._settlement_output(row) for row in rows]
+
+    def _balance_map(self, db: Session, squad_id: UUID) -> dict[UUID, Decimal]:
         rows = db.execute(
             text(
                 '''
@@ -125,11 +218,7 @@ class DatabaseFinanceService:
         balances = {UUID(str(user_id)): amount for user_id, amount in rows}
         if any(not isinstance(value, Decimal) for value in balances.values()):
             raise TypeError('El driver debe devolver Decimal para los saldos')
-        return BalanceOutput(
-            squad_id=squad_id,
-            net_balances=balances,
-            suggested_transfers=suggest_transfers(balances),
-        )
+        return balances
 
     def _member_ids(self, db: Session, squad_id: UUID) -> set[UUID]:
         return set(
@@ -179,6 +268,21 @@ class DatabaseFinanceService:
                 for participant in participants
             ],
             created_at=expense.created_at.replace(tzinfo=timezone.utc),
+        )
+
+    def _settlement_output(self, settlement: Settlement) -> SettlementOutput:
+        created_at = settlement.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        return SettlementOutput(
+            id=settlement.id,
+            squad_id=settlement.squad_id,
+            client_request_id=settlement.client_request_id,
+            from_user_id=settlement.from_user_id,
+            to_user_id=settlement.to_user_id,
+            amount=settlement.amount,
+            note=settlement.note,
+            created_at=created_at,
         )
 
 

@@ -34,6 +34,17 @@ class FinanceController extends StateNotifier<AsyncValue<FinanceSnapshot?>> {
       throw FinanceRequestException(message);
     }
   }
+
+  Future<void> settle(SettlementDraft draft) async {
+    state = const AsyncValue.loading();
+    try {
+      state = AsyncValue.data(await _repository.createSettlement(draft));
+    } catch (error, stackTrace) {
+      final message = apiErrorMessage(error);
+      state = AsyncValue.error(message, stackTrace);
+      throw FinanceRequestException(message);
+    }
+  }
 }
 
 class FinanceRequestException implements Exception {

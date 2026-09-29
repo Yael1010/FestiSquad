@@ -38,3 +38,40 @@ class ExpenseParticipant(Base):
     expense_id: Mapped[UUID] = mapped_column(ForeignKey('expenses.id'), primary_key=True)
     user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'), primary_key=True)
     share_amount: Mapped[Decimal] = mapped_column(DECIMAL(18, 2, asdecimal=True))
+
+
+class Settlement(Base):
+    __tablename__ = 'settlements'
+    __table_args__ = (
+        CheckConstraint('amount > 0', name='ck_settlements_amount'),
+        CheckConstraint(
+            'from_user_id <> to_user_id',
+            name='ck_settlements_distinct_users',
+        ),
+        Index(
+            'ix_settlements_squad_created',
+            'squad_id',
+            text('created_at DESC'),
+        ),
+        Index(
+            'uq_settlements_client_request',
+            'client_request_id',
+            unique=True,
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(
+        UNIQUEIDENTIFIER,
+        primary_key=True,
+        default=uuid4,
+        server_default=text('NEWID()'),
+    )
+    squad_id: Mapped[UUID] = mapped_column(ForeignKey('squads.id'))
+    client_request_id: Mapped[UUID] = mapped_column(UNIQUEIDENTIFIER)
+    from_user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'))
+    to_user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'))
+    amount: Mapped[Decimal] = mapped_column(DECIMAL(18, 2, asdecimal=True))
+    note: Mapped[str | None] = mapped_column(Unicode(180))
+    created_at: Mapped[datetime] = mapped_column(
+        DATETIME2,
+        server_default=text('SYSUTCDATETIME()'),
+    )

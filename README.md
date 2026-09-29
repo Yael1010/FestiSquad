@@ -42,6 +42,7 @@ database/004_phase5_expense_idempotency.sql
 database/005_phase6_music_preferences.sql
 database/007_phase8_social_auth.sql
 database/008_phase10_festival_catalog.sql
+database/009_phase11_settlements.sql
 ```
 
 Si la base fue creada durante una fase anterior, ejecutar las migraciones
@@ -53,6 +54,7 @@ database/004_phase5_expense_idempotency.sql
 database/005_phase6_music_preferences.sql
 database/007_phase8_social_auth.sql
 database/008_phase10_festival_catalog.sql
+database/009_phase11_settlements.sql
 ```
 
 ## Inicio rápido Flutter
@@ -101,8 +103,9 @@ vinculación.
 El mapa funciona en Android con permiso de ubicación bajo demanda. El catálogo
 permite seleccionar festivales publicados y conserva sus geometrías para uso
 sin conexión. La carga administrativa y el formato GeoJSON se documentan en
-[Fase 10](docs/phase-10-festival-catalog.md). Ver también
-[Fase 4](docs/phase-4-resilient-map.md) para los límites del modo web y del
+[Fase 10](docs/phase-10-festival-catalog.md). El flujo de pagos se documenta en
+[Fase 11](docs/phase-11-common-fund-settlements.md), y
+[Fase 4](docs/phase-4-resilient-map.md) describe los límites del modo web y del
 rastreo en segundo plano.
 
 ## Calidad y RNF

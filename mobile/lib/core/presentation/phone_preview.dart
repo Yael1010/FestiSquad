@@ -44,9 +44,9 @@ class PhonePreview extends StatelessWidget {
               child: SizedBox(
                 width: frameSize.width * scale,
                 height: frameSize.height * scale,
-                child: Transform.scale(
-                  scale: scale,
-                  alignment: Alignment.topLeft,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
                   child: SizedBox.fromSize(
                     size: frameSize,
                     child: DecoratedBox(

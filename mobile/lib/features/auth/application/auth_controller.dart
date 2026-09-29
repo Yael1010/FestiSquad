@@ -11,10 +11,11 @@ final authControllerProvider =
 
 class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
   AuthController(this._repository) : super(const AsyncValue.loading()) {
-    _restore();
+    _initialization = _restore();
   }
 
   final AuthRepository _repository;
+  late final Future<void> _initialization;
 
   Future<void> _restore() async {
     try {
@@ -29,6 +30,7 @@ class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
     required String email,
     required String password,
   }) async {
+    await _initialization;
     await _authenticate(
       () => _repository.register(
         name: name,
@@ -42,6 +44,7 @@ class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
     required String email,
     required String password,
   }) async {
+    await _initialization;
     await _authenticate(
       () => _repository.login(email: email, password: password),
     );
@@ -59,6 +62,7 @@ class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
   }
 
   Future<SocialAuthResult> finishSocial(String flowToken) async {
+    await _initialization;
     try {
       final result = await _repository.finishSocial(flowToken);
       if (result.session != null) state = AsyncValue.data(result.session);
@@ -69,6 +73,7 @@ class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
   }
 
   Future<void> logout() async {
+    await _initialization;
     await _repository.logout();
     state = const AsyncValue.data(null);
   }

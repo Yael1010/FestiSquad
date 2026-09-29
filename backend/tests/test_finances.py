@@ -6,8 +6,8 @@ from uuid import UUID
 import pytest
 from sqlalchemy.orm import Session
 
-from app.domains.finances.db_models import Expense, ExpenseParticipant
-from app.domains.finances.db_schemas import ExpenseInput
+from app.domains.finances.db_models import Expense, ExpenseParticipant, Settlement
+from app.domains.finances.db_schemas import ExpenseInput, SettlementInput
 from app.domains.finances.db_service import DatabaseFinanceService
 from app.domains.finances.exact_money import suggest_transfers
 
@@ -26,6 +26,17 @@ def expense_input() -> ExpenseInput:
             {'user_id': B, 'share_amount': '100.00'},
             {'user_id': C, 'share_amount': '100.00'},
         ],
+    )
+
+
+def settlement_input(amount: str = '100.00') -> SettlementInput:
+    return SettlementInput(
+        squad_id=A,
+        client_request_id=UUID(int=199),
+        from_user_id=B,
+        to_user_id=A,
+        amount=amount,
+        note='Transferencia SPEI',
     )
 
 
@@ -100,4 +111,63 @@ def test_repeated_client_request_returns_original_expense() -> None:
 
     assert result.id == existing.id
     db.add.assert_not_called()
+    db.commit.assert_not_called()
+
+
+def test_create_settlement_reduces_an_existing_debt() -> None:
+    db = MagicMock(spec=Session)
+    db.scalars.return_value = [A, B, C]
+    db.scalar.return_value = None
+    db.execute.return_value.all.return_value = [
+        (A, Decimal('200.00')),
+        (B, Decimal('-100.00')),
+        (C, Decimal('-100.00')),
+    ]
+
+    def refresh(settlement: Settlement) -> None:
+        settlement.created_at = datetime(2026, 9, 29)
+
+    db.refresh.side_effect = refresh
+    result = DatabaseFinanceService().create_settlement(
+        db,
+        settlement_input(),
+        B,
+    )
+
+    assert result.amount == Decimal('100.00')
+    assert result.from_user_id == B
+    assert isinstance(db.add.call_args.args[0], Settlement)
+    db.commit.assert_called_once()
+
+
+def test_settlement_cannot_be_recorded_by_another_member() -> None:
+    db = MagicMock(spec=Session)
+    db.scalars.return_value = [A, B, C]
+
+    with pytest.raises(PermissionError, match='quien paga'):
+        DatabaseFinanceService().create_settlement(
+            db,
+            settlement_input(),
+            C,
+        )
+
+    db.commit.assert_not_called()
+
+
+def test_settlement_cannot_exceed_current_debt() -> None:
+    db = MagicMock(spec=Session)
+    db.scalars.return_value = [A, B]
+    db.scalar.return_value = None
+    db.execute.return_value.all.return_value = [
+        (A, Decimal('50.00')),
+        (B, Decimal('-50.00')),
+    ]
+
+    with pytest.raises(ValueError, match='no puede exceder'):
+        DatabaseFinanceService().create_settlement(
+            db,
+            settlement_input('50.01'),
+            B,
+        )
+
     db.commit.assert_not_called()

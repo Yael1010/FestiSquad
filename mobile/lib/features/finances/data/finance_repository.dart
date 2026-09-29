@@ -26,11 +26,13 @@ final financeRepositoryProvider = Provider<FinanceRepository>((ref) {
 
 abstract interface class FinanceRemoteDataSource {
   Future<List<SquadExpense>> expenses(String squadId);
+  Future<List<SquadSettlement>> settlements(String squadId);
   Future<({Map<String, Money> balances, List<DebtTransfer> transfers})>
       balances(
     String squadId,
   );
   Future<SquadExpense> create(ExpenseDraft draft);
+  Future<SquadSettlement> createSettlement(SettlementDraft draft);
 }
 
 class ApiFinanceRemoteDataSource implements FinanceRemoteDataSource {
@@ -76,6 +78,25 @@ class ApiFinanceRemoteDataSource implements FinanceRemoteDataSource {
       Map<String, dynamic>.from(response.data as Map),
     );
   }
+
+  @override
+  Future<List<SquadSettlement>> settlements(String squadId) async {
+    final response = await _api.get('/expenses/squad/$squadId/settlements');
+    return (response.data as List)
+        .map((item) => SquadSettlement.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<SquadSettlement> createSettlement(SettlementDraft draft) async {
+    final response =
+        await _api.post('/expenses/settlements', data: draft.toJson());
+    return SquadSettlement.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
 }
 
 class FinanceRepository {
@@ -89,7 +110,9 @@ class FinanceRepository {
     final userId = await _currentUserId();
     await _retryPending(userId);
     final cached = await _readCache(userId, squadId);
-    if (cached.expenses.isNotEmpty || cached.netBalances.isNotEmpty) {
+    if (cached.expenses.isNotEmpty ||
+        cached.settlements.isNotEmpty ||
+        cached.netBalances.isNotEmpty) {
       unawaited(_refresh(userId, squadId));
       return cached;
     }
@@ -140,13 +163,54 @@ class FinanceRepository {
     }
   }
 
+  Future<FinanceSnapshot> createSettlement(SettlementDraft draft) async {
+    final userId = await _currentUserId();
+    await _cacheSettlement(
+      userId,
+      SquadSettlement(
+        id: draft.clientRequestId,
+        clientRequestId: draft.clientRequestId,
+        squadId: draft.squadId,
+        fromUserId: draft.fromUserId,
+        toUserId: draft.toUserId,
+        amount: draft.amount,
+        note: draft.note,
+        createdAt: DateTime.now().toUtc(),
+        pendingSync: true,
+      ),
+    );
+    await _database.queueSettlement(jsonEncode(draft.toJson()));
+    await _recalculateLocalSummary(userId, draft.squadId);
+
+    try {
+      final saved = await _remote.createSettlement(draft);
+      await _cacheSettlement(userId, saved);
+      await _deletePendingSettlement(draft.clientRequestId);
+      try {
+        return await _refresh(userId, draft.squadId);
+      } on DioException {
+        return _readCache(userId, draft.squadId);
+      }
+    } on DioException catch (error) {
+      if (_isNetworkFailure(error)) {
+        return _readCache(userId, draft.squadId);
+      }
+      await _database.deleteSettlement(userId, draft.clientRequestId);
+      await _deletePendingSettlement(draft.clientRequestId);
+      await _recalculateLocalSummary(userId, draft.squadId);
+      rethrow;
+    }
+  }
+
   Future<FinanceSnapshot> _refresh(String userId, String squadId) async {
     final responses = await Future.wait([
       _remote.expenses(squadId),
+      _remote.settlements(squadId),
       _remote.balances(squadId),
     ]);
     final expenses = responses[0] as List<SquadExpense>;
-    final summary = responses[1] as ({
+    final settlements = responses[1] as List<SquadSettlement>;
+    final summary = responses[2] as ({
       Map<String, Money> balances,
       List<DebtTransfer> transfers
     });
@@ -155,9 +219,15 @@ class FinanceRepository {
       squadId,
       expenses.map((expense) => _toCache(userId, expense)),
     );
+    await _database.replaceSyncedSettlements(
+      userId,
+      squadId,
+      settlements.map((settlement) => _settlementToCache(userId, settlement)),
+    );
     await _cacheSummary(userId, squadId, summary.balances, summary.transfers);
     return FinanceSnapshot(
       expenses: await _readExpenses(userId, squadId),
+      settlements: await _readSettlements(userId, squadId),
       netBalances: summary.balances,
       transfers: summary.transfers,
       fromCache: false,
@@ -166,6 +236,7 @@ class FinanceRepository {
 
   Future<FinanceSnapshot> _readCache(String userId, String squadId) async {
     final expenses = await _readExpenses(userId, squadId);
+    final settlements = await _readSettlements(userId, squadId);
     final balances = {
       for (final row in await _database.readBalances(userId, squadId))
         row.userId: Money.fromCents(row.balanceCents),
@@ -179,6 +250,7 @@ class FinanceRepository {
         .toList(growable: false);
     return FinanceSnapshot(
       expenses: expenses,
+      settlements: settlements,
       netBalances: balances,
       transfers: transfers,
       fromCache: true,
@@ -213,6 +285,52 @@ class FinanceRepository {
 
   Future<void> _cacheExpense(String userId, SquadExpense expense) {
     return _database.upsertExpense(_toCache(userId, expense));
+  }
+
+  Future<List<SquadSettlement>> _readSettlements(
+    String userId,
+    String squadId,
+  ) async {
+    return (await _database.readSettlements(userId, squadId))
+        .map((row) => SquadSettlement(
+              id: row.serverId ?? row.clientRequestId,
+              clientRequestId: row.clientRequestId,
+              squadId: row.squadId,
+              fromUserId: row.fromUserId,
+              toUserId: row.toUserId,
+              amount: Money.fromCents(row.amountCents),
+              note: row.note,
+              createdAt: row.createdAt,
+              pendingSync: row.syncState != 'synced',
+            ))
+        .toList(growable: false);
+  }
+
+  Future<void> _cacheSettlement(
+    String userId,
+    SquadSettlement settlement,
+  ) {
+    return _database.upsertSettlement(
+      _settlementToCache(userId, settlement),
+    );
+  }
+
+  CachedSettlementsCompanion _settlementToCache(
+    String userId,
+    SquadSettlement settlement,
+  ) {
+    return CachedSettlementsCompanion.insert(
+      sessionUserId: userId,
+      clientRequestId: settlement.clientRequestId,
+      serverId: Value(settlement.pendingSync ? null : settlement.id),
+      squadId: settlement.squadId,
+      fromUserId: settlement.fromUserId,
+      toUserId: settlement.toUserId,
+      amountCents: settlement.amount.cents,
+      note: Value(settlement.note),
+      createdAt: settlement.createdAt.toUtc(),
+      syncState: settlement.pendingSync ? 'pending' : 'synced',
+    );
   }
 
   CachedExpensesCompanion _toCache(String userId, SquadExpense expense) {
@@ -264,6 +382,7 @@ class FinanceRepository {
 
   Future<void> _recalculateLocalSummary(String userId, String squadId) async {
     final expenses = await _readExpenses(userId, squadId);
+    final settlements = await _readSettlements(userId, squadId);
     final balances = <String, Money>{};
     for (final expense in expenses) {
       balances.update(
@@ -278,6 +397,18 @@ class FinanceRepository {
           ifAbsent: () => Money.fromCents(-participant.amount.cents),
         );
       }
+    }
+    for (final settlement in settlements) {
+      balances.update(
+        settlement.fromUserId,
+        (value) => value + settlement.amount,
+        ifAbsent: () => settlement.amount,
+      );
+      balances.update(
+        settlement.toUserId,
+        (value) => value - settlement.amount,
+        ifAbsent: () => Money.fromCents(-settlement.amount.cents),
+      );
     }
     balances.removeWhere((_, amount) => amount == Money.zero);
     await _cacheSummary(userId, squadId, balances, _simplify(balances));
@@ -346,10 +477,35 @@ class FinanceRepository {
         return;
       }
     }
+    for (final operation in await _database.readPendingSettlements()) {
+      final data = jsonDecode(operation.payloadJson) as Map<String, dynamic>;
+      final draft = SettlementDraft.fromJson(data);
+      try {
+        await _cacheSettlement(
+          userId,
+          await _remote.createSettlement(draft),
+        );
+        await _database.deletePendingOperation(operation.id);
+      } on DioException catch (error) {
+        if (_isNetworkFailure(error)) return;
+        await _database.deleteSettlement(userId, draft.clientRequestId);
+        await _database.deletePendingOperation(operation.id);
+        await _recalculateLocalSummary(userId, draft.squadId);
+      }
+    }
   }
 
   Future<void> _deletePending(String clientRequestId) async {
     for (final operation in await _database.readPendingExpenses()) {
+      final data = jsonDecode(operation.payloadJson) as Map<String, dynamic>;
+      if (data['client_request_id'] == clientRequestId) {
+        await _database.deletePendingOperation(operation.id);
+      }
+    }
+  }
+
+  Future<void> _deletePendingSettlement(String clientRequestId) async {
+    for (final operation in await _database.readPendingSettlements()) {
       final data = jsonDecode(operation.payloadJson) as Map<String, dynamic>;
       if (data['client_request_id'] == clientRequestId) {
         await _database.deletePendingOperation(operation.id);

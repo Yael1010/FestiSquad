@@ -335,8 +335,9 @@ class _SocialAuthSheetState extends ConsumerState<SocialAuthSheet>
       if (!mounted) return;
       switch (result.status) {
         case SocialAuthStatus.completed:
-          Navigator.of(context).pop();
-          context.go('/dashboard');
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
         case SocialAuthStatus.pending:
           if (!silent) {
             setState(() => _message =
@@ -519,9 +520,9 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
         );
       }
       if (!mounted) return;
-      final router = GoRouter.of(context);
-      Navigator.pop(context);
-      router.go('/dashboard');
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     } on AuthRequestException catch (error) {
       if (mounted) setState(() => _requestError = error.message);
     } finally {

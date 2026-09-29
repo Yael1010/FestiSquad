@@ -10,6 +10,12 @@ WITH movements AS (
     SELECT e.squad_id, p.user_id, -p.share_amount AS delta
     FROM dbo.expense_participants AS p
     JOIN dbo.expenses AS e ON e.id = p.expense_id
+    UNION ALL
+    SELECT squad_id, from_user_id AS user_id, amount AS delta
+    FROM dbo.settlements
+    UNION ALL
+    SELECT squad_id, to_user_id AS user_id, -amount AS delta
+    FROM dbo.settlements
 )
 SELECT squad_id, user_id, SUM(delta) AS balance
 FROM movements

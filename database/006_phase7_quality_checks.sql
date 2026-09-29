@@ -8,10 +8,14 @@ SELECT
     t.name AS data_type
 FROM sys.columns AS c
 JOIN sys.types AS t ON c.user_type_id = t.user_type_id
-WHERE OBJECT_NAME(c.object_id) IN ('expenses', 'expense_participants')
+WHERE OBJECT_NAME(c.object_id) IN (
+    'expenses',
+    'expense_participants',
+    'settlements'
+)
   AND t.name IN ('float', 'real', 'money', 'smallmoney');
 
--- Debe mostrar DECIMAL(18,2) para amount y share_amount.
+-- Debe mostrar DECIMAL(18,2) para gastos, cuotas y liquidaciones.
 SELECT
     OBJECT_NAME(c.object_id) AS table_name,
     c.name AS column_name,
@@ -21,4 +25,5 @@ SELECT
 FROM sys.columns AS c
 JOIN sys.types AS t ON c.user_type_id = t.user_type_id
 WHERE (OBJECT_NAME(c.object_id) = 'expenses' AND c.name = 'amount')
-   OR (OBJECT_NAME(c.object_id) = 'expense_participants' AND c.name = 'share_amount');
+   OR (OBJECT_NAME(c.object_id) = 'expense_participants' AND c.name = 'share_amount')
+   OR (OBJECT_NAME(c.object_id) = 'settlements' AND c.name = 'amount');

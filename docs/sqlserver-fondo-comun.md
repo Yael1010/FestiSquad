@@ -25,8 +25,9 @@ captura de imágenes/OCR y almacenamiento de archivos quedan fuera de este paso.
 
 Supuesto explícito para este MVP: todos los importes son MXN. No mezclar monedas;
 para habilitar varias, añadir moneda por grupo/gasto y agrupar también por moneda.
-No es todavía una caja con depósitos ni un registro de pagos de liquidación:
-las transferencias calculadas son sugerencias, no pagos ejecutados o confirmados.
+La fase 11 agrega `settlements` como registro inmutable de pagos confirmados entre
+miembros. Las transferencias calculadas siguen siendo sugerencias hasta que el
+deudor registra una liquidación parcial o completa.
 
 ## 1. Preparar SQL Server
 
@@ -44,7 +45,8 @@ CREATE DATABASE FestiSquad;
 Selecciona esa base. Para el repositorio completo, ejecuta su
 `database/001_initial_schema.sql` **solo si aún no se aplicó**. Después ejecuta
 `database/002_fund_balances.sql` y
-`database/004_phase5_expense_idempotency.sql`. No vuelvas a crear tablas
+`database/004_phase5_expense_idempotency.sql` y
+`database/009_phase11_settlements.sql`. No vuelvas a crear tablas
 existentes.
 
 Se incluye `database/fund_schema_reference.sql` como DDL autónomo del módulo,

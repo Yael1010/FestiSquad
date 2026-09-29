@@ -86,3 +86,23 @@ GO
 
 -- Promueve explícitamente una cuenta existente antes de usar administración:
 -- UPDATE dbo.users SET is_platform_admin = 1 WHERE email = 'admin@example.com';
+
+USE FestiSquad;
+
+SELECT
+    name,
+    venue_name,
+    city,
+    status,
+    updated_at
+FROM dbo.festivals;
+
+SELECT
+    name,
+    email,
+    is_platform_admin
+FROM dbo.users;
+
+UPDATE dbo.users
+SET is_platform_admin = 1
+WHERE email = 'fyael7093@gmail.com';

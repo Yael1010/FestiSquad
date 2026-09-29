@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/security/token_storage.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/festi_widgets.dart';
+import '../../squads/application/squad_members_controller.dart';
 import '../../squads/application/squad_controller.dart';
 import '../../squads/domain/squad.dart';
 import '../../squads/presentation/squad_preview.dart';
@@ -22,6 +23,7 @@ class FinancesScreen extends ConsumerStatefulWidget {
 
 class _FinancesScreenState extends ConsumerState<FinancesScreen> {
   String? get _squadId => activeSquadPreview.value.id;
+  String? _currentUserId;
 
   @override
   void initState() {
@@ -32,6 +34,8 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
   Future<void> _load() async {
     final squadId = _squadId;
     if (squadId != null) {
+      final session = await ref.read(tokenStorageProvider).readSession();
+      if (mounted) setState(() => _currentUserId = session?.userId);
       await ref.read(financeControllerProvider.notifier).load(squadId);
     }
   }
@@ -74,9 +78,51 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _settle(
+    DebtTransfer transfer,
+    Map<String, String> memberNames,
+  ) async {
+    final squadId = _squadId;
+    if (squadId == null || _currentUserId != transfer.fromUserId) return;
+    final draft = await showModalBottomSheet<SettlementDraft>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => _SettlementForm(
+        squadId: squadId,
+        transfer: transfer,
+        memberNames: memberNames,
+      ),
+    );
+    if (draft == null || !mounted) return;
+    try {
+      await ref.read(financeControllerProvider.notifier).settle(draft);
+      if (!mounted) return;
+      final snapshot = ref.read(financeControllerProvider).valueOrNull;
+      _show(
+        snapshot?.fromCache == true
+            ? 'Pago guardado. Se sincronizará cuando vuelva la conexión.'
+            : 'Pago registrado y saldos actualizados.',
+      );
+    } on FinanceRequestException catch (error) {
+      _show(error.message);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final finances = ref.watch(financeControllerProvider);
+    final squadId = _squadId;
+    final members = squadId == null
+        ? const <SquadMemberProfile>[]
+        : ref
+                .watch(squadMembersControllerProvider(squadId))
+                .valueOrNull
+                ?.value ??
+            const <SquadMemberProfile>[];
+    final memberNames = {
+      for (final member in members) member.userId: member.name,
+    };
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -104,6 +150,7 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
               final value = snapshot ??
                   const FinanceSnapshot(
                     expenses: [],
+                    settlements: [],
                     netBalances: {},
                     transfers: [],
                     fromCache: false,
@@ -126,7 +173,12 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
                     Text('DEUDAS SIMPLIFICADAS',
                         style: Theme.of(context).textTheme.labelLarge),
                     const SizedBox(height: 10),
-                    _TransfersList(transfers: value.transfers),
+                    _TransfersList(
+                      transfers: value.transfers,
+                      currentUserId: _currentUserId,
+                      memberNames: memberNames,
+                      onSettle: (transfer) => _settle(transfer, memberNames),
+                    ),
                     const SizedBox(height: 24),
                     Row(
                       children: [
@@ -139,7 +191,26 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    _ExpenseList(expenses: value.expenses),
+                    _ExpenseList(
+                      expenses: value.expenses,
+                      memberNames: memberNames,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text('PAGOS REGISTRADOS',
+                              style: Theme.of(context).textTheme.labelLarge),
+                        ),
+                        Text('${value.settlements.length}',
+                            style: const TextStyle(color: FestiColors.muted)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    _SettlementList(
+                      settlements: value.settlements,
+                      memberNames: memberNames,
+                    ),
                   ],
                 ),
               );
@@ -204,9 +275,17 @@ class _BalanceSummary extends ConsumerWidget {
 }
 
 class _TransfersList extends StatelessWidget {
-  const _TransfersList({required this.transfers});
+  const _TransfersList({
+    required this.transfers,
+    required this.currentUserId,
+    required this.memberNames,
+    required this.onSettle,
+  });
 
   final List<DebtTransfer> transfers;
+  final String? currentUserId;
+  final Map<String, String> memberNames;
+  final ValueChanged<DebtTransfer> onSettle;
 
   @override
   Widget build(BuildContext context) {
@@ -217,17 +296,27 @@ class _TransfersList extends StatelessWidget {
     return Column(
       children: [
         for (final transfer in transfers)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading:
-                const CircleAvatar(child: Icon(Icons.swap_horiz, size: 18)),
-            title: Text(
-              '${_memberLabel(transfer.fromUserId)} paga a '
-              '${_memberLabel(transfer.toUserId)}',
-            ),
-            trailing: Text(
-              transfer.amount.format(),
-              style: const TextStyle(fontWeight: FontWeight.w800),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading:
+                  const CircleAvatar(child: Icon(Icons.swap_horiz, size: 18)),
+              title: Text(
+                '${_nameFor(transfer.fromUserId, memberNames)} paga a '
+                '${_nameFor(transfer.toUserId, memberNames)}',
+              ),
+              subtitle: transfer.fromUserId == currentUserId
+                  ? TextButton.icon(
+                      onPressed: () => onSettle(transfer),
+                      icon: const Icon(Icons.check_circle_outline, size: 18),
+                      label: const Text('Registrar pago'),
+                    )
+                  : null,
+              trailing: Text(
+                transfer.amount.format(),
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
             ),
           ),
       ],
@@ -236,9 +325,13 @@ class _TransfersList extends StatelessWidget {
 }
 
 class _ExpenseList extends StatelessWidget {
-  const _ExpenseList({required this.expenses});
+  const _ExpenseList({
+    required this.expenses,
+    required this.memberNames,
+  });
 
   final List<SquadExpense> expenses;
+  final Map<String, String> memberNames;
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +358,7 @@ class _ExpenseList extends StatelessWidget {
                 const CircleAvatar(child: Icon(Icons.receipt_long, size: 18)),
             title: Text(expense.description),
             subtitle: Text(
-              '${_memberLabel(expense.paidByUserId)} · '
+              '${_nameFor(expense.paidByUserId, memberNames)} · '
               '${expense.participants.length} participantes',
             ),
             trailing: Column(
@@ -281,6 +374,179 @@ class _ExpenseList extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _SettlementList extends StatelessWidget {
+  const _SettlementList({
+    required this.settlements,
+    required this.memberNames,
+  });
+
+  final List<SquadSettlement> settlements;
+  final Map<String, String> memberNames;
+
+  @override
+  Widget build(BuildContext context) {
+    if (settlements.isEmpty) {
+      return const Text(
+        'Aún no se han liquidado pagos.',
+        style: TextStyle(color: FestiColors.muted),
+      );
+    }
+    return Column(
+      children: [
+        for (final settlement in settlements)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const CircleAvatar(
+              child: Icon(Icons.check_circle_outline, size: 18),
+            ),
+            title: Text(
+              '${_nameFor(settlement.fromUserId, memberNames)} pagó a '
+              '${_nameFor(settlement.toUserId, memberNames)}',
+            ),
+            subtitle: Text(
+              settlement.note?.isNotEmpty == true
+                  ? settlement.note!
+                  : _shortDate(settlement.createdAt),
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  settlement.amount.format(),
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                if (settlement.pendingSync)
+                  const Text(
+                    'PENDIENTE',
+                    style: TextStyle(color: FestiColors.cyan, fontSize: 10),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _SettlementForm extends StatefulWidget {
+  const _SettlementForm({
+    required this.squadId,
+    required this.transfer,
+    required this.memberNames,
+  });
+
+  final String squadId;
+  final DebtTransfer transfer;
+  final Map<String, String> memberNames;
+
+  @override
+  State<_SettlementForm> createState() => _SettlementFormState();
+}
+
+class _SettlementFormState extends State<_SettlementForm> {
+  final _form = GlobalKey<FormState>();
+  late final TextEditingController _amount;
+  final _note = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _amount = TextEditingController(
+      text: widget.transfer.amount.toDecimalString(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _amount.dispose();
+    _note.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_form.currentState!.validate()) return;
+    final amount = Money.parse(_amount.text, allowNegative: false);
+    Navigator.pop(
+      context,
+      SettlementDraft(
+        clientRequestId: const Uuid().v4(),
+        squadId: widget.squadId,
+        fromUserId: widget.transfer.fromUserId,
+        toUserId: widget.transfer.toUserId,
+        amount: amount,
+        note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final recipient = _nameFor(widget.transfer.toUserId, widget.memberNames);
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        20,
+        20,
+        MediaQuery.viewInsetsOf(context).bottom + 24,
+      ),
+      child: Form(
+        key: _form,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Registrar pago',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'A $recipient · máximo ${widget.transfer.amount.format()}',
+              style: const TextStyle(color: FestiColors.muted),
+            ),
+            const SizedBox(height: 18),
+            TextFormField(
+              controller: _amount,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Importe pagado',
+                prefixText: r'$ ',
+              ),
+              validator: (value) {
+                try {
+                  final amount = Money.parse(value ?? '', allowNegative: false);
+                  if (amount.compareTo(widget.transfer.amount) > 0) {
+                    return 'No puede exceder la deuda pendiente.';
+                  }
+                  return null;
+                } on FormatException catch (error) {
+                  return error.message;
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _note,
+              maxLength: 180,
+              decoration: const InputDecoration(
+                labelText: 'Nota opcional',
+                hintText: 'Transferencia, efectivo...',
+              ),
+            ),
+            const SizedBox(height: 14),
+            BlueButton(
+              label: 'CONFIRMAR PAGO',
+              icon: Icons.check_circle_outline,
+              onPressed: _submit,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -493,4 +759,14 @@ String _memberLabel(String id) {
   final compact = id.replaceAll('-', '');
   final end = compact.length < 6 ? compact.length : 6;
   return 'Miembro ${compact.substring(0, end)}';
+}
+
+String _nameFor(String id, Map<String, String> names) =>
+    names[id] ?? _memberLabel(id);
+
+String _shortDate(DateTime value) {
+  final local = value.toLocal();
+  final day = local.day.toString().padLeft(2, '0');
+  final month = local.month.toString().padLeft(2, '0');
+  return '$day/$month/${local.year}';
 }

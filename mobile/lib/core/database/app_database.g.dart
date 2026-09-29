@@ -4179,6 +4179,527 @@ class CachedDebtTransfersCompanion extends UpdateCompanion<CachedDebtTransfer> {
   }
 }
 
+class $CachedSettlementsTable extends CachedSettlements
+    with TableInfo<$CachedSettlementsTable, CachedSettlement> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedSettlementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sessionUserIdMeta =
+      const VerificationMeta('sessionUserId');
+  @override
+  late final GeneratedColumn<String> sessionUserId = GeneratedColumn<String>(
+      'session_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _clientRequestIdMeta =
+      const VerificationMeta('clientRequestId');
+  @override
+  late final GeneratedColumn<String> clientRequestId = GeneratedColumn<String>(
+      'client_request_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _serverIdMeta =
+      const VerificationMeta('serverId');
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+      'server_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _squadIdMeta =
+      const VerificationMeta('squadId');
+  @override
+  late final GeneratedColumn<String> squadId = GeneratedColumn<String>(
+      'squad_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fromUserIdMeta =
+      const VerificationMeta('fromUserId');
+  @override
+  late final GeneratedColumn<String> fromUserId = GeneratedColumn<String>(
+      'from_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _toUserIdMeta =
+      const VerificationMeta('toUserId');
+  @override
+  late final GeneratedColumn<String> toUserId = GeneratedColumn<String>(
+      'to_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _amountCentsMeta =
+      const VerificationMeta('amountCents');
+  @override
+  late final GeneratedColumn<int> amountCents = GeneratedColumn<int>(
+      'amount_cents', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+      'note', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _syncStateMeta =
+      const VerificationMeta('syncState');
+  @override
+  late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
+      'sync_state', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        sessionUserId,
+        clientRequestId,
+        serverId,
+        squadId,
+        fromUserId,
+        toUserId,
+        amountCents,
+        note,
+        createdAt,
+        syncState
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_settlements';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedSettlement> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('session_user_id')) {
+      context.handle(
+          _sessionUserIdMeta,
+          sessionUserId.isAcceptableOrUnknown(
+              data['session_user_id']!, _sessionUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionUserIdMeta);
+    }
+    if (data.containsKey('client_request_id')) {
+      context.handle(
+          _clientRequestIdMeta,
+          clientRequestId.isAcceptableOrUnknown(
+              data['client_request_id']!, _clientRequestIdMeta));
+    } else if (isInserting) {
+      context.missing(_clientRequestIdMeta);
+    }
+    if (data.containsKey('server_id')) {
+      context.handle(_serverIdMeta,
+          serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta));
+    }
+    if (data.containsKey('squad_id')) {
+      context.handle(_squadIdMeta,
+          squadId.isAcceptableOrUnknown(data['squad_id']!, _squadIdMeta));
+    } else if (isInserting) {
+      context.missing(_squadIdMeta);
+    }
+    if (data.containsKey('from_user_id')) {
+      context.handle(
+          _fromUserIdMeta,
+          fromUserId.isAcceptableOrUnknown(
+              data['from_user_id']!, _fromUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_fromUserIdMeta);
+    }
+    if (data.containsKey('to_user_id')) {
+      context.handle(_toUserIdMeta,
+          toUserId.isAcceptableOrUnknown(data['to_user_id']!, _toUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_toUserIdMeta);
+    }
+    if (data.containsKey('amount_cents')) {
+      context.handle(
+          _amountCentsMeta,
+          amountCents.isAcceptableOrUnknown(
+              data['amount_cents']!, _amountCentsMeta));
+    } else if (isInserting) {
+      context.missing(_amountCentsMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('sync_state')) {
+      context.handle(_syncStateMeta,
+          syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta));
+    } else if (isInserting) {
+      context.missing(_syncStateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sessionUserId, clientRequestId};
+  @override
+  CachedSettlement map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedSettlement(
+      sessionUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}session_user_id'])!,
+      clientRequestId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}client_request_id'])!,
+      serverId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}server_id']),
+      squadId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}squad_id'])!,
+      fromUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}from_user_id'])!,
+      toUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}to_user_id'])!,
+      amountCents: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}amount_cents'])!,
+      note: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}note']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      syncState: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+    );
+  }
+
+  @override
+  $CachedSettlementsTable createAlias(String alias) {
+    return $CachedSettlementsTable(attachedDatabase, alias);
+  }
+}
+
+class CachedSettlement extends DataClass
+    implements Insertable<CachedSettlement> {
+  final String sessionUserId;
+  final String clientRequestId;
+  final String? serverId;
+  final String squadId;
+  final String fromUserId;
+  final String toUserId;
+  final int amountCents;
+  final String? note;
+  final DateTime createdAt;
+  final String syncState;
+  const CachedSettlement(
+      {required this.sessionUserId,
+      required this.clientRequestId,
+      this.serverId,
+      required this.squadId,
+      required this.fromUserId,
+      required this.toUserId,
+      required this.amountCents,
+      this.note,
+      required this.createdAt,
+      required this.syncState});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['session_user_id'] = Variable<String>(sessionUserId);
+    map['client_request_id'] = Variable<String>(clientRequestId);
+    if (!nullToAbsent || serverId != null) {
+      map['server_id'] = Variable<String>(serverId);
+    }
+    map['squad_id'] = Variable<String>(squadId);
+    map['from_user_id'] = Variable<String>(fromUserId);
+    map['to_user_id'] = Variable<String>(toUserId);
+    map['amount_cents'] = Variable<int>(amountCents);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['sync_state'] = Variable<String>(syncState);
+    return map;
+  }
+
+  CachedSettlementsCompanion toCompanion(bool nullToAbsent) {
+    return CachedSettlementsCompanion(
+      sessionUserId: Value(sessionUserId),
+      clientRequestId: Value(clientRequestId),
+      serverId: serverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverId),
+      squadId: Value(squadId),
+      fromUserId: Value(fromUserId),
+      toUserId: Value(toUserId),
+      amountCents: Value(amountCents),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdAt: Value(createdAt),
+      syncState: Value(syncState),
+    );
+  }
+
+  factory CachedSettlement.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedSettlement(
+      sessionUserId: serializer.fromJson<String>(json['sessionUserId']),
+      clientRequestId: serializer.fromJson<String>(json['clientRequestId']),
+      serverId: serializer.fromJson<String?>(json['serverId']),
+      squadId: serializer.fromJson<String>(json['squadId']),
+      fromUserId: serializer.fromJson<String>(json['fromUserId']),
+      toUserId: serializer.fromJson<String>(json['toUserId']),
+      amountCents: serializer.fromJson<int>(json['amountCents']),
+      note: serializer.fromJson<String?>(json['note']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      syncState: serializer.fromJson<String>(json['syncState']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sessionUserId': serializer.toJson<String>(sessionUserId),
+      'clientRequestId': serializer.toJson<String>(clientRequestId),
+      'serverId': serializer.toJson<String?>(serverId),
+      'squadId': serializer.toJson<String>(squadId),
+      'fromUserId': serializer.toJson<String>(fromUserId),
+      'toUserId': serializer.toJson<String>(toUserId),
+      'amountCents': serializer.toJson<int>(amountCents),
+      'note': serializer.toJson<String?>(note),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'syncState': serializer.toJson<String>(syncState),
+    };
+  }
+
+  CachedSettlement copyWith(
+          {String? sessionUserId,
+          String? clientRequestId,
+          Value<String?> serverId = const Value.absent(),
+          String? squadId,
+          String? fromUserId,
+          String? toUserId,
+          int? amountCents,
+          Value<String?> note = const Value.absent(),
+          DateTime? createdAt,
+          String? syncState}) =>
+      CachedSettlement(
+        sessionUserId: sessionUserId ?? this.sessionUserId,
+        clientRequestId: clientRequestId ?? this.clientRequestId,
+        serverId: serverId.present ? serverId.value : this.serverId,
+        squadId: squadId ?? this.squadId,
+        fromUserId: fromUserId ?? this.fromUserId,
+        toUserId: toUserId ?? this.toUserId,
+        amountCents: amountCents ?? this.amountCents,
+        note: note.present ? note.value : this.note,
+        createdAt: createdAt ?? this.createdAt,
+        syncState: syncState ?? this.syncState,
+      );
+  CachedSettlement copyWithCompanion(CachedSettlementsCompanion data) {
+    return CachedSettlement(
+      sessionUserId: data.sessionUserId.present
+          ? data.sessionUserId.value
+          : this.sessionUserId,
+      clientRequestId: data.clientRequestId.present
+          ? data.clientRequestId.value
+          : this.clientRequestId,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      squadId: data.squadId.present ? data.squadId.value : this.squadId,
+      fromUserId:
+          data.fromUserId.present ? data.fromUserId.value : this.fromUserId,
+      toUserId: data.toUserId.present ? data.toUserId.value : this.toUserId,
+      amountCents:
+          data.amountCents.present ? data.amountCents.value : this.amountCents,
+      note: data.note.present ? data.note.value : this.note,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      syncState: data.syncState.present ? data.syncState.value : this.syncState,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedSettlement(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('clientRequestId: $clientRequestId, ')
+          ..write('serverId: $serverId, ')
+          ..write('squadId: $squadId, ')
+          ..write('fromUserId: $fromUserId, ')
+          ..write('toUserId: $toUserId, ')
+          ..write('amountCents: $amountCents, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncState: $syncState')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(sessionUserId, clientRequestId, serverId,
+      squadId, fromUserId, toUserId, amountCents, note, createdAt, syncState);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedSettlement &&
+          other.sessionUserId == this.sessionUserId &&
+          other.clientRequestId == this.clientRequestId &&
+          other.serverId == this.serverId &&
+          other.squadId == this.squadId &&
+          other.fromUserId == this.fromUserId &&
+          other.toUserId == this.toUserId &&
+          other.amountCents == this.amountCents &&
+          other.note == this.note &&
+          other.createdAt == this.createdAt &&
+          other.syncState == this.syncState);
+}
+
+class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
+  final Value<String> sessionUserId;
+  final Value<String> clientRequestId;
+  final Value<String?> serverId;
+  final Value<String> squadId;
+  final Value<String> fromUserId;
+  final Value<String> toUserId;
+  final Value<int> amountCents;
+  final Value<String?> note;
+  final Value<DateTime> createdAt;
+  final Value<String> syncState;
+  final Value<int> rowid;
+  const CachedSettlementsCompanion({
+    this.sessionUserId = const Value.absent(),
+    this.clientRequestId = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.squadId = const Value.absent(),
+    this.fromUserId = const Value.absent(),
+    this.toUserId = const Value.absent(),
+    this.amountCents = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedSettlementsCompanion.insert({
+    required String sessionUserId,
+    required String clientRequestId,
+    this.serverId = const Value.absent(),
+    required String squadId,
+    required String fromUserId,
+    required String toUserId,
+    required int amountCents,
+    this.note = const Value.absent(),
+    required DateTime createdAt,
+    required String syncState,
+    this.rowid = const Value.absent(),
+  })  : sessionUserId = Value(sessionUserId),
+        clientRequestId = Value(clientRequestId),
+        squadId = Value(squadId),
+        fromUserId = Value(fromUserId),
+        toUserId = Value(toUserId),
+        amountCents = Value(amountCents),
+        createdAt = Value(createdAt),
+        syncState = Value(syncState);
+  static Insertable<CachedSettlement> custom({
+    Expression<String>? sessionUserId,
+    Expression<String>? clientRequestId,
+    Expression<String>? serverId,
+    Expression<String>? squadId,
+    Expression<String>? fromUserId,
+    Expression<String>? toUserId,
+    Expression<int>? amountCents,
+    Expression<String>? note,
+    Expression<DateTime>? createdAt,
+    Expression<String>? syncState,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (sessionUserId != null) 'session_user_id': sessionUserId,
+      if (clientRequestId != null) 'client_request_id': clientRequestId,
+      if (serverId != null) 'server_id': serverId,
+      if (squadId != null) 'squad_id': squadId,
+      if (fromUserId != null) 'from_user_id': fromUserId,
+      if (toUserId != null) 'to_user_id': toUserId,
+      if (amountCents != null) 'amount_cents': amountCents,
+      if (note != null) 'note': note,
+      if (createdAt != null) 'created_at': createdAt,
+      if (syncState != null) 'sync_state': syncState,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedSettlementsCompanion copyWith(
+      {Value<String>? sessionUserId,
+      Value<String>? clientRequestId,
+      Value<String?>? serverId,
+      Value<String>? squadId,
+      Value<String>? fromUserId,
+      Value<String>? toUserId,
+      Value<int>? amountCents,
+      Value<String?>? note,
+      Value<DateTime>? createdAt,
+      Value<String>? syncState,
+      Value<int>? rowid}) {
+    return CachedSettlementsCompanion(
+      sessionUserId: sessionUserId ?? this.sessionUserId,
+      clientRequestId: clientRequestId ?? this.clientRequestId,
+      serverId: serverId ?? this.serverId,
+      squadId: squadId ?? this.squadId,
+      fromUserId: fromUserId ?? this.fromUserId,
+      toUserId: toUserId ?? this.toUserId,
+      amountCents: amountCents ?? this.amountCents,
+      note: note ?? this.note,
+      createdAt: createdAt ?? this.createdAt,
+      syncState: syncState ?? this.syncState,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sessionUserId.present) {
+      map['session_user_id'] = Variable<String>(sessionUserId.value);
+    }
+    if (clientRequestId.present) {
+      map['client_request_id'] = Variable<String>(clientRequestId.value);
+    }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (squadId.present) {
+      map['squad_id'] = Variable<String>(squadId.value);
+    }
+    if (fromUserId.present) {
+      map['from_user_id'] = Variable<String>(fromUserId.value);
+    }
+    if (toUserId.present) {
+      map['to_user_id'] = Variable<String>(toUserId.value);
+    }
+    if (amountCents.present) {
+      map['amount_cents'] = Variable<int>(amountCents.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (syncState.present) {
+      map['sync_state'] = Variable<String>(syncState.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedSettlementsCompanion(')
+          ..write('sessionUserId: $sessionUserId, ')
+          ..write('clientRequestId: $clientRequestId, ')
+          ..write('serverId: $serverId, ')
+          ..write('squadId: $squadId, ')
+          ..write('fromUserId: $fromUserId, ')
+          ..write('toUserId: $toUserId, ')
+          ..write('amountCents: $amountCents, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncState: $syncState, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CachedClashStatesTable extends CachedClashStates
     with TableInfo<$CachedClashStatesTable, CachedClashState> {
   @override
@@ -5151,6 +5672,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CachedBalancesTable cachedBalances = $CachedBalancesTable(this);
   late final $CachedDebtTransfersTable cachedDebtTransfers =
       $CachedDebtTransfersTable(this);
+  late final $CachedSettlementsTable cachedSettlements =
+      $CachedSettlementsTable(this);
   late final $CachedClashStatesTable cachedClashStates =
       $CachedClashStatesTable(this);
   late final $CachedSquadMembersTable cachedSquadMembers =
@@ -5170,6 +5693,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         cachedExpenses,
         cachedBalances,
         cachedDebtTransfers,
+        cachedSettlements,
         cachedClashStates,
         cachedSquadMembers
       ];
@@ -7311,6 +7835,259 @@ typedef $$CachedDebtTransfersTableProcessedTableManager = ProcessedTableManager<
     ),
     CachedDebtTransfer,
     PrefetchHooks Function()>;
+typedef $$CachedSettlementsTableCreateCompanionBuilder
+    = CachedSettlementsCompanion Function({
+  required String sessionUserId,
+  required String clientRequestId,
+  Value<String?> serverId,
+  required String squadId,
+  required String fromUserId,
+  required String toUserId,
+  required int amountCents,
+  Value<String?> note,
+  required DateTime createdAt,
+  required String syncState,
+  Value<int> rowid,
+});
+typedef $$CachedSettlementsTableUpdateCompanionBuilder
+    = CachedSettlementsCompanion Function({
+  Value<String> sessionUserId,
+  Value<String> clientRequestId,
+  Value<String?> serverId,
+  Value<String> squadId,
+  Value<String> fromUserId,
+  Value<String> toUserId,
+  Value<int> amountCents,
+  Value<String?> note,
+  Value<DateTime> createdAt,
+  Value<String> syncState,
+  Value<int> rowid,
+});
+
+class $$CachedSettlementsTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedSettlementsTable> {
+  $$CachedSettlementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get clientRequestId => $composableBuilder(
+      column: $table.clientRequestId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fromUserId => $composableBuilder(
+      column: $table.fromUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get toUserId => $composableBuilder(
+      column: $table.toUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get amountCents => $composableBuilder(
+      column: $table.amountCents, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncState => $composableBuilder(
+      column: $table.syncState, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedSettlementsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedSettlementsTable> {
+  $$CachedSettlementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get clientRequestId => $composableBuilder(
+      column: $table.clientRequestId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get squadId => $composableBuilder(
+      column: $table.squadId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fromUserId => $composableBuilder(
+      column: $table.fromUserId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get toUserId => $composableBuilder(
+      column: $table.toUserId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get amountCents => $composableBuilder(
+      column: $table.amountCents, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get note => $composableBuilder(
+      column: $table.note, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncState => $composableBuilder(
+      column: $table.syncState, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedSettlementsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedSettlementsTable> {
+  $$CachedSettlementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get sessionUserId => $composableBuilder(
+      column: $table.sessionUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get clientRequestId => $composableBuilder(
+      column: $table.clientRequestId, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<String> get squadId =>
+      $composableBuilder(column: $table.squadId, builder: (column) => column);
+
+  GeneratedColumn<String> get fromUserId => $composableBuilder(
+      column: $table.fromUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get toUserId =>
+      $composableBuilder(column: $table.toUserId, builder: (column) => column);
+
+  GeneratedColumn<int> get amountCents => $composableBuilder(
+      column: $table.amountCents, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => column);
+}
+
+class $$CachedSettlementsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedSettlementsTable,
+    CachedSettlement,
+    $$CachedSettlementsTableFilterComposer,
+    $$CachedSettlementsTableOrderingComposer,
+    $$CachedSettlementsTableAnnotationComposer,
+    $$CachedSettlementsTableCreateCompanionBuilder,
+    $$CachedSettlementsTableUpdateCompanionBuilder,
+    (
+      CachedSettlement,
+      BaseReferences<_$AppDatabase, $CachedSettlementsTable, CachedSettlement>
+    ),
+    CachedSettlement,
+    PrefetchHooks Function()> {
+  $$CachedSettlementsTableTableManager(
+      _$AppDatabase db, $CachedSettlementsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedSettlementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedSettlementsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedSettlementsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> sessionUserId = const Value.absent(),
+            Value<String> clientRequestId = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<String> squadId = const Value.absent(),
+            Value<String> fromUserId = const Value.absent(),
+            Value<String> toUserId = const Value.absent(),
+            Value<int> amountCents = const Value.absent(),
+            Value<String?> note = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<String> syncState = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedSettlementsCompanion(
+            sessionUserId: sessionUserId,
+            clientRequestId: clientRequestId,
+            serverId: serverId,
+            squadId: squadId,
+            fromUserId: fromUserId,
+            toUserId: toUserId,
+            amountCents: amountCents,
+            note: note,
+            createdAt: createdAt,
+            syncState: syncState,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String sessionUserId,
+            required String clientRequestId,
+            Value<String?> serverId = const Value.absent(),
+            required String squadId,
+            required String fromUserId,
+            required String toUserId,
+            required int amountCents,
+            Value<String?> note = const Value.absent(),
+            required DateTime createdAt,
+            required String syncState,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedSettlementsCompanion.insert(
+            sessionUserId: sessionUserId,
+            clientRequestId: clientRequestId,
+            serverId: serverId,
+            squadId: squadId,
+            fromUserId: fromUserId,
+            toUserId: toUserId,
+            amountCents: amountCents,
+            note: note,
+            createdAt: createdAt,
+            syncState: syncState,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedSettlementsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CachedSettlementsTable,
+    CachedSettlement,
+    $$CachedSettlementsTableFilterComposer,
+    $$CachedSettlementsTableOrderingComposer,
+    $$CachedSettlementsTableAnnotationComposer,
+    $$CachedSettlementsTableCreateCompanionBuilder,
+    $$CachedSettlementsTableUpdateCompanionBuilder,
+    (
+      CachedSettlement,
+      BaseReferences<_$AppDatabase, $CachedSettlementsTable, CachedSettlement>
+    ),
+    CachedSettlement,
+    PrefetchHooks Function()>;
 typedef $$CachedClashStatesTableCreateCompanionBuilder
     = CachedClashStatesCompanion Function({
   required String sessionUserId,
@@ -7801,6 +8578,8 @@ class $AppDatabaseManager {
       $$CachedBalancesTableTableManager(_db, _db.cachedBalances);
   $$CachedDebtTransfersTableTableManager get cachedDebtTransfers =>
       $$CachedDebtTransfersTableTableManager(_db, _db.cachedDebtTransfers);
+  $$CachedSettlementsTableTableManager get cachedSettlements =>
+      $$CachedSettlementsTableTableManager(_db, _db.cachedSettlements);
   $$CachedClashStatesTableTableManager get cachedClashStates =>
       $$CachedClashStatesTableTableManager(_db, _db.cachedClashStates);
   $$CachedSquadMembersTableTableManager get cachedSquadMembers =>

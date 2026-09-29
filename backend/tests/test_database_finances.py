@@ -7,8 +7,8 @@ from sqlalchemy.dialects import mssql
 from sqlalchemy.schema import CreateTable
 
 from app.core.database_settings import DatabaseSettings
-from app.domains.finances.db_models import Base, Expense, ExpenseParticipant
-from app.domains.finances.db_schemas import BalanceOutput, ExpenseInput
+from app.domains.finances.db_models import Base, Expense, ExpenseParticipant, Settlement
+from app.domains.finances.db_schemas import BalanceOutput, ExpenseInput, SettlementInput
 from app.domains.finances.exact_money import money, split_equal, suggest_transfers
 
 A, B, C = (UUID(int=i) for i in (1, 2, 3))
@@ -85,6 +85,30 @@ def test_ddl_is_sql_server_decimal():
         assert model.__table__.c[column].type.asdecimal
     expense_ddl = str(CreateTable(Expense.__table__).compile(dialect=mssql.dialect()))
     assert 'client_request_id UNIQUEIDENTIFIER NOT NULL' in expense_ddl
+    settlement_ddl = str(
+        CreateTable(Settlement.__table__).compile(dialect=mssql.dialect())
+    )
+    assert 'amount DECIMAL(18, 2) NOT NULL' in settlement_ddl
+    assert 'FLOAT' not in settlement_ddl
+
+
+def test_settlement_requires_distinct_members_and_exact_money():
+    with pytest.raises(ValidationError):
+        SettlementInput(
+            squad_id=A,
+            client_request_id=UUID(int=199),
+            from_user_id=A,
+            to_user_id=A,
+            amount='1.00',
+        )
+    with pytest.raises(ValidationError):
+        SettlementInput(
+            squad_id=A,
+            client_request_id=UUID(int=199),
+            from_user_id=B,
+            to_user_id=A,
+            amount=0.1,
+        )
 
 
 def test_production_requires_certificate_validation():

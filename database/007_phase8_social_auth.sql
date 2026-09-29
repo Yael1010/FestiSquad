@@ -64,3 +64,6 @@ END;
 
 COMMIT TRANSACTION;
 GO
+
+SELECT TOP 10 * FROM dbo.external_accounts;
+SELECT TOP 10 * FROM dbo.social_auth_flows;

@@ -70,4 +70,6 @@ Para una base creada durante la Fase 2 se deben ejecutar, en orden,
 scripts normalizan los datos y agregan índices sin recrear la base. Finalmente,
 `database/007_phase8_social_auth.sql` agrega identidades externas y flujos OAuth
 de un solo uso. `database/008_phase10_festival_catalog.sql` añade la
-administración global y los metadatos indexados del catálogo.
+administración global, la geometría y los metadatos indexados del catálogo.
+`database/009_phase11_settlements.sql` incorpora las liquidaciones entre
+miembros y las integra en la vista de saldos.

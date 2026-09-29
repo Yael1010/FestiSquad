@@ -144,6 +144,24 @@ CREATE TABLE expense_participants (
     CONSTRAINT fk_expense_participants_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE settlements (
+    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
+    squad_id UNIQUEIDENTIFIER NOT NULL,
+    client_request_id UNIQUEIDENTIFIER NOT NULL,
+    from_user_id UNIQUEIDENTIFIER NOT NULL,
+    to_user_id UNIQUEIDENTIFIER NOT NULL,
+    amount DECIMAL(18,2) NOT NULL,
+    note NVARCHAR(180) NULL,
+    created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT pk_settlements PRIMARY KEY (id),
+    CONSTRAINT uq_settlements_client_request UNIQUE (client_request_id),
+    CONSTRAINT ck_settlements_amount CHECK (amount > 0),
+    CONSTRAINT ck_settlements_distinct_users CHECK (from_user_id <> to_user_id),
+    CONSTRAINT fk_settlements_squad FOREIGN KEY (squad_id) REFERENCES squads(id),
+    CONSTRAINT fk_settlements_from_user FOREIGN KEY (from_user_id) REFERENCES users(id),
+    CONSTRAINT fk_settlements_to_user FOREIGN KEY (to_user_id) REFERENCES users(id)
+);
+
 CREATE TABLE music_preferences (
     user_id UNIQUEIDENTIFIER NOT NULL,
     genre_id INT NOT NULL,
@@ -208,6 +226,7 @@ CREATE INDEX ix_stages_festival ON stages(festival_id, name);
 CREATE INDEX ix_festivals_status_starts ON festivals(status, starts_at);
 CREATE INDEX ix_meeting_points_squad_created ON meeting_points(squad_id, created_at DESC);
 CREATE INDEX ix_expense_participants_user ON expense_participants(user_id, expense_id);
+CREATE INDEX ix_settlements_squad_created ON settlements(squad_id, created_at DESC);
 CREATE INDEX ix_music_preferences_genre ON music_preferences(genre_id, user_id);
 CREATE INDEX ix_music_artist_preferences_artist ON music_artist_preferences(artist_id, user_id);
 CREATE INDEX ix_external_accounts_user ON external_accounts(user_id);

@@ -3,7 +3,13 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.domains.auth.dependencies import CurrentUser, DatabaseSession
-from app.domains.finances.db_schemas import BalanceOutput, ExpenseInput, ExpenseOutput
+from app.domains.finances.db_schemas import (
+    BalanceOutput,
+    ExpenseInput,
+    ExpenseOutput,
+    SettlementInput,
+    SettlementOutput,
+)
 from app.domains.finances.db_service import finance_service
 
 router = APIRouter()
@@ -51,5 +57,46 @@ def balances(
 ) -> BalanceOutput:
     try:
         return finance_service.balances_for_squad(db, squad_id, current_user.id)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail='No perteneces a este squad.') from exc
+
+
+@router.post(
+    '/settlements',
+    response_model=SettlementOutput,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_settlement(
+    payload: SettlementInput,
+    db: DatabaseSession,
+    current_user: CurrentUser,
+) -> SettlementOutput:
+    try:
+        return finance_service.create_settlement(db, payload, current_user.id)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get(
+    '/squad/{squad_id}/settlements',
+    response_model=list[SettlementOutput],
+)
+def list_settlements(
+    squad_id: UUID,
+    db: DatabaseSession,
+    current_user: CurrentUser,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> list[SettlementOutput]:
+    try:
+        return finance_service.list_settlements(
+            db,
+            squad_id,
+            current_user.id,
+            limit=limit,
+            offset=offset,
+        )
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail='No perteneces a este squad.') from exc

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:festisquad/core/theme/app_theme.dart';
 import 'package:festisquad/core/offline/offline_state.dart';
+import 'package:festisquad/core/presentation/phone_preview.dart';
 import 'package:festisquad/features/auth/data/auth_repository.dart';
 import 'package:festisquad/features/auth/domain/auth_session.dart';
 import 'package:festisquad/features/auth/presentation/login_screen.dart';
@@ -29,6 +30,34 @@ void main() {
     'dashboard': const DashboardScreen(),
     'join': const JoinSquadScreen()
   };
+
+  testWidgets('phone preview scales once on a short laptop viewport',
+      (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.physicalSize = const Size(1536, 720);
+    tester.view.devicePixelRatio = 1;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
+        ],
+        child: MaterialApp(
+          theme: buildAppTheme(),
+          home: const PhonePreview(child: LoginScreen()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final title = find.text('FestiSquad', findRichText: true);
+    expect(title, findsOneWidget);
+    expect(tester.getSize(title).height, lessThan(70));
+    expect(find.text('CREAR CUENTA'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final entry in screens.entries) {
     testWidgets('${entry.key} adapts to small, large and accessible layouts',
         (tester) async {

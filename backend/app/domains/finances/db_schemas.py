@@ -53,3 +53,27 @@ class BalanceOutput(BaseModel):
     currency: str = 'MXN'
     net_balances: dict[UUID, Decimal]
     suggested_transfers: list[TransferOutput]
+
+
+class SettlementInput(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    squad_id: UUID
+    client_request_id: UUID
+    from_user_id: UUID
+    to_user_id: UUID
+    amount: Money
+    note: str | None = Field(default=None, max_length=180)
+
+    @model_validator(mode='after')
+    def different_members(self):
+        if self.from_user_id == self.to_user_id:
+            raise ValueError('El origen y el destino del pago deben ser distintos')
+        if self.note == '':
+            self.note = None
+        return self
+
+
+class SettlementOutput(SettlementInput):
+    id: UUID
+    currency: str = 'MXN'
+    created_at: datetime
