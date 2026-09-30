@@ -9,9 +9,15 @@ import 'package:festisquad/core/presentation/phone_preview.dart';
 import 'package:festisquad/features/auth/data/auth_repository.dart';
 import 'package:festisquad/features/auth/domain/auth_session.dart';
 import 'package:festisquad/features/auth/presentation/login_screen.dart';
+import 'package:festisquad/features/clash_resolver/data/clash_repository.dart';
+import 'package:festisquad/features/clash_resolver/domain/clash_models.dart';
+import 'package:festisquad/features/finances/data/finance_repository.dart';
+import 'package:festisquad/features/finances/domain/finance_models.dart';
+import 'package:festisquad/features/finances/domain/money.dart';
 import 'package:festisquad/features/squads/presentation/dashboard_screen.dart';
 import 'package:festisquad/features/squads/presentation/join_squad_screen.dart';
 import 'package:festisquad/features/squads/presentation/squad_preview.dart';
+import 'package:festisquad/features/squads/presentation/squad_signal_screen.dart';
 import 'package:festisquad/features/squads/data/squad_repository.dart';
 import 'package:festisquad/features/squads/domain/squad.dart';
 
@@ -159,9 +165,213 @@ void main() {
     expect(find.text('Escribe un correo válido'), findsOneWidget);
     expect(find.text('Usa al menos 8 caracteres'), findsOneWidget);
   });
+
+  testWidgets('long pressing the squad bolt reveals Squad Signal',
+      (tester) async {
+    final router = GoRouter(initialLocation: '/dashboard', routes: [
+      GoRoute(
+        path: '/dashboard',
+        builder: (_, __) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: '/squad-signal',
+        builder: (_, state) => SquadSignalScreen(
+          squadName: state.uri.queryParameters['name']!,
+          squadCode: state.uri.queryParameters['code']!,
+        ),
+      ),
+    ]);
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
+        ],
+        child: MaterialApp.router(
+          theme: buildAppTheme(),
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pump();
+    var trigger = find.byKey(const ValueKey('squad-signal-trigger'));
+    final shortPress = await tester.startGesture(tester.getCenter(trigger));
+    await tester.pump(const Duration(seconds: 1));
+    await shortPress.up();
+    await tester.pump();
+    expect(find.byType(SquadSignalScreen), findsNothing);
+
+    trigger = find.byKey(const ValueKey('squad-signal-trigger'));
+    final gesture = await tester.startGesture(tester.getCenter(trigger));
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pump(const Duration(milliseconds: 3100));
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(SquadSignalScreen), findsOneWidget);
+    expect(
+      find.text('LA SQUAD SIEMPRE ENCUENTRA EL CAMINO'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('signed-in dashboard shows the real user balance',
+      (tester) async {
+    addTearDown(() =>
+        activeSquadPreview.value = const SquadPreview("Headliners ’26", 5));
+    const squad = Squad(
+      id: '00000000-0000-0000-0000-000000000010',
+      name: 'fest',
+      code: '6E12C2',
+      ownerId: '00000000-0000-0000-0000-000000000001',
+      memberIds: [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+      ],
+      currentUserRole: 'admin',
+    );
+    final snapshot = FinanceSnapshot(
+      expenses: [
+        SquadExpense(
+          id: 'expense-1',
+          clientRequestId: 'request-1',
+          squadId: squad.id,
+          paidByUserId: _FakeAuthRepository.session.userId,
+          description: 'Bebidas',
+          amount: const Money.fromCents(10000),
+          participants: const [],
+          createdAt: DateTime.utc(2026, 9, 29),
+          pendingSync: false,
+        ),
+      ],
+      settlements: const [],
+      netBalances: const {
+        '00000000-0000-0000-0000-000000000002': Money.fromCents(-5000),
+      },
+      transfers: const [],
+      fromCache: false,
+    );
+    final members = [
+      SquadMemberProfile(
+        userId: squad.ownerId,
+        name: 'Yael Flores',
+        role: 'admin',
+        joinedAt: DateTime.utc(2026, 9, 1),
+        isOwner: true,
+        isCurrentUser: false,
+      ),
+      SquadMemberProfile(
+        userId: _FakeAuthRepository.session.userId,
+        name: 'Ángel Yael',
+        role: 'member',
+        joinedAt: DateTime.utc(2026, 9, 2),
+        isOwner: false,
+        isCurrentUser: true,
+      ),
+    ];
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(
+            _FakeAuthRepository(
+              restoredSession: _FakeAuthRepository.session,
+            ),
+          ),
+          squadRepositoryProvider.overrideWithValue(
+            _FakeSquadRepository(mine: const [squad], members: members),
+          ),
+          financeRepositoryProvider.overrideWithValue(
+            _FakeFinanceRepository(snapshot),
+          ),
+          clashRemoteDataSourceProvider.overrideWithValue(
+            _FakeClashRemoteDataSource(),
+          ),
+        ],
+        child: MaterialApp(
+          theme: buildAppTheme(),
+          home: const DashboardScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(r'MXN $50.00'), findsOneWidget);
+    expect(find.text('Pendiente por pagar'), findsOneWidget);
+    expect(find.textContaining('Bebidas'), findsOneWidget);
+    expect(find.text(r'$500', findRichText: true), findsNothing);
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    expect(find.text('Spotify · Conectado'), findsOneWidget);
+    expect(find.text('ÁY'), findsOneWidget);
+    expect(find.text('+2'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('dashboard recovers from the first squad load failure',
+      (tester) async {
+    addTearDown(() =>
+        activeSquadPreview.value = const SquadPreview("Headliners ’26", 5));
+    const squad = Squad(
+      id: '00000000-0000-0000-0000-000000000020',
+      name: 'Squad recuperado',
+      code: 'RETRY1',
+      ownerId: '00000000-0000-0000-0000-000000000002',
+      memberIds: ['00000000-0000-0000-0000-000000000002'],
+      currentUserRole: 'admin',
+    );
+    final squadRepository = _FakeSquadRepository(
+      mine: const [squad],
+      failuresBeforeSuccess: 1,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(
+            _FakeAuthRepository(
+              restoredSession: _FakeAuthRepository.session,
+            ),
+          ),
+          squadRepositoryProvider.overrideWithValue(squadRepository),
+          financeRepositoryProvider.overrideWithValue(
+            _FakeFinanceRepository(
+              const FinanceSnapshot(
+                expenses: [],
+                settlements: [],
+                netBalances: {},
+                transfers: [],
+                fromCache: false,
+              ),
+            ),
+          ),
+          clashRemoteDataSourceProvider.overrideWithValue(
+            _FakeClashRemoteDataSource(),
+          ),
+        ],
+        child: MaterialApp(
+          theme: buildAppTheme(),
+          home: const DashboardScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(squadRepository.loadMineCalls, 2);
+    expect(find.text('Squad recuperado'), findsOneWidget);
+    expect(find.textContaining('Ocurrió un error inesperado'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _FakeAuthRepository implements AuthRepository {
+  _FakeAuthRepository({this.restoredSession});
+
+  final AuthSession? restoredSession;
   static const session = AuthSession(
     userId: '00000000-0000-0000-0000-000000000002',
     accessToken: 'access-token',
@@ -205,10 +415,20 @@ class _FakeAuthRepository implements AuthRepository {
       session;
 
   @override
-  Future<AuthSession?> restore() async => null;
+  Future<AuthSession?> restore() async => restoredSession;
 }
 
 class _FakeSquadRepository implements SquadRepository {
+  _FakeSquadRepository({
+    this.mine = const [],
+    this.members = const [],
+    this.failuresBeforeSuccess = 0,
+  });
+
+  final List<Squad> mine;
+  final List<SquadMemberProfile> members;
+  int failuresBeforeSuccess;
+  int loadMineCalls = 0;
   @override
   Future<void> deleteSquad(String squadId) async {}
 
@@ -216,7 +436,7 @@ class _FakeSquadRepository implements SquadRepository {
   Future<OfflineData<List<SquadMemberProfile>>> loadMembers(
     String squadId,
   ) async =>
-      const OfflineData([], fromCache: false);
+      OfflineData(members, fromCache: false);
 
   @override
   Future<void> removeMember(String squadId, String userId) async {}
@@ -228,8 +448,14 @@ class _FakeSquadRepository implements SquadRepository {
   Future<void> updateRole(String squadId, String userId, String role) async {}
 
   @override
-  Future<OfflineData<List<Squad>>> loadMine() async =>
-      const OfflineData([], fromCache: false);
+  Future<OfflineData<List<Squad>>> loadMine() async {
+    loadMineCalls++;
+    if (failuresBeforeSuccess > 0) {
+      failuresBeforeSuccess--;
+      throw StateError('Fallo transitorio de inicio');
+    }
+    return OfflineData(mine, fromCache: false);
+  }
 
   @override
   Future<Squad> create(String name) async {
@@ -261,4 +487,50 @@ class _FakeSquadRepository implements SquadRepository {
       currentUserRole: 'member',
     );
   }
+}
+
+class _FakeClashRemoteDataSource implements ClashRemoteDataSource {
+  @override
+  Future<MusicPreferences> preferences() async => const MusicPreferences(
+        spotifyArtists: ['Artista uno'],
+        spotifyGenres: ['rock'],
+      );
+
+  @override
+  Future<({List<ClashConflict> conflicts, String? festivalName})>
+      conflicts() async =>
+          (conflicts: const <ClashConflict>[], festivalName: null as String?);
+
+  @override
+  Future<ClashRecommendation> recommend(
+    String squadId,
+    List<ConcertOption> options,
+  ) =>
+      throw UnimplementedError();
+
+  @override
+  Future<MusicPreferences> saveManual(
+    List<String> genres,
+    List<String> artists,
+  ) =>
+      throw UnimplementedError();
+
+  @override
+  Future<String> spotifyAuthorizationUrl() => throw UnimplementedError();
+}
+
+class _FakeFinanceRepository implements FinanceRepository {
+  _FakeFinanceRepository(this.snapshot);
+
+  final FinanceSnapshot snapshot;
+
+  @override
+  Future<FinanceSnapshot> load(String squadId) async => snapshot;
+
+  @override
+  Future<FinanceSnapshot> create(ExpenseDraft draft) async => snapshot;
+
+  @override
+  Future<FinanceSnapshot> createSettlement(SettlementDraft draft) async =>
+      snapshot;
 }

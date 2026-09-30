@@ -14,6 +14,7 @@ import '../features/map/presentation/map_screen.dart';
 import '../features/squads/presentation/dashboard_screen.dart';
 import '../features/squads/presentation/join_squad_screen.dart';
 import '../features/squads/presentation/squad_members_screen.dart';
+import '../features/squads/presentation/squad_signal_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier(0);
@@ -36,6 +37,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (context, state) => const DashboardScreen()),
       GoRoute(
           path: '/join', builder: (context, state) => const JoinSquadScreen()),
+      GoRoute(
+        path: '/squad-signal',
+        builder: (context, state) => SquadSignalScreen(
+          squadName: state.uri.queryParameters['name'] ?? 'Mi squad',
+          squadCode: state.uri.queryParameters['code'] ?? 'DEMO26',
+        ),
+      ),
       GoRoute(
         path: '/squads/:squadId',
         builder: (context, state) => SquadMembersScreen(

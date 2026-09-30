@@ -25,10 +25,17 @@ class TokenStorage {
   static const _refreshTokenKey = 'auth_refresh_token';
 
   final FlutterSecureStorage _storage;
+  StoredSession? _cachedSession;
 
-  Future<String?> readAccessToken() => _storage.read(key: _accessTokenKey);
+  Future<String?> readAccessToken() async {
+    final cached = _cachedSession;
+    if (cached != null) return cached.accessToken;
+    return _storage.read(key: _accessTokenKey);
+  }
 
   Future<StoredSession?> readSession() async {
+    final cached = _cachedSession;
+    if (cached != null) return cached;
     final values = await Future.wait([
       _storage.read(key: _userIdKey),
       _storage.read(key: _accessTokenKey),
@@ -36,26 +43,31 @@ class TokenStorage {
     ]);
     if (values.any((value) => value == null || value.isEmpty)) return null;
 
-    return StoredSession(
+    final session = StoredSession(
       userId: values[0]!,
       accessToken: values[1]!,
       refreshToken: values[2]!,
     );
+    _cachedSession = session;
+    return session;
   }
 
   Future<void> writeSession(StoredSession session) async {
-    await Future.wait([
-      _storage.write(key: _userIdKey, value: session.userId),
-      _storage.write(key: _accessTokenKey, value: session.accessToken),
-      _storage.write(key: _refreshTokenKey, value: session.refreshToken),
-    ]);
+    _cachedSession = session;
+    try {
+      await _storage.write(key: _userIdKey, value: session.userId);
+      await _storage.write(key: _accessTokenKey, value: session.accessToken);
+      await _storage.write(key: _refreshTokenKey, value: session.refreshToken);
+    } catch (_) {
+      _cachedSession = null;
+      rethrow;
+    }
   }
 
   Future<void> clear() async {
-    await Future.wait([
-      _storage.delete(key: _userIdKey),
-      _storage.delete(key: _accessTokenKey),
-      _storage.delete(key: _refreshTokenKey),
-    ]);
+    _cachedSession = null;
+    await _storage.delete(key: _userIdKey);
+    await _storage.delete(key: _accessTokenKey);
+    await _storage.delete(key: _refreshTokenKey);
   }
 }

@@ -17,6 +17,8 @@ class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
   final AuthRepository _repository;
   late final Future<void> _initialization;
 
+  Future<void> get initialized => _initialization;
+
   Future<void> _restore() async {
     try {
       state = AsyncValue.data(await _repository.restore());

@@ -1,11 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/festi_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/presentation/login_screen.dart';
+import '../../clash_resolver/application/clash_controller.dart';
+import '../../clash_resolver/data/clash_repository.dart';
+import '../../clash_resolver/domain/clash_models.dart';
+import '../../finances/data/finance_repository.dart';
+import '../../finances/domain/finance_models.dart';
+import '../../finances/domain/money.dart';
 import '../application/squad_controller.dart';
+import '../data/squad_repository.dart';
+import '../domain/squad.dart';
 import 'squad_preview.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -16,6 +27,12 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String _query = '';
+  FinanceSnapshot? _financeSnapshot;
+  String? _financeSquadId;
+  bool _financeLoading = false;
+  List<SquadMemberProfile> _squadMembers = const [];
+  MusicPreferences? _musicPreferences;
+  bool _spotifyLoading = false;
   static const _searchItems = [
     ('Festivales y escenarios', '/festivals', 'escenarios mapa festival'),
     ('Mi squad · Amigos', '/join', 'amigos squad'),
@@ -31,9 +48,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _loadSquad() async {
+    await ref.read(authControllerProvider.notifier).initialized;
+    if (!mounted) return;
     if (ref.read(authControllerProvider).valueOrNull == null) return;
+    activeSquadPreview.value = const SquadPreview('Cargando squad…', 0);
+    setState(() {
+      _squadMembers = const [];
+      _musicPreferences = null;
+      _financeSnapshot = null;
+    });
     try {
-      final squad = await ref.read(squadControllerProvider.notifier).loadMine();
+      final squad = await _loadSquadWithRetry();
       if (squad == null) {
         activeSquadPreview.value = const SquadPreview('Sin squad activo', 0);
         return;
@@ -44,6 +69,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         id: squad.id,
         code: squad.code,
       );
+      unawaited(_loadFinance(squad.id));
+      unawaited(_loadMembers(squad.id));
+      unawaited(_loadSpotifyStatus());
       if (ref.read(squadControllerProvider.notifier).lastLoadWasFromCache) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -57,6 +85,71 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error.message)),
       );
+    }
+  }
+
+  Future<Squad?> _loadSquadWithRetry() async {
+    try {
+      return await ref.read(squadControllerProvider.notifier).loadMine();
+    } on SquadRequestException {
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      return ref.read(squadControllerProvider.notifier).loadMine();
+    }
+  }
+
+  Future<void> _loadMembers(String squadId) async {
+    try {
+      final result =
+          await ref.read(squadRepositoryProvider).loadMembers(squadId);
+      if (!mounted || activeSquadPreview.value.id != squadId) return;
+      setState(() => _squadMembers = result.value);
+    } catch (_) {
+      // El contador del squad sigue siendo exacto aunque falle el detalle.
+    }
+  }
+
+  Future<void> _loadSpotifyStatus() async {
+    if (mounted) setState(() => _spotifyLoading = true);
+    try {
+      final preferences =
+          await ref.read(clashRemoteDataSourceProvider).preferences();
+      if (!mounted) return;
+      setState(() => _musicPreferences = preferences);
+    } catch (_) {
+      final cached = ref.read(clashControllerProvider).valueOrNull;
+      if (mounted && cached != null) {
+        setState(() => _musicPreferences = cached.preferences);
+      }
+    } finally {
+      if (mounted) setState(() => _spotifyLoading = false);
+    }
+  }
+
+  Future<void> _loadFinance(String squadId) async {
+    if (mounted) {
+      setState(() {
+        _financeLoading = true;
+        _financeSquadId = squadId;
+      });
+    }
+    try {
+      final snapshot = await ref.read(financeRepositoryProvider).load(squadId);
+      if (!mounted || _financeSquadId != squadId) return;
+      setState(() => _financeSnapshot = snapshot);
+    } catch (_) {
+      if (!mounted || _financeSquadId != squadId) return;
+      setState(() => _financeSnapshot = null);
+    } finally {
+      if (mounted && _financeSquadId == squadId) {
+        setState(() => _financeLoading = false);
+      }
+    }
+  }
+
+  Future<void> _openFinances(String? squadId) async {
+    await context.push('/finances');
+    if (mounted && squadId != null) {
+      await _loadFinance(squadId);
     }
   }
 
@@ -96,6 +189,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         id: squad.id,
         code: squad.code,
       );
+      unawaited(_loadFinance(squad.id));
+      unawaited(_loadMembers(squad.id));
+      unawaited(_loadSpotifyStatus());
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Squad creado. Código: ${squad.code}')),
@@ -148,7 +244,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
     if (action != 'logout') return;
     await ref.read(authControllerProvider.notifier).logout();
+    activeSquadPreview.value = const SquadPreview('Sin squad activo', 0);
     if (mounted) context.go('/login');
+  }
+
+  Future<void> _openClash() async {
+    await context.push('/clash');
+    if (mounted) await _loadSpotifyStatus();
   }
 
   @override
@@ -284,15 +386,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Row(children: [
-                                      Expanded(
+                                    Row(children: [
+                                      const Expanded(
                                           child: Text('SQUAD ACTIVO',
                                               style: TextStyle(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w700,
                                                   color: FestiColors.muted))),
-                                      Icon(Icons.bolt,
-                                          size: 18, color: FestiColors.cyan)
+                                      _SquadSignalTrigger(
+                                        onActivated: () {
+                                          HapticFeedback.heavyImpact();
+                                          context.push(
+                                            '/squad-signal?name=${Uri.encodeQueryComponent(squad.name)}&code=${Uri.encodeQueryComponent(squad.code ?? 'DEMO26')}',
+                                          );
+                                        },
+                                      ),
                                     ]),
                                     const SizedBox(height: 5),
                                     Text(squad.name,
@@ -319,65 +427,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                       color: FestiColors.cyan)))
                                         ]),
                                     const SizedBox(height: 22),
-                                    const Wrap(spacing: -5, children: [
-                                      _Avatar('YL'),
-                                      _Avatar('AM'),
-                                      _Avatar('JC'),
-                                      _Avatar('+2')
-                                    ]),
+                                    _SquadAvatars(
+                                      memberCount: squad.members,
+                                      members: _squadMembers,
+                                      demo: ref
+                                              .watch(authControllerProvider)
+                                              .valueOrNull ==
+                                          null,
+                                    ),
                                   ])),
-                          FestiCard(
-                              onTap: () => context.push('/finances'),
-                              padding: const EdgeInsets.all(17),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Row(children: [
-                                      Expanded(
-                                          child: Text('FONDO COMÚN',
-                                              style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: FestiColors.muted))),
-                                      Icon(Icons.account_balance_wallet_rounded,
-                                          color: FestiColors.cyan, size: 18)
-                                    ]),
-                                    const SizedBox(height: 26),
-                                    const FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text.rich(TextSpan(children: [
-                                          TextSpan(
-                                              text: '\$500',
-                                              style: TextStyle(
-                                                  fontSize: 36,
-                                                  fontWeight: FontWeight.w800)),
-                                          TextSpan(
-                                              text: '.00',
-                                              style: TextStyle(
-                                                  fontSize: 18,
-                                                  color: FestiColors.cyan,
-                                                  fontWeight: FontWeight.w700))
-                                        ]))),
-                                    const SizedBox(height: 8),
-                                    const Text('MXN disponible',
-                                        style: TextStyle(
-                                            color: FestiColors.muted,
-                                            fontSize: 12)),
-                                    const SizedBox(height: 19),
-                                    const Divider(color: FestiColors.border),
-                                    const Text.rich(
-                                        TextSpan(children: [
-                                          TextSpan(
-                                              text: 'Último gasto: ',
-                                              style: TextStyle(
-                                                  color: FestiColors.muted)),
-                                          TextSpan(
-                                              text: '-\$120',
-                                              style: TextStyle(
-                                                  color: FestiColors.cyan))
-                                        ]),
-                                        style: TextStyle(fontSize: 11)),
-                                  ])),
+                          _FinanceDashboardCard(
+                            snapshot: _financeSnapshot,
+                            loading: _financeLoading,
+                            onTap: () => _openFinances(squad.id),
+                          ),
                         ];
                         if (constraints.maxWidth < 330 ||
                             MediaQuery.textScalerOf(context).scale(14) > 20) {
@@ -440,23 +503,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ]))),
               const SizedBox(height: 18),
               FestiCard(
-                  onTap: () => context.push('/clash'),
+                  onTap: _openClash,
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Wrap(
+                        Wrap(
                             alignment: WrapAlignment.spaceBetween,
                             spacing: 12,
                             runSpacing: 10,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              Text('SUGERENCIA INTELIGENTE',
+                              const Text('SUGERENCIA INTELIGENTE',
                                   style: TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 12,
                                       letterSpacing: .5)),
-                              StatusPill('Spotify · Sin conectar',
-                                  icon: Icons.graphic_eq)
+                              StatusPill(
+                                ref
+                                            .watch(authControllerProvider)
+                                            .valueOrNull ==
+                                        null
+                                    ? 'Spotify · Sin conectar'
+                                    : _spotifyLoading
+                                        ? 'Spotify · Consultando'
+                                        : _musicPreferences == null
+                                            ? 'Spotify · No disponible'
+                                            : _musicPreferences!
+                                                    .spotifyConnected
+                                                ? 'Spotify · Conectado'
+                                                : 'Spotify · Sin conectar',
+                                icon: Icons.graphic_eq,
+                              )
                             ]),
                         const SizedBox(height: 16),
                         Container(
@@ -465,38 +542,53 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 color: FestiColors.background,
                                 borderRadius: BorderRadius.circular(17),
                                 border: Border.all(color: FestiColors.border)),
-                            child: const Row(
+                            child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.bolt_rounded,
+                                  const Icon(Icons.bolt_rounded,
                                       color: FestiColors.cyan),
-                                  SizedBox(width: 12),
+                                  const SizedBox(width: 12),
                                   Expanded(
                                       child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                        Text('¡Empalme a las 8:00 PM!',
-                                            style: TextStyle(
+                                        Text(
+                                            ref
+                                                        .watch(
+                                                            authControllerProvider)
+                                                        .valueOrNull ==
+                                                    null
+                                                ? '¡Empalme a las 8:00 PM!'
+                                                : 'Revisa los próximos empalmes',
+                                            style: const TextStyle(
                                                 fontWeight: FontWeight.w800,
                                                 fontSize: 15)),
-                                        SizedBox(height: 7),
+                                        const SizedBox(height: 7),
                                         Text(
-                                            'Tu artista favorito coincide con la votación del squad en el Escenario Corona.',
-                                            style: TextStyle(
+                                            ref
+                                                        .watch(
+                                                            authControllerProvider)
+                                                        .valueOrNull ==
+                                                    null
+                                                ? 'Tu artista favorito coincide con la votación del squad en el Escenario Corona.'
+                                                : 'Abre Clash Resolver para consultar las recomendaciones reales de tu squad.',
+                                            style: const TextStyle(
                                                 color: FestiColors.muted,
                                                 fontSize: 13,
                                                 height: 1.4))
                                       ])),
                                 ])),
                       ])),
-              const SizedBox(height: 18),
-              const Center(
-                  child: Text('DEMOSTRACIÓN · DATOS DE EJEMPLO',
-                      style: TextStyle(
-                          color: FestiColors.muted,
-                          fontSize: 10,
-                          letterSpacing: 1.2))),
+              if (ref.watch(authControllerProvider).valueOrNull == null) ...[
+                const SizedBox(height: 18),
+                const Center(
+                    child: Text('DEMOSTRACIÓN · DATOS DE EJEMPLO',
+                        style: TextStyle(
+                            color: FestiColors.muted,
+                            fontSize: 10,
+                            letterSpacing: 1.2))),
+              ],
             ]))),
         bottomNavigationBar: NavigationBar(
             backgroundColor: const Color(0xFF080F1C),
@@ -520,6 +612,291 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   icon: Icon(Icons.calendar_month_outlined), label: 'Agenda')
             ]),
       );
+}
+
+class _SquadAvatars extends StatelessWidget {
+  const _SquadAvatars({
+    required this.memberCount,
+    required this.members,
+    required this.demo,
+  });
+
+  final int memberCount;
+  final List<SquadMemberProfile> members;
+  final bool demo;
+
+  @override
+  Widget build(BuildContext context) {
+    if (demo) {
+      return const Wrap(
+        spacing: -5,
+        children: [_Avatar('YL'), _Avatar('AM'), _Avatar('JC'), _Avatar('+2')],
+      );
+    }
+
+    final visibleCount = memberCount > 3 ? 3 : memberCount;
+    final labels = List<String>.generate(visibleCount, (index) {
+      if (index >= members.length) return '${index + 1}';
+      final words = members[index]
+          .name
+          .trim()
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
+          .toList(growable: false);
+      if (words.isEmpty) return '${index + 1}';
+      return words.take(2).map((word) => word[0].toUpperCase()).join();
+    });
+
+    return Wrap(
+      spacing: -5,
+      children: [
+        for (final label in labels) _Avatar(label),
+        if (memberCount > visibleCount)
+          _Avatar('+${memberCount - visibleCount}'),
+      ],
+    );
+  }
+}
+
+class _FinanceDashboardCard extends ConsumerWidget {
+  const _FinanceDashboardCard({
+    required this.snapshot,
+    required this.loading,
+    required this.onTap,
+  });
+
+  final FinanceSnapshot? snapshot;
+  final bool loading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(authControllerProvider).valueOrNull;
+    if (session == null) {
+      return FestiCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(17),
+        child: const _DemoFinanceSummary(),
+      );
+    }
+
+    final balance = snapshot?.netBalances[session.userId] ?? Money.zero;
+    final hasSnapshot = snapshot != null;
+    final amount = hasSnapshot
+        ? Money.fromCents(balance.cents.abs()).toDecimalString()
+        : '--';
+    final label = loading && !hasSnapshot
+        ? 'Actualizando saldo'
+        : !hasSnapshot
+            ? 'Saldo no disponible'
+            : balance.cents < 0
+                ? 'Pendiente por pagar'
+                : balance.cents > 0
+                    ? 'Pendiente por recibir'
+                    : 'Al corriente';
+    final amountColor =
+        balance.cents < 0 ? const Color(0xFFFF8D8D) : FestiColors.cyan;
+    final latest = snapshot?.expenses.firstOrNull;
+
+    return FestiCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(17),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'FONDO COMÚN',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: FestiColors.muted,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.account_balance_wallet_rounded,
+                color: FestiColors.cyan,
+                size: 18,
+              ),
+            ],
+          ),
+          const SizedBox(height: 26),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              hasSnapshot ? 'MXN \$$amount' : amount,
+              style: TextStyle(
+                color: hasSnapshot ? amountColor : FestiColors.muted,
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: FestiColors.muted, fontSize: 12),
+          ),
+          const SizedBox(height: 19),
+          const Divider(color: FestiColors.border),
+          Text(
+            latest == null
+                ? 'Sin tickets registrados'
+                : 'Último ticket: ${latest.description} · ${latest.amount.format()}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: latest == null ? FestiColors.muted : FestiColors.cyan,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DemoFinanceSummary extends StatelessWidget {
+  const _DemoFinanceSummary();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'FONDO COMÚN',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: FestiColors.muted,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.account_balance_wallet_rounded,
+              color: FestiColors.cyan,
+              size: 18,
+            ),
+          ],
+        ),
+        SizedBox(height: 26),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '\$500',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                TextSpan(
+                  text: '.00',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: FestiColors.cyan,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'MXN disponible',
+          style: TextStyle(color: FestiColors.muted, fontSize: 12),
+        ),
+        SizedBox(height: 19),
+        Divider(color: FestiColors.border),
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: 'Último gasto: ',
+                style: TextStyle(color: FestiColors.muted),
+              ),
+              TextSpan(
+                text: '-\$120',
+                style: TextStyle(color: FestiColors.cyan),
+              ),
+            ],
+          ),
+          style: TextStyle(fontSize: 11),
+        ),
+      ],
+    );
+  }
+}
+
+class _SquadSignalTrigger extends StatefulWidget {
+  const _SquadSignalTrigger({required this.onActivated});
+
+  final VoidCallback onActivated;
+
+  @override
+  State<_SquadSignalTrigger> createState() => _SquadSignalTriggerState();
+}
+
+class _SquadSignalTriggerState extends State<_SquadSignalTrigger> {
+  Timer? _holdTimer;
+  bool _activated = false;
+
+  void _startHold(TapDownDetails _) {
+    _holdTimer?.cancel();
+    _activated = false;
+    _holdTimer = Timer(const Duration(seconds: 3), () {
+      _activated = true;
+      widget.onActivated();
+    });
+  }
+
+  void _cancelHold() {
+    _holdTimer?.cancel();
+    _holdTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _cancelHold();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Activar señal del squad',
+      button: true,
+      onLongPress: widget.onActivated,
+      child: GestureDetector(
+        key: const ValueKey('squad-signal-trigger'),
+        behavior: HitTestBehavior.opaque,
+        onTapDown: _startHold,
+        onTapUp: (_) => _cancelHold(),
+        onTapCancel: _cancelHold,
+        onTap: () {
+          if (!_activated) _cancelHold();
+        },
+        child: const Icon(
+          Icons.bolt,
+          size: 18,
+          color: FestiColors.cyan,
+        ),
+      ),
+    );
+  }
 }
 
 class _Avatar extends StatelessWidget {
