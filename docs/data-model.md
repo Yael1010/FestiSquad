@@ -35,6 +35,10 @@ erDiagram
 - `schedule_items` referencia al escenario. El festival se obtiene mediante
   `stages.festival_id`, evitando la dependencia transitiva
   `schedule_item -> stage -> festival` duplicada en la misma fila.
+- `clash_votes` relaciona squad, horario y usuario; su clave compuesta evita
+  votos duplicados sobre una opción.
+- `clash_decisions` conserva una decisión por squad y empalme estable, junto al
+  horario seleccionado y al administrador que la confirmó.
 - Las preferencias musicales relacionan usuarios con géneros mediante claves, sin
   repetir el nombre textual del género.
 - Los artistas favoritos están normalizados en `artists` y se relacionan con

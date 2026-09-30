@@ -253,365 +253,374 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (mounted) await _loadSpotifyStatus();
   }
 
+  String get _displayName {
+    for (final member in _squadMembers) {
+      if (member.isCurrentUser) return member.name.trim();
+    }
+    return ref.read(authControllerProvider).valueOrNull == null
+        ? 'Invitado'
+        : 'Mi perfil';
+  }
+
+  String get _displayInitials {
+    final words = _displayName
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .take(2);
+    final value = words.map((word) => word[0].toUpperCase()).join();
+    return value.isEmpty ? 'FS' : value;
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-        body: SafeArea(
-            child: FestiBody(
-                child: ListView(
-                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
-                    children: [
-              Row(children: [
-                Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: FestiColors.cyan),
-                        boxShadow: [
-                          BoxShadow(
-                              color: FestiColors.cyan.withValues(alpha: .18),
-                              blurRadius: 16)
-                        ]),
-                    child: const CircleAvatar(
-                        radius: 23,
-                        backgroundColor: Color(0xFF173B67),
-                        child: Text('YF',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800)))),
-                const SizedBox(width: 14),
-                const Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Text.rich(
-                          TextSpan(children: [
-                            TextSpan(
-                                text: 'Yael ',
-                                style: TextStyle(fontWeight: FontWeight.w800)),
-                            TextSpan(
-                                text: 'Flores',
-                                style: TextStyle(color: FestiColors.muted))
-                          ]),
-                          style: TextStyle(fontSize: 21)),
-                      SizedBox(height: 5),
-                      Text('•  En sintonía con tu squad',
-                          style:
-                              TextStyle(color: FestiColors.cyan, fontSize: 12)),
-                    ])),
-                IconButton.filledTonal(
-                    tooltip: 'Notificaciones',
-                    onPressed: () => showFeatureInfo(context, 'Notificaciones',
-                        'No tienes notificaciones nuevas en esta demostración.'),
-                    icon: const Badge(
-                        smallSize: 7,
-                        backgroundColor: FestiColors.cyan,
-                        child: Icon(Icons.notifications_none_rounded))),
-                IconButton(
-                    tooltip: 'Perfil',
-                    onPressed: _openProfile,
-                    icon: const Icon(Icons.account_circle_outlined,
-                        color: FestiColors.cyan)),
-              ]),
-              const SizedBox(height: 20),
-              TextField(
-                  onChanged: (value) =>
-                      setState(() => _query = value.trim().toLowerCase()),
-                  decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.search, color: FestiColors.muted),
-                      hintText: 'Buscar escenarios, amigos o compras…',
-                      hintStyle:
-                          TextStyle(fontSize: 14, color: FestiColors.muted))),
-              if (_query.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                FestiCard(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                      for (final item in _searchItems)
-                        if (_matches(item))
-                          ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(item.$1),
-                              trailing: const Icon(Icons.arrow_forward,
-                                  color: FestiColors.cyan),
-                              onTap: () => context.push(item.$2)),
-                      if (!_searchItems.any(_matches))
-                        const Text(
-                            'Sin resultados. Prueba “mapa”, “amigos” o “compras”.',
-                            style: TextStyle(color: FestiColors.muted)),
-                    ])),
-              ],
-              const SizedBox(height: 18),
-              Row(children: [
-                Expanded(
-                    child: OutlinedButton.icon(
-                        onPressed: () => context.push('/join'),
-                        icon: const Icon(Icons.tag, size: 19),
-                        label: const Text('Unirse con código',
-                            textAlign: TextAlign.center,
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 12)))),
-                const SizedBox(width: 12),
-                Expanded(
-                    child: OutlinedButton.icon(
-                        onPressed: _createSquad,
-                        icon: const Icon(Icons.person_add_alt_1, size: 19),
-                        label: const Text('Crear nuevo squad',
-                            textAlign: TextAlign.center,
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 12))))
-              ]),
-              const SizedBox(height: 18),
-              ValueListenableBuilder<SquadPreview>(
-                  valueListenable: activeSquadPreview,
-                  builder: (context, squad, _) =>
-                      LayoutBuilder(builder: (context, constraints) {
-                        final cards = [
-                          FestiCard(
-                              glow: true,
-                              onTap: () {
-                                if (squad.id == null) {
-                                  showFeatureInfo(
-                                    context,
-                                    squad.name,
-                                    'Crea o selecciona un squad para consultar sus integrantes.',
-                                  );
-                                  return;
-                                }
-                                context.push(
-                                  '/squads/${squad.id}?name=${Uri.encodeQueryComponent(squad.name)}&code=${squad.code ?? '------'}',
-                                );
-                              },
-                              padding: const EdgeInsets.all(17),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(children: [
-                                      const Expanded(
-                                          child: Text('SQUAD ACTIVO',
-                                              style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: FestiColors.muted))),
-                                      _SquadSignalTrigger(
-                                        onActivated: () {
-                                          HapticFeedback.heavyImpact();
-                                          context.push(
-                                            '/squad-signal?name=${Uri.encodeQueryComponent(squad.name)}&code=${Uri.encodeQueryComponent(squad.code ?? 'DEMO26')}',
-                                          );
-                                        },
-                                      ),
-                                    ]),
-                                    const SizedBox(height: 5),
-                                    Text(squad.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: FestiColors.cyan)),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Text('${squad.members}',
-                                              style: const TextStyle(
-                                                  fontSize: 44,
-                                                  height: 1,
-                                                  fontWeight: FontWeight.w800)),
-                                          const SizedBox(width: 10),
-                                          const Flexible(
-                                              child: Text('Amigos\n• en línea',
-                                                  style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: FestiColors.cyan)))
-                                        ]),
-                                    const SizedBox(height: 22),
-                                    _SquadAvatars(
-                                      memberCount: squad.members,
-                                      members: _squadMembers,
-                                      demo: ref
-                                              .watch(authControllerProvider)
-                                              .valueOrNull ==
-                                          null,
-                                    ),
-                                  ])),
-                          _FinanceDashboardCard(
-                            snapshot: _financeSnapshot,
-                            loading: _financeLoading,
-                            onTap: () => _openFinances(squad.id),
-                          ),
-                        ];
-                        if (constraints.maxWidth < 330 ||
-                            MediaQuery.textScalerOf(context).scale(14) > 20) {
-                          return Column(children: [
-                            cards[0],
-                            const SizedBox(height: 14),
-                            cards[1]
-                          ]);
-                        }
-                        return IntrinsicHeight(
-                            child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                              Expanded(child: cards[0]),
-                              const SizedBox(width: 14),
-                              Expanded(child: cards[1])
-                            ]));
-                      })),
-              const SizedBox(height: 18),
-              FestiCard(
-                  glow: true,
-                  padding: EdgeInsets.zero,
-                  onTap: () => context.push('/festivals'),
-                  child: SizedBox(
-                      height: 206 *
-                          (MediaQuery.textScalerOf(context).scale(14) / 14)
-                              .clamp(1, 2),
-                      child: Stack(fit: StackFit.expand, children: [
-                        const CustomPaint(painter: _FestivalPainter()),
-                        Container(
-                            decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                              Color(0x22060B16),
-                              Color(0xFF060B16)
-                            ]))),
-                        const Padding(
-                            padding: EdgeInsets.all(15),
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Wrap(spacing: 8, runSpacing: 8, children: [
-                                    StatusPill('Mapa del festival',
-                                        icon: Icons.location_on),
-                                    StatusPill('VISTA PREVIA')
-                                  ]),
-                                  Spacer(),
-                                  Text('Catálogo de festivales',
-                                      style: TextStyle(
-                                          fontSize: 21,
-                                          fontWeight: FontWeight.w800)),
-                                  SizedBox(height: 8),
-                                  Text('Selecciona el recinto y abre su mapa',
-                                      style: TextStyle(
-                                          color: FestiColors.cyan,
-                                          fontSize: 12)),
-                                ])),
-                      ]))),
-              const SizedBox(height: 18),
-              FestiCard(
-                  onTap: _openClash,
+  Widget build(BuildContext context) {
+    final displayName = _displayName;
+    final displayInitials = _displayInitials;
+    return Scaffold(
+      body: SafeArea(
+          child: FestiBody(
+              child: ListView(
+                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
+                  children: [
+            Row(children: [
+              Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: FestiColors.cyan),
+                      boxShadow: [
+                        BoxShadow(
+                            color: FestiColors.cyan.withValues(alpha: .18),
+                            blurRadius: 16)
+                      ]),
+                  child: CircleAvatar(
+                      radius: 23,
+                      backgroundColor: const Color(0xFF173B67),
+                      child: Text(displayInitials,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800)))),
+              const SizedBox(width: 14),
+              Expanded(
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Wrap(
-                            alignment: WrapAlignment.spaceBetween,
-                            spacing: 12,
-                            runSpacing: 10,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              const Text('SUGERENCIA INTELIGENTE',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                      letterSpacing: .5)),
-                              StatusPill(
-                                ref
-                                            .watch(authControllerProvider)
-                                            .valueOrNull ==
-                                        null
-                                    ? 'Spotify · Sin conectar'
-                                    : _spotifyLoading
-                                        ? 'Spotify · Consultando'
-                                        : _musicPreferences == null
-                                            ? 'Spotify · No disponible'
-                                            : _musicPreferences!
-                                                    .spotifyConnected
-                                                ? 'Spotify · Conectado'
-                                                : 'Spotify · Sin conectar',
-                                icon: Icons.graphic_eq,
-                              )
-                            ]),
-                        const SizedBox(height: 16),
-                        Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                                color: FestiColors.background,
-                                borderRadius: BorderRadius.circular(17),
-                                border: Border.all(color: FestiColors.border)),
-                            child: Row(
+                    Text(displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 21, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 5),
+                    const Text('En sintonía con tu squad',
+                        style:
+                            TextStyle(color: FestiColors.cyan, fontSize: 12)),
+                  ])),
+              IconButton.filledTonal(
+                  tooltip: 'Notificaciones',
+                  onPressed: () => showFeatureInfo(context, 'Notificaciones',
+                      'No tienes notificaciones nuevas.'),
+                  icon: const Icon(Icons.notifications_none_rounded)),
+              IconButton(
+                  tooltip: 'Perfil',
+                  onPressed: _openProfile,
+                  icon: const Icon(Icons.account_circle_outlined,
+                      color: FestiColors.cyan)),
+            ]),
+            const SizedBox(height: 20),
+            TextField(
+                onChanged: (value) =>
+                    setState(() => _query = value.trim().toLowerCase()),
+                decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.search, color: FestiColors.muted),
+                    hintText: 'Buscar escenarios, amigos o compras…',
+                    hintStyle:
+                        TextStyle(fontSize: 14, color: FestiColors.muted))),
+            if (_query.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              FestiCard(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                    for (final item in _searchItems)
+                      if (_matches(item))
+                        ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(item.$1),
+                            trailing: const Icon(Icons.arrow_forward,
+                                color: FestiColors.cyan),
+                            onTap: () => context.push(item.$2)),
+                    if (!_searchItems.any(_matches))
+                      const Text(
+                          'Sin resultados. Prueba “mapa”, “amigos” o “compras”.',
+                          style: TextStyle(color: FestiColors.muted)),
+                  ])),
+            ],
+            const SizedBox(height: 18),
+            Row(children: [
+              Expanded(
+                  child: OutlinedButton.icon(
+                      onPressed: () => context.push('/join'),
+                      icon: const Icon(Icons.tag, size: 19),
+                      label: const Text('Unirse con código',
+                          textAlign: TextAlign.center,
+                          style:
+                              TextStyle(color: Colors.white, fontSize: 12)))),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: OutlinedButton.icon(
+                      onPressed: _createSquad,
+                      icon: const Icon(Icons.person_add_alt_1, size: 19),
+                      label: const Text('Crear nuevo squad',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white, fontSize: 12))))
+            ]),
+            const SizedBox(height: 18),
+            ValueListenableBuilder<SquadPreview>(
+                valueListenable: activeSquadPreview,
+                builder: (context, squad, _) =>
+                    LayoutBuilder(builder: (context, constraints) {
+                      final cards = [
+                        FestiCard(
+                            glow: true,
+                            onTap: () {
+                              if (squad.id == null) {
+                                showFeatureInfo(
+                                  context,
+                                  squad.name,
+                                  'Crea o selecciona un squad para consultar sus integrantes.',
+                                );
+                                return;
+                              }
+                              context.push(
+                                '/squads/${squad.id}?name=${Uri.encodeQueryComponent(squad.name)}&code=${squad.code ?? '------'}',
+                              );
+                            },
+                            padding: const EdgeInsets.all(17),
+                            child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(Icons.bolt_rounded,
-                                      color: FestiColors.cyan),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                      child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                        Text(
-                                            ref
-                                                        .watch(
-                                                            authControllerProvider)
-                                                        .valueOrNull ==
-                                                    null
-                                                ? '¡Empalme a las 8:00 PM!'
-                                                : 'Revisa los próximos empalmes',
+                                  Row(children: [
+                                    const Expanded(
+                                        child: Text('SQUAD ACTIVO',
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: FestiColors.muted))),
+                                    _SquadSignalTrigger(
+                                      onActivated: () {
+                                        HapticFeedback.heavyImpact();
+                                        context.push(
+                                          '/squad-signal?name=${Uri.encodeQueryComponent(squad.name)}&code=${Uri.encodeQueryComponent(squad.code ?? '------')}',
+                                        );
+                                      },
+                                    ),
+                                  ]),
+                                  const SizedBox(height: 5),
+                                  Text(squad.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          color: FestiColors.cyan)),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text('${squad.members}',
                                             style: const TextStyle(
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 15)),
-                                        const SizedBox(height: 7),
-                                        Text(
-                                            ref
-                                                        .watch(
-                                                            authControllerProvider)
-                                                        .valueOrNull ==
-                                                    null
-                                                ? 'Tu artista favorito coincide con la votación del squad en el Escenario Corona.'
-                                                : 'Abre Clash Resolver para consultar las recomendaciones reales de tu squad.',
-                                            style: const TextStyle(
-                                                color: FestiColors.muted,
-                                                fontSize: 13,
-                                                height: 1.4))
-                                      ])),
+                                                fontSize: 44,
+                                                height: 1,
+                                                fontWeight: FontWeight.w800)),
+                                        const SizedBox(width: 10),
+                                        const Flexible(
+                                            child: Text('Amigos\n• en línea',
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: FestiColors.cyan)))
+                                      ]),
+                                  const SizedBox(height: 22),
+                                  _SquadAvatars(
+                                    memberCount: squad.members,
+                                    members: _squadMembers,
+                                    demo: ref
+                                            .watch(authControllerProvider)
+                                            .valueOrNull ==
+                                        null,
+                                  ),
                                 ])),
-                      ])),
-              if (ref.watch(authControllerProvider).valueOrNull == null) ...[
-                const SizedBox(height: 18),
-                const Center(
-                    child: Text('DEMOSTRACIÓN · DATOS DE EJEMPLO',
-                        style: TextStyle(
-                            color: FestiColors.muted,
-                            fontSize: 10,
-                            letterSpacing: 1.2))),
-              ],
-            ]))),
-        bottomNavigationBar: NavigationBar(
-            backgroundColor: const Color(0xFF080F1C),
-            indicatorColor: const Color(0xFF103952),
-            selectedIndex: 0,
-            onDestinationSelected: (index) {
-              if (index != 0) {
-                context.push(
-                    ['/dashboard', '/festivals', '/finances', '/clash'][index]);
-              }
-            },
-            destinations: const [
-              NavigationDestination(
-                  icon: Icon(Icons.home_rounded, color: FestiColors.cyan),
-                  label: 'Inicio'),
-              NavigationDestination(
-                  icon: Icon(Icons.map_outlined), label: 'Mapa'),
-              NavigationDestination(
-                  icon: Icon(Icons.payments_outlined), label: 'Finanzas'),
-              NavigationDestination(
-                  icon: Icon(Icons.calendar_month_outlined), label: 'Agenda')
-            ]),
-      );
+                        _FinanceDashboardCard(
+                          snapshot: _financeSnapshot,
+                          loading: _financeLoading,
+                          onTap: () => _openFinances(squad.id),
+                        ),
+                      ];
+                      if (constraints.maxWidth < 330 ||
+                          MediaQuery.textScalerOf(context).scale(14) > 20) {
+                        return Column(children: [
+                          cards[0],
+                          const SizedBox(height: 14),
+                          cards[1]
+                        ]);
+                      }
+                      return IntrinsicHeight(
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                            Expanded(child: cards[0]),
+                            const SizedBox(width: 14),
+                            Expanded(child: cards[1])
+                          ]));
+                    })),
+            const SizedBox(height: 18),
+            FestiCard(
+                glow: true,
+                padding: EdgeInsets.zero,
+                onTap: () => context.push('/festivals'),
+                child: SizedBox(
+                    height: 206 *
+                        (MediaQuery.textScalerOf(context).scale(14) / 14)
+                            .clamp(1, 2),
+                    child: Stack(fit: StackFit.expand, children: [
+                      const CustomPaint(painter: _FestivalPainter()),
+                      Container(
+                          decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                            Color(0x22060B16),
+                            Color(0xFF060B16)
+                          ]))),
+                      const Padding(
+                          padding: EdgeInsets.all(15),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Wrap(spacing: 8, runSpacing: 8, children: [
+                                  StatusPill('Mapa del festival',
+                                      icon: Icons.location_on),
+                                  StatusPill('VISTA PREVIA')
+                                ]),
+                                Spacer(),
+                                Text('Catálogo de festivales',
+                                    style: TextStyle(
+                                        fontSize: 21,
+                                        fontWeight: FontWeight.w800)),
+                                SizedBox(height: 8),
+                                Text('Selecciona el recinto y abre su mapa',
+                                    style: TextStyle(
+                                        color: FestiColors.cyan, fontSize: 12)),
+                              ])),
+                    ]))),
+            const SizedBox(height: 18),
+            FestiCard(
+                onTap: _openClash,
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          spacing: 12,
+                          runSpacing: 10,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            const Text('SUGERENCIA INTELIGENTE',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                    letterSpacing: .5)),
+                            StatusPill(
+                              ref.watch(authControllerProvider).valueOrNull ==
+                                      null
+                                  ? 'Spotify · Sin conectar'
+                                  : _spotifyLoading
+                                      ? 'Spotify · Consultando'
+                                      : _musicPreferences == null
+                                          ? 'Spotify · No disponible'
+                                          : _musicPreferences!.spotifyConnected
+                                              ? 'Spotify · Conectado'
+                                              : 'Spotify · Sin conectar',
+                              icon: Icons.graphic_eq,
+                            )
+                          ]),
+                      const SizedBox(height: 16),
+                      Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                              color: FestiColors.background,
+                              borderRadius: BorderRadius.circular(17),
+                              border: Border.all(color: FestiColors.border)),
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.bolt_rounded,
+                                    color: FestiColors.cyan),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                      Text(
+                                          ref
+                                                      .watch(
+                                                          authControllerProvider)
+                                                      .valueOrNull ==
+                                                  null
+                                              ? '¡Empalme a las 8:00 PM!'
+                                              : 'Revisa los próximos empalmes',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 15)),
+                                      const SizedBox(height: 7),
+                                      Text(
+                                          ref
+                                                      .watch(
+                                                          authControllerProvider)
+                                                      .valueOrNull ==
+                                                  null
+                                              ? 'Tu artista favorito coincide con la votación del squad en el Escenario Corona.'
+                                              : 'Abre Clash Resolver para consultar las recomendaciones reales de tu squad.',
+                                          style: const TextStyle(
+                                              color: FestiColors.muted,
+                                              fontSize: 13,
+                                              height: 1.4))
+                                    ])),
+                              ])),
+                    ])),
+            if (ref.watch(authControllerProvider).valueOrNull == null) ...[
+              const SizedBox(height: 18),
+              const Center(
+                  child: Text('DEMOSTRACIÓN · DATOS DE EJEMPLO',
+                      style: TextStyle(
+                          color: FestiColors.muted,
+                          fontSize: 10,
+                          letterSpacing: 1.2))),
+            ],
+          ]))),
+      bottomNavigationBar: NavigationBar(
+          backgroundColor: const Color(0xFF080F1C),
+          indicatorColor: const Color(0xFF103952),
+          selectedIndex: 0,
+          onDestinationSelected: (index) {
+            if (index != 0) {
+              context.push(
+                  ['/dashboard', '/festivals', '/finances', '/clash'][index]);
+            }
+          },
+          destinations: const [
+            NavigationDestination(
+                icon: Icon(Icons.home_rounded, color: FestiColors.cyan),
+                label: 'Inicio'),
+            NavigationDestination(
+                icon: Icon(Icons.map_outlined), label: 'Mapa'),
+            NavigationDestination(
+                icon: Icon(Icons.payments_outlined), label: 'Finanzas'),
+            NavigationDestination(
+                icon: Icon(Icons.calendar_month_outlined), label: 'Agenda')
+          ]),
+    );
+  }
 }
 
 class _SquadAvatars extends StatelessWidget {

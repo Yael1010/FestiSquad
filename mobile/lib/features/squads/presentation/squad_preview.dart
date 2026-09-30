@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Shared, session-only state for the interface demonstration.
+// Shared, session-only summary of the squad selected by the signed-in user.
 class SquadPreview {
   const SquadPreview(this.name, this.members, {this.id, this.code});
   final String name;
@@ -10,4 +10,4 @@ class SquadPreview {
 }
 
 final activeSquadPreview =
-    ValueNotifier(const SquadPreview("Headliners ’26", 5));
+    ValueNotifier(const SquadPreview('Sin squad activo', 0));

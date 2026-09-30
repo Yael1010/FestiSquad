@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import CHAR, CheckConstraint, ForeignKey, Index, Unicode, UnicodeText, text
+from sqlalchemy import CHAR, CheckConstraint, ForeignKey, Index, Integer, Unicode, UnicodeText, text
 from sqlalchemy.dialects.mssql import DATETIME2, UNIQUEIDENTIFIER
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -61,3 +61,37 @@ class Stage(Base):
     )
     name: Mapped[str] = mapped_column(Unicode(120), nullable=False)
     polygon_geojson: Mapped[str] = mapped_column(UnicodeText, nullable=False)
+
+
+class ScheduleItem(Base):
+    __tablename__ = "schedule_items"
+    __table_args__ = (
+        CheckConstraint("ends_at > starts_at", name="ck_schedule_items_dates"),
+        Index("ix_schedule_items_stage_time", "stage_id", "starts_at", "ends_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        UNIQUEIDENTIFIER,
+        primary_key=True,
+        default=uuid4,
+        server_default=text("NEWID()"),
+    )
+    stage_id: Mapped[UUID] = mapped_column(ForeignKey("stages.id"), nullable=False)
+    artist_name: Mapped[str] = mapped_column(Unicode(160), nullable=False)
+    starts_at: Mapped[datetime] = mapped_column(DATETIME2, nullable=False)
+    ends_at: Mapped[datetime] = mapped_column(DATETIME2, nullable=False)
+
+
+class ScheduleItemGenre(Base):
+    __tablename__ = "schedule_item_genres"
+
+    schedule_item_id: Mapped[UUID] = mapped_column(
+        UNIQUEIDENTIFIER,
+        ForeignKey("schedule_items.id"),
+        primary_key=True,
+    )
+    genre_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("genres.id"),
+        primary_key=True,
+    )

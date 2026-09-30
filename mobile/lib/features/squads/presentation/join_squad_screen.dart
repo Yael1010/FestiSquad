@@ -16,7 +16,7 @@ class JoinSquadScreen extends ConsumerStatefulWidget {
 class _JoinSquadScreenState extends ConsumerState<JoinSquadScreen> {
   final _code = TextEditingController();
   final _focus = FocusNode();
-  bool _manual = false;
+  bool _manual = true;
   bool _joining = false;
   String? _error;
   bool get _valid =>
@@ -115,10 +115,8 @@ class _JoinSquadScreenState extends ConsumerState<JoinSquadScreen> {
                   icon: const Icon(Icons.notifications_none)),
               IconButton(
                   tooltip: 'Perfil',
-                  onPressed: () => showFeatureInfo(
-                      context,
-                      'Perfil de demostración',
-                      'Yael Flores · Explora las interfaces sin crear una cuenta.'),
+                  onPressed: () => showFeatureInfo(context, 'Perfil',
+                      'Administra tu sesión desde la pantalla principal.'),
                   icon: const Icon(Icons.account_circle,
                       color: FestiColors.cyan)),
               const SizedBox(width: 8)
@@ -145,10 +143,10 @@ class _JoinSquadScreenState extends ConsumerState<JoinSquadScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.w800))),
-                      const StatusPill('DEMO')
+                      const StatusPill('PRIVADO', icon: Icons.lock_outline)
                     ]),
                     const Center(
-                        child: Text('CORONA CAPITAL 2026',
+                        child: Text('ACCESO POR INVITACIÓN',
                             style: TextStyle(
                                 color: FestiColors.cyan,
                                 fontSize: 12,
@@ -232,7 +230,7 @@ class _JoinSquadScreenState extends ConsumerState<JoinSquadScreen> {
                                           right: 0,
                                           child: Center(
                                               child: StatusPill(
-                                                  'VISTA PREVIA · CÁMARA INACTIVA',
+                                                  'CÁMARA NO DISPONIBLE',
                                                   icon:
                                                       Icons.qr_code_scanner))),
                                     ]),
@@ -257,7 +255,7 @@ class _JoinSquadScreenState extends ConsumerState<JoinSquadScreen> {
                                 fontSize: 20, fontWeight: FontWeight.w700)),
                         SizedBox(height: 10),
                         Text(
-                            'Pega el código privado de 6 caracteres que compartieron contigo.',
+                            'Pega el código privado que compartieron contigo.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: FestiColors.muted, height: 1.5))

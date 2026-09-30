@@ -9,6 +9,8 @@ from app.domains.festivals.schemas import (
     FestivalDetailResponse,
     FestivalSummaryResponse,
     FestivalUpdateRequest,
+    ScheduleItemAdminRequest,
+    ScheduleItemResponse,
     StageCreateRequest,
     StageResponse,
     StageUpdateRequest,
@@ -57,7 +59,15 @@ def create_festival(
     admin: PlatformAdmin,
 ) -> FestivalDetailResponse:
     del admin
-    return festival_service.create(db, payload)
+    try:
+        return festival_service.create(db, payload)
+    except ValueError as exc:
+        detail = (
+            "Cada horario debe usar un escenario incluido en el festival."
+            if str(exc) == "schedule_stage_not_found"
+            else "Los horarios deben quedar dentro de las fechas del festival."
+        )
+        raise HTTPException(status_code=422, detail=detail) from exc
 
 
 @router.get("/{festival_id}", response_model=FestivalDetailResponse)
@@ -161,3 +171,84 @@ def delete_stage(
             else "Escenario no encontrado."
         )
         raise HTTPException(status_code=409, detail=detail) from exc
+
+
+@router.get(
+    "/{festival_id}/schedule",
+    response_model=list[ScheduleItemResponse],
+)
+def festival_schedule(
+    festival_id: UUID,
+    db: DatabaseSession,
+    current_user: CurrentUser,
+) -> list[ScheduleItemResponse]:
+    del current_user
+    try:
+        return festival_service.schedule(db, festival_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Festival no encontrado.") from exc
+
+
+@router.post(
+    "/{festival_id}/schedule",
+    response_model=ScheduleItemResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_schedule_item(
+    festival_id: UUID,
+    payload: ScheduleItemAdminRequest,
+    db: DatabaseSession,
+    admin: PlatformAdmin,
+) -> ScheduleItemResponse:
+    del admin
+    try:
+        return festival_service.add_schedule_item(db, festival_id, payload)
+    except ValueError as exc:
+        detail = (
+            "El horario debe quedar dentro de las fechas del festival."
+            if str(exc) == "schedule_outside_festival"
+            else "Festival o escenario no encontrado."
+        )
+        raise HTTPException(status_code=422, detail=detail) from exc
+
+
+@router.put(
+    "/{festival_id}/schedule/{item_id}",
+    response_model=ScheduleItemResponse,
+)
+def update_schedule_item(
+    festival_id: UUID,
+    item_id: UUID,
+    payload: ScheduleItemAdminRequest,
+    db: DatabaseSession,
+    admin: PlatformAdmin,
+) -> ScheduleItemResponse:
+    del admin
+    try:
+        return festival_service.update_schedule_item(
+            db, festival_id, item_id, payload
+        )
+    except ValueError as exc:
+        detail = (
+            "El horario debe quedar dentro de las fechas del festival."
+            if str(exc) == "schedule_outside_festival"
+            else "Horario o escenario no encontrado."
+        )
+        raise HTTPException(status_code=422, detail=detail) from exc
+
+
+@router.delete(
+    "/{festival_id}/schedule/{item_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_schedule_item(
+    festival_id: UUID,
+    item_id: UUID,
+    db: DatabaseSession,
+    admin: PlatformAdmin,
+) -> None:
+    del admin
+    try:
+        festival_service.delete_schedule_item(db, festival_id, item_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Horario no encontrado.") from exc

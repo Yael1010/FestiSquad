@@ -25,6 +25,8 @@ class ConcertOption(BaseModel):
     starts_at: datetime
     ends_at: datetime
     genres: list[str] = Field(default_factory=list, max_length=12)
+    vote_count: int = Field(default=0, ge=0)
+    voted_by_current_user: bool = False
 
     @field_validator("genres")
     @classmethod
@@ -39,9 +41,16 @@ class ConcertOption(BaseModel):
 
 
 class ConflictGroup(BaseModel):
+    id: str = Field(min_length=64, max_length=64)
     starts_at: datetime
     ends_at: datetime
     options: list[ConcertOption] = Field(min_length=2)
+    decided_option_id: UUID | None = None
+
+    @computed_field
+    @property
+    def total_votes(self) -> int:
+        return sum(option.vote_count for option in self.options)
 
 
 class ConflictListResponse(BaseModel):
@@ -59,6 +68,7 @@ class RecommendationRequest(BaseModel):
     favorite_artists: list[str] = Field(default_factory=list, exclude=True)
     genre_weights: dict[str, int] = Field(default_factory=dict, exclude=True)
     artist_weights: dict[str, int] = Field(default_factory=dict, exclude=True)
+    option_vote_weights: dict[str, int] = Field(default_factory=dict, exclude=True)
 
 
 class RecommendationResponse(BaseModel):
@@ -69,6 +79,20 @@ class RecommendationResponse(BaseModel):
     matched_genres: list[str]
     matched_artist: bool
     reason: str
+    vote_count: int = 0
+
+
+class ClashVoteRequest(BaseModel):
+    squad_id: UUID
+    conflict_id: str = Field(min_length=64, max_length=64)
+    option_id: UUID
+    selected: bool = True
+
+
+class ClashDecisionRequest(BaseModel):
+    squad_id: UUID
+    conflict_id: str = Field(min_length=64, max_length=64)
+    option_id: UUID
 
 
 class ManualMusicPreferencesRequest(BaseModel):

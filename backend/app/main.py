@@ -19,7 +19,7 @@ async def lifespan(_app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="FestiSquad API",
-        version="0.1.0",
+        version="1.0.0",
         description="API modular para logística, ubicación, finanzas y recomendaciones musicales.",
         lifespan=lifespan,
         docs_url=None if settings.environment == "production" else "/docs",
@@ -38,7 +38,7 @@ def create_app() -> FastAPI:
             else None
         ),
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
 

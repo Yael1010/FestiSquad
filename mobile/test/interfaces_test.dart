@@ -497,9 +497,27 @@ class _FakeClashRemoteDataSource implements ClashRemoteDataSource {
       );
 
   @override
-  Future<({List<ClashConflict> conflicts, String? festivalName})>
-      conflicts() async =>
-          (conflicts: const <ClashConflict>[], festivalName: null as String?);
+  Future<({List<ClashConflict> conflicts, String? festivalName})> conflicts(
+          String squadId,
+          {String? festivalId}) async =>
+      (conflicts: const <ClashConflict>[], festivalName: null as String?);
+
+  @override
+  Future<({List<ClashConflict> conflicts, String? festivalName})> vote(
+    String squadId,
+    String conflictId,
+    String optionId,
+    bool selected,
+  ) async =>
+      (conflicts: const <ClashConflict>[], festivalName: null as String?);
+
+  @override
+  Future<({List<ClashConflict> conflicts, String? festivalName})> decide(
+    String squadId,
+    String conflictId,
+    String optionId,
+  ) async =>
+      (conflicts: const <ClashConflict>[], festivalName: null as String?);
 
   @override
   Future<ClashRecommendation> recommend(

@@ -26,6 +26,7 @@ class _FestivalAdminScreenState extends ConsumerState<FestivalAdminScreen> {
   final _officialUrl = TextEditingController();
   final _boundary = TextEditingController();
   final _stages = TextEditingController(text: '[]');
+  final _schedule = TextEditingController(text: '[]');
   DateTime? _startsAt;
   DateTime? _endsAt;
   bool _publish = true;
@@ -39,6 +40,7 @@ class _FestivalAdminScreenState extends ConsumerState<FestivalAdminScreen> {
     _officialUrl.dispose();
     _boundary.dispose();
     _stages.dispose();
+    _schedule.dispose();
     super.dispose();
   }
 
@@ -80,6 +82,9 @@ class _FestivalAdminScreenState extends ConsumerState<FestivalAdminScreen> {
       final stages = (jsonDecode(_stages.text) as List)
           .map((item) => Map<String, dynamic>.from(item as Map))
           .toList(growable: false);
+      final schedule = (jsonDecode(_schedule.text) as List)
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList(growable: false);
       setState(() => _saving = true);
       final created = await ref.read(festivalRepositoryProvider).create(
             FestivalDraft(
@@ -90,6 +95,7 @@ class _FestivalAdminScreenState extends ConsumerState<FestivalAdminScreen> {
               endsAt: _endsAt!,
               boundary: boundary,
               stages: stages,
+              schedule: schedule,
               officialUrl: _officialUrl.text.trim().isEmpty
                   ? null
                   : _officialUrl.text.trim(),
@@ -181,6 +187,17 @@ class _FestivalAdminScreenState extends ConsumerState<FestivalAdminScreen> {
               _stages,
               'Escenarios',
               maxLines: 8,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Agenda del festival',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            _field(
+              _schedule,
+              'Horarios por escenario',
+              maxLines: 10,
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,

@@ -84,6 +84,81 @@ void main() {
     expect(result.recommendation!.offline, isTrue);
   });
 
+  test('squad vote is optimistic and queued while offline', () async {
+    final now = DateTime.utc(2026, 10, 1, 20);
+    final conflict = ClashConflict(
+      id: List.filled(64, 'a').join(),
+      startsAt: now,
+      endsAt: now.add(const Duration(hours: 1)),
+      options: [
+        ConcertOption(
+          id: '00000000-0000-0000-0000-000000000101',
+          artist: 'Las Luces',
+          stage: 'A',
+          startsAt: now,
+          endsAt: now.add(const Duration(hours: 1)),
+          genres: const ['indie'],
+        ),
+        ConcertOption(
+          id: '00000000-0000-0000-0000-000000000102',
+          artist: 'DJ Norte',
+          stage: 'B',
+          startsAt: now,
+          endsAt: now.add(const Duration(hours: 1)),
+          genres: const ['electrónica'],
+        ),
+      ],
+    );
+    remote.agendaConflicts = [conflict];
+    await repository.load(squadId);
+    remote.offline = true;
+
+    final result =
+        await repository.vote(squadId, conflict, conflict.options[0]);
+
+    expect(result.conflicts.single.options[0].votedByCurrentUser, isTrue);
+    expect(result.conflicts.single.options[0].voteCount, 1);
+    expect(result.syncPending, isTrue);
+    expect(await database.readPendingClashVotes(), hasLength(1));
+  });
+
+  test('offline recommendation includes squad vote weight', () async {
+    final now = DateTime.utc(2026, 10, 1, 20);
+    final conflict = ClashConflict(
+      id: List.filled(64, 'b').join(),
+      startsAt: now,
+      endsAt: now.add(const Duration(hours: 1)),
+      options: [
+        ConcertOption(
+          id: '00000000-0000-0000-0000-000000000201',
+          artist: 'Artista A',
+          stage: 'A',
+          startsAt: now,
+          endsAt: now.add(const Duration(hours: 1)),
+          genres: const [],
+        ),
+        ConcertOption(
+          id: '00000000-0000-0000-0000-000000000202',
+          artist: 'Artista B',
+          stage: 'B',
+          startsAt: now,
+          endsAt: now.add(const Duration(hours: 1)),
+          genres: const [],
+          voteCount: 2,
+        ),
+      ],
+    );
+    remote.agendaConflicts = [conflict];
+    await repository.load(squadId);
+    remote.offline = true;
+
+    final result = await repository.recommend(squadId, conflict);
+
+    expect(result.recommendation!.selectedArtist, 'Artista B');
+    expect(result.recommendation!.voteCount, 2);
+    expect(result.recommendation!.reason, contains('2 voto(s)'));
+  });
+
   testWidgets('clash screen fits a compact phone', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
@@ -111,6 +186,7 @@ void main() {
 class _FakeClashRemote implements ClashRemoteDataSource {
   bool offline = false;
   MusicPreferences stored = const MusicPreferences();
+  List<ClashConflict> agendaConflicts = const [];
 
   Never _failure() => throw DioException(
         requestOptions: RequestOptions(path: '/clash-resolver'),
@@ -118,13 +194,35 @@ class _FakeClashRemote implements ClashRemoteDataSource {
       );
 
   @override
-  Future<({List<ClashConflict> conflicts, String? festivalName})>
-      conflicts() async {
+  Future<({List<ClashConflict> conflicts, String? festivalName})> conflicts(
+      String squadId,
+      {String? festivalId}) async {
     if (offline) _failure();
     return (
       festivalName: 'Festival',
-      conflicts: const <ClashConflict>[],
+      conflicts: agendaConflicts,
     );
+  }
+
+  @override
+  Future<({List<ClashConflict> conflicts, String? festivalName})> vote(
+    String squadId,
+    String conflictId,
+    String optionId,
+    bool selected,
+  ) async {
+    if (offline) _failure();
+    return (festivalName: 'Festival', conflicts: const <ClashConflict>[]);
+  }
+
+  @override
+  Future<({List<ClashConflict> conflicts, String? festivalName})> decide(
+    String squadId,
+    String conflictId,
+    String optionId,
+  ) async {
+    if (offline) _failure();
+    return (festivalName: 'Festival', conflicts: const <ClashConflict>[]);
   }
 
   @override

@@ -77,6 +77,9 @@ class FestivalCatalogScreen extends ConsumerWidget {
                     onTap: () => context.push(
                       '/map?festivalId=${Uri.encodeQueryComponent(festival.id)}',
                     ),
+                    onAgenda: () => context.push(
+                      '/clash?festivalId=${Uri.encodeQueryComponent(festival.id)}',
+                    ),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -89,10 +92,15 @@ class FestivalCatalogScreen extends ConsumerWidget {
 }
 
 class _FestivalCard extends StatelessWidget {
-  const _FestivalCard({required this.festival, required this.onTap});
+  const _FestivalCard({
+    required this.festival,
+    required this.onTap,
+    required this.onAgenda,
+  });
 
   final FestivalSummary festival;
   final VoidCallback onTap;
+  final VoidCallback onAgenda;
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +138,12 @@ class _FestivalCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Icon(Icons.arrow_forward, color: FestiColors.cyan),
+                    IconButton(
+                      tooltip: 'Abrir agenda y Clash Resolver',
+                      onPressed: onAgenda,
+                      icon: const Icon(Icons.event_note_outlined,
+                          color: FestiColors.cyan),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -247,17 +260,16 @@ class _EmptyCatalog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FestiCard(
-        child: Column(
-          children: [
-            const Icon(Icons.map_outlined, size: 40, color: FestiColors.cyan),
-            const SizedBox(height: 12),
-            const Text('Aún no hay festivales publicados.'),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: onDemo,
-              child: const Text('Abrir plano de demostración'),
-            ),
-          ],
+        child: FestiEmptyState(
+          icon: Icons.map_outlined,
+          title: 'Aún no hay festivales publicados',
+          message:
+              'El catálogo aparecerá aquí cuando un administrador publique un festival.',
+          action: OutlinedButton.icon(
+            onPressed: onDemo,
+            icon: const Icon(Icons.explore_outlined),
+            label: const Text('Explorar mapa sin festival'),
+          ),
         ),
       );
 }

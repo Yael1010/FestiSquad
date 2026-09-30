@@ -17,10 +17,14 @@ class BlueButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final IconData? icon;
   @override
-  Widget build(BuildContext context) => DecoratedBox(
+  Widget build(BuildContext context) => Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: label,
+      child: DecoratedBox(
         decoration: BoxDecoration(
             gradient: FestiColors.gradient,
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
                   color: FestiColors.blue.withValues(alpha: .22),
@@ -44,7 +48,7 @@ class BlueButton extends StatelessWidget {
                       style: const TextStyle(
                           fontWeight: FontWeight.w800, letterSpacing: 1))),
             ])),
-      );
+      ));
 }
 
 class FestiCard extends StatelessWidget {
@@ -61,7 +65,7 @@ class FestiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: glow
                 ? [
                     BoxShadow(
@@ -72,7 +76,7 @@ class FestiCard extends StatelessWidget {
         child: Material(
             color: FestiColors.surface,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(8),
                 side: BorderSide(
                     color:
                         glow ? const Color(0xFF166381) : FestiColors.border)),
@@ -104,6 +108,48 @@ class StatusPill extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w700)))
         ]),
+      );
+}
+
+class FestiEmptyState extends StatelessWidget {
+  const FestiEmptyState({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.action,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        container: true,
+        label: '$title. $message',
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 42, color: FestiColors.cyan),
+              const SizedBox(height: 14),
+              Text(title,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text(message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: FestiColors.muted)),
+              if (action != null) ...[
+                const SizedBox(height: 18),
+                action!,
+              ],
+            ],
+          ),
+        ),
       );
 }
 

@@ -14,7 +14,8 @@ class ClashController extends StateNotifier<AsyncValue<ClashSnapshot?>> {
 
   final ClashRepository _repository;
 
-  Future<void> load(String squadId) => _run(() => _repository.load(squadId));
+  Future<void> load(String squadId, {String? festivalId}) =>
+      _run(() => _repository.load(squadId, festivalId: festivalId));
 
   Future<void> saveManual(
     String squadId,
@@ -26,6 +27,22 @@ class ClashController extends StateNotifier<AsyncValue<ClashSnapshot?>> {
 
   Future<void> recommend(String squadId, ClashConflict conflict) {
     return _run(() => _repository.recommend(squadId, conflict));
+  }
+
+  Future<void> vote(
+    String squadId,
+    ClashConflict conflict,
+    ConcertOption option,
+  ) {
+    return _run(() => _repository.vote(squadId, conflict, option));
+  }
+
+  Future<void> decide(
+    String squadId,
+    ClashConflict conflict,
+    String optionId,
+  ) {
+    return _run(() => _repository.decide(squadId, conflict, optionId));
   }
 
   Future<String> spotifyAuthorizationUrl() =>

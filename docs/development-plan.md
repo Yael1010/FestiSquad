@@ -47,8 +47,11 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
   mapas reales mediante geometría GeoJSON validada.
 - [x] Fase 11: experiencia completa del Fondo Común, liquidaciones parciales o
   completas, historial y sincronización offline idempotente.
-- [ ] Fase 12: Clash Resolver conectado a agendas reales.
-- [ ] Fase 13: mejora integral de interfaces y estabilización de entrega.
+- [x] Fase 12: agenda real por festival, votación por integrante, recomendación
+  ponderada y decisión grupal confirmada por administradores del squad.
+- [x] Fase 13: sistema visual consolidado, accesibilidad, flujo crítico E2E y
+  verificación automatizada de entrega. Las mediciones físicas y el benchmark
+  del despliegue quedan como evidencias manuales de aceptación.
 
 ## APIs Iniciales
 

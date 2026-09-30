@@ -26,9 +26,23 @@ abstract interface class ClashRemoteDataSource {
   Future<MusicPreferences> preferences();
   Future<MusicPreferences> saveManual(
       List<String> genres, List<String> artists);
-  Future<({String? festivalName, List<ClashConflict> conflicts})> conflicts();
+  Future<({String? festivalName, List<ClashConflict> conflicts})> conflicts(
+    String squadId, {
+    String? festivalId,
+  });
   Future<ClashRecommendation> recommend(
       String squadId, List<ConcertOption> options);
+  Future<({String? festivalName, List<ClashConflict> conflicts})> vote(
+    String squadId,
+    String conflictId,
+    String optionId,
+    bool selected,
+  );
+  Future<({String? festivalName, List<ClashConflict> conflicts})> decide(
+    String squadId,
+    String conflictId,
+    String optionId,
+  );
   Future<String> spotifyAuthorizationUrl();
 }
 
@@ -56,10 +70,51 @@ class ApiClashRemoteDataSource implements ClashRemoteDataSource {
   }
 
   @override
-  Future<({String? festivalName, List<ClashConflict> conflicts})>
-      conflicts() async {
-    final response = await _api.get('/clash-resolver/conflicts');
-    final data = Map<String, dynamic>.from(response.data as Map);
+  Future<({String? festivalName, List<ClashConflict> conflicts})> conflicts(
+      String squadId,
+      {String? festivalId}) async {
+    final festivalQuery = festivalId == null
+        ? ''
+        : '&festival_id=${Uri.encodeQueryComponent(festivalId)}';
+    final response = await _api.get(
+      '/clash-resolver/conflicts?squad_id=${Uri.encodeQueryComponent(squadId)}$festivalQuery',
+    );
+    return _agenda(response.data);
+  }
+
+  @override
+  Future<({String? festivalName, List<ClashConflict> conflicts})> vote(
+    String squadId,
+    String conflictId,
+    String optionId,
+    bool selected,
+  ) async {
+    final response = await _api.put('/clash-resolver/votes', data: {
+      'squad_id': squadId,
+      'conflict_id': conflictId,
+      'option_id': optionId,
+      'selected': selected,
+    });
+    return _agenda(response.data);
+  }
+
+  @override
+  Future<({String? festivalName, List<ClashConflict> conflicts})> decide(
+    String squadId,
+    String conflictId,
+    String optionId,
+  ) async {
+    final response = await _api.put('/clash-resolver/decision', data: {
+      'squad_id': squadId,
+      'conflict_id': conflictId,
+      'option_id': optionId,
+    });
+    return _agenda(response.data);
+  }
+
+  ({String? festivalName, List<ClashConflict> conflicts}) _agenda(
+      dynamic responseData) {
+    final data = Map<String, dynamic>.from(responseData as Map);
     return (
       festivalName: data['festival_name'] as String?,
       conflicts: (data['conflicts'] as List)
@@ -94,12 +149,18 @@ class ClashRepository {
   final AppDatabase _database;
   final TokenStorage _tokens;
 
-  Future<ClashSnapshot> load(String squadId) async {
+  Future<ClashSnapshot> load(String squadId, {String? festivalId}) async {
     final userId = await _userId();
     await _retryPending();
+    await _retryPendingVotes();
     final cached = await _readCache(userId, squadId);
     try {
-      return await _refresh(userId, squadId, cached.recommendation);
+      return await _refresh(
+        userId,
+        squadId,
+        cached.recommendation,
+        festivalId: festivalId,
+      );
     } on DioException catch (error) {
       if (!_isNetworkFailure(error)) rethrow;
       return cached;
@@ -159,16 +220,95 @@ class ClashRepository {
     }
   }
 
+  Future<ClashSnapshot> vote(
+    String squadId,
+    ClashConflict conflict,
+    ConcertOption option,
+  ) async {
+    final optionId = option.id;
+    if (optionId == null || conflict.id.isEmpty) {
+      throw StateError('El horario no tiene una identidad válida.');
+    }
+    final userId = await _userId();
+    final current = await _readCache(userId, squadId);
+    final selected = !option.votedByCurrentUser;
+    final optimistic = current.copyWith(
+      conflicts: current.conflicts
+          .map((item) => item.id == conflict.id
+              ? item.copyWith(
+                  options: item.options.map((candidate) {
+                    final wasSelected = candidate.votedByCurrentUser;
+                    final isSelected = candidate.id == optionId && selected;
+                    final delta = (isSelected ? 1 : 0) - (wasSelected ? 1 : 0);
+                    final updatedCount = candidate.voteCount + delta;
+                    return candidate.copyWith(
+                      votedByCurrentUser: isSelected,
+                      voteCount: updatedCount < 0 ? 0 : updatedCount,
+                    );
+                  }).toList(growable: false),
+                )
+              : item)
+          .toList(growable: false),
+      fromCache: true,
+      syncPending: true,
+    );
+    await _writeCache(userId, squadId, optimistic);
+    final payload = jsonEncode({
+      'squad_id': squadId,
+      'conflict_id': conflict.id,
+      'option_id': optionId,
+      'selected': selected,
+    });
+    await _database.queueClashVote(squadId, conflict.id, payload);
+    try {
+      final agenda = await _remote.vote(
+        squadId,
+        conflict.id,
+        optionId,
+        selected,
+      );
+      await _clearPendingVote(squadId, conflict.id);
+      final saved = optimistic.copyWith(
+        conflicts: agenda.conflicts,
+        festivalName: agenda.festivalName,
+        fromCache: false,
+        syncPending:
+            (await _database.readPendingMusicPreferences()).isNotEmpty ||
+                (await _database.readPendingClashVotes()).isNotEmpty,
+      );
+      await _writeCache(userId, squadId, saved);
+      return saved;
+    } on DioException catch (error) {
+      if (!_isNetworkFailure(error)) rethrow;
+      return optimistic;
+    }
+  }
+
+  Future<ClashSnapshot> decide(
+    String squadId,
+    ClashConflict conflict,
+    String optionId,
+  ) async {
+    final userId = await _userId();
+    final current = await _readCache(userId, squadId);
+    final agenda = await _remote.decide(squadId, conflict.id, optionId);
+    final saved = current.copyWith(
+      conflicts: agenda.conflicts,
+      festivalName: agenda.festivalName,
+      fromCache: false,
+    );
+    await _writeCache(userId, squadId, saved);
+    return saved;
+  }
+
   Future<String> spotifyAuthorizationUrl() => _remote.spotifyAuthorizationUrl();
 
   Future<ClashSnapshot> _refresh(
-    String userId,
-    String squadId,
-    ClashRecommendation? recommendation,
-  ) async {
+      String userId, String squadId, ClashRecommendation? recommendation,
+      {String? festivalId}) async {
     final responses = await Future.wait([
       _remote.preferences(),
-      _remote.conflicts(),
+      _remote.conflicts(squadId, festivalId: festivalId),
     ]);
     final conflictData =
         responses[1] as ({String? festivalName, List<ClashConflict> conflicts});
@@ -200,7 +340,8 @@ class ClashRepository {
           : ClashRecommendation.fromJson(Map<String, dynamic>.from(
               jsonDecode(row.recommendationJson!) as Map)),
       fromCache: true,
-      syncPending: (await _database.readPendingMusicPreferences()).isNotEmpty,
+      syncPending: (await _database.readPendingMusicPreferences()).isNotEmpty ||
+          (await _database.readPendingClashVotes()).isNotEmpty,
     );
   }
 
@@ -247,7 +388,7 @@ class ClashRepository {
         option: option,
         genres: matched,
         artist: artistMatch,
-        score: matched.length * 3 + (artistMatch ? 5 : 0)
+        score: matched.length * 3 + (artistMatch ? 5 : 0) + option.voteCount * 4
       );
     }).toList()
       ..sort((a, b) {
@@ -264,10 +405,13 @@ class ClashRepository {
       score: best.score,
       matchedGenres: best.genres,
       matchedArtist: best.artist,
-      reason: best.score == 0
-          ? 'Sin coincidencias locales; se eligió la opción más temprana.'
-          : 'Recomendación local con tus preferencias guardadas.',
+      reason: best.option.voteCount > 0
+          ? 'Recomendación local respaldada por ${best.option.voteCount} voto(s) del squad.'
+          : best.score == 0
+              ? 'Sin coincidencias locales; se eligió la opción más temprana.'
+              : 'Recomendación local con tus preferencias guardadas.',
       offline: true,
+      voteCount: best.option.voteCount,
     );
   }
 
@@ -283,6 +427,34 @@ class ClashRepository {
         await _database.deletePendingOperation(operation.id);
       } on DioException {
         return;
+      }
+    }
+  }
+
+  Future<void> _retryPendingVotes() async {
+    for (final operation in await _database.readPendingClashVotes()) {
+      final data =
+          Map<String, dynamic>.from(jsonDecode(operation.payloadJson) as Map);
+      try {
+        await _remote.vote(
+          data['squad_id'] as String,
+          data['conflict_id'] as String,
+          data['option_id'] as String,
+          data['selected'] as bool,
+        );
+        await _database.deletePendingOperation(operation.id);
+      } on DioException {
+        return;
+      }
+    }
+  }
+
+  Future<void> _clearPendingVote(String squadId, String conflictId) async {
+    final operationKey = '$squadId:$conflictId';
+    for (final operation in await _database.readPendingClashVotes()) {
+      final data = jsonDecode(operation.payloadJson) as Map<String, dynamic>;
+      if (data['operation_key'] == operationKey) {
+        await _database.deletePendingOperation(operation.id);
       }
     }
   }

@@ -43,6 +43,7 @@ database/005_phase6_music_preferences.sql
 database/007_phase8_social_auth.sql
 database/008_phase10_festival_catalog.sql
 database/009_phase11_settlements.sql
+database/010_phase12_clash_voting.sql
 ```
 
 Si la base fue creada durante una fase anterior, ejecutar las migraciones
@@ -55,6 +56,7 @@ database/005_phase6_music_preferences.sql
 database/007_phase8_social_auth.sql
 database/008_phase10_festival_catalog.sql
 database/009_phase11_settlements.sql
+database/010_phase12_clash_voting.sql
 ```
 
 ## Inicio rápido Flutter
@@ -105,6 +107,10 @@ permite seleccionar festivales publicados y conserva sus geometrías para uso
 sin conexión. La carga administrativa y el formato GeoJSON se documentan en
 [Fase 10](docs/phase-10-festival-catalog.md). El flujo de pagos se documenta en
 [Fase 11](docs/phase-11-common-fund-settlements.md), y
+[Fase 12](docs/phase-12-real-agenda-voting.md). La agenda de cada festival se
+conecta con Clash Resolver y permite votar y confirmar una decisión grupal.
+[Fase 13](docs/phase-13-release-stabilization.md) consolida el sistema visual,
+la accesibilidad, las pruebas E2E y el procedimiento de entrega.
 [Fase 4](docs/phase-4-resilient-map.md) describe los límites del modo web y del
 rastreo en segundo plano.
 
@@ -121,6 +127,12 @@ flutter test
 
 cd ..
 powershell -ExecutionPolicy Bypass -File tools/check_secrets.ps1
+```
+
+Para ejecutar toda la validación de entrega en un solo paso:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/verify_release.ps1
 ```
 
 La configuración de proxy TLS está en `deploy/nginx/festisquad.conf`. El

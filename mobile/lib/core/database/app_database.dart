@@ -719,6 +719,37 @@ class AppDatabase extends _$AppDatabase {
       ),
     );
   }
+
+  Future<List<PendingSyncOperation>> readPendingClashVotes() {
+    return (select(pendingSyncOperations)
+          ..where((row) => row.resourceType.equals('clash_vote'))
+          ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]))
+        .get();
+  }
+
+  Future<void> queueClashVote(
+    String squadId,
+    String conflictId,
+    String payloadJson,
+  ) async {
+    final operationKey = '$squadId:$conflictId';
+    for (final pending in await readPendingClashVotes()) {
+      final payload = jsonDecode(pending.payloadJson) as Map<String, dynamic>;
+      if (payload['operation_key'] == operationKey) {
+        await deletePendingOperation(pending.id);
+      }
+    }
+    final payload = Map<String, dynamic>.from(jsonDecode(payloadJson) as Map)
+      ..['operation_key'] = operationKey;
+    await into(pendingSyncOperations).insert(
+      PendingSyncOperationsCompanion.insert(
+        resourceType: 'clash_vote',
+        operation: 'replace',
+        payloadJson: jsonEncode(payload),
+        createdAt: DateTime.now().toUtc(),
+      ),
+    );
+  }
 }
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {

@@ -2,16 +2,24 @@ import json
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.domains.festivals.db_models import Festival, Stage
+from app.domains.clash_resolver.db_models import Genre
+from app.domains.festivals.db_models import (
+    Festival,
+    ScheduleItem,
+    ScheduleItemGenre,
+    Stage,
+)
 from app.domains.festivals.schemas import (
     FestivalCreateRequest,
     FestivalDetailResponse,
     FestivalSummaryResponse,
     FestivalUpdateRequest,
+    ScheduleItemAdminRequest,
+    ScheduleItemResponse,
     StageCreateRequest,
     StageResponse,
     StageUpdateRequest,
@@ -84,8 +92,23 @@ class FestivalService:
             status=payload.status,
         )
         db.add(festival)
-        for stage in payload.stages:
-            db.add(self._new_stage(festival.id, stage))
+        stages = [self._new_stage(festival.id, stage) for stage in payload.stages]
+        db.add_all(stages)
+        db.flush()
+        stages_by_name = {stage.name.casefold(): stage for stage in stages}
+        for item in payload.schedule:
+            stage = stages_by_name.get(item.stage_name.strip().casefold())
+            if stage is None:
+                raise ValueError("schedule_stage_not_found")
+            self._add_schedule_item(
+                db,
+                festival,
+                stage,
+                item.artist_name,
+                item.starts_at,
+                item.ends_at,
+                item.genres,
+            )
         db.commit()
         return self.detail(db, festival.id, include_unpublished=True)
 
@@ -163,6 +186,93 @@ class FestivalService:
             db.rollback()
             raise ValueError("stage_has_schedule") from exc
 
+    def schedule(
+        self, db: Session, festival_id: UUID
+    ) -> list[ScheduleItemResponse]:
+        self._required(db, festival_id)
+        rows = db.execute(
+            select(ScheduleItem, Stage)
+            .join(Stage, Stage.id == ScheduleItem.stage_id)
+            .where(Stage.festival_id == festival_id)
+            .order_by(ScheduleItem.starts_at, Stage.name, ScheduleItem.artist_name)
+        ).all()
+        result: list[ScheduleItemResponse] = []
+        for item, stage in rows:
+            genres = list(
+                db.scalars(
+                    select(Genre.name)
+                    .join(ScheduleItemGenre, ScheduleItemGenre.genre_id == Genre.id)
+                    .where(ScheduleItemGenre.schedule_item_id == item.id)
+                    .order_by(Genre.name)
+                )
+            )
+            result.append(self._schedule_response(item, stage, genres))
+        return result
+
+    def add_schedule_item(
+        self,
+        db: Session,
+        festival_id: UUID,
+        payload: ScheduleItemAdminRequest,
+    ) -> ScheduleItemResponse:
+        festival = self._required(db, festival_id)
+        stage = self._required_stage(db, festival_id, UUID(payload.stage_id))
+        item = self._add_schedule_item(
+            db,
+            festival,
+            stage,
+            payload.artist_name,
+            payload.starts_at,
+            payload.ends_at,
+            payload.genres,
+        )
+        db.commit()
+        return self._schedule_response(item, stage, payload.genres)
+
+    def update_schedule_item(
+        self,
+        db: Session,
+        festival_id: UUID,
+        item_id: UUID,
+        payload: ScheduleItemAdminRequest,
+    ) -> ScheduleItemResponse:
+        festival = self._required(db, festival_id)
+        item = db.get(ScheduleItem, item_id)
+        stage = self._required_stage(db, festival_id, UUID(payload.stage_id))
+        current_stage = db.get(Stage, item.stage_id) if item else None
+        if item is None or current_stage is None or current_stage.festival_id != festival_id:
+            raise ValueError("schedule_not_found")
+        self._validate_schedule_dates(festival, payload.starts_at, payload.ends_at)
+        item.stage_id = stage.id
+        item.artist_name = payload.artist_name.strip()
+        item.starts_at = self._database_datetime(payload.starts_at)
+        item.ends_at = self._database_datetime(payload.ends_at)
+        db.execute(
+            ScheduleItemGenre.__table__.delete().where(
+                ScheduleItemGenre.schedule_item_id == item.id
+            )
+        )
+        self._attach_genres(db, item.id, payload.genres)
+        db.commit()
+        return self._schedule_response(item, stage, payload.genres)
+
+    def delete_schedule_item(
+        self, db: Session, festival_id: UUID, item_id: UUID
+    ) -> None:
+        item = db.get(ScheduleItem, item_id)
+        stage = db.get(Stage, item.stage_id) if item else None
+        if item is None or stage is None or stage.festival_id != festival_id:
+            raise ValueError("schedule_not_found")
+        db.execute(
+            ScheduleItemGenre.__table__.delete().where(
+                ScheduleItemGenre.schedule_item_id == item.id
+            )
+        )
+        db.execute(text("DELETE FROM dbo.clash_decisions WHERE schedule_item_id = :id"), {"id": str(item.id)})
+        db.execute(text("DELETE FROM dbo.clash_votes WHERE schedule_item_id = :id"), {"id": str(item.id)})
+        db.delete(item)
+        db.commit()
+
     def _required(self, db: Session, festival_id: UUID) -> Festival:
         festival = db.get(Festival, festival_id)
         if festival is None:
@@ -186,6 +296,67 @@ class FestivalService:
             festival_id=festival_id,
             name=payload.name.strip(),
             polygon_geojson=json.dumps(payload.polygon.model_dump()),
+        )
+
+    def _add_schedule_item(
+        self,
+        db: Session,
+        festival: Festival,
+        stage: Stage,
+        artist_name: str,
+        starts_at: datetime,
+        ends_at: datetime,
+        genres: list[str],
+    ) -> ScheduleItem:
+        self._validate_schedule_dates(festival, starts_at, ends_at)
+        item = ScheduleItem(
+            id=uuid4(),
+            stage_id=stage.id,
+            artist_name=artist_name.strip(),
+            starts_at=self._database_datetime(starts_at),
+            ends_at=self._database_datetime(ends_at),
+        )
+        db.add(item)
+        db.flush()
+        self._attach_genres(db, item.id, genres)
+        return item
+
+    def _attach_genres(
+        self, db: Session, schedule_item_id: UUID, genres: list[str]
+    ) -> None:
+        for name in genres:
+            normalized = " ".join(name.strip().split()).casefold()
+            genre = db.scalar(select(Genre).where(Genre.name == normalized))
+            if genre is None:
+                genre = Genre(name=normalized)
+                db.add(genre)
+                db.flush()
+            db.add(
+                ScheduleItemGenre(
+                    schedule_item_id=schedule_item_id,
+                    genre_id=genre.id,
+                )
+            )
+
+    def _validate_schedule_dates(
+        self, festival: Festival, starts_at: datetime, ends_at: datetime
+    ) -> None:
+        starts = self._database_datetime(starts_at)
+        ends = self._database_datetime(ends_at)
+        if ends <= starts or starts < festival.starts_at or ends > festival.ends_at:
+            raise ValueError("schedule_outside_festival")
+
+    def _schedule_response(
+        self, item: ScheduleItem, stage: Stage, genres: list[str]
+    ) -> ScheduleItemResponse:
+        return ScheduleItemResponse(
+            id=str(item.id),
+            stage_id=str(stage.id),
+            stage_name=stage.name,
+            artist_name=item.artist_name,
+            starts_at=self._response_datetime(item.starts_at),
+            ends_at=self._response_datetime(item.ends_at),
+            genres=genres,
         )
 
     def _summary(self, festival: Festival, stage_count: int) -> FestivalSummaryResponse:

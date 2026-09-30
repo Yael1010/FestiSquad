@@ -41,7 +41,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/squad-signal',
         builder: (context, state) => SquadSignalScreen(
           squadName: state.uri.queryParameters['name'] ?? 'Mi squad',
-          squadCode: state.uri.queryParameters['code'] ?? 'DEMO26',
+          squadCode: state.uri.queryParameters['code'] ?? '------',
         ),
       ),
       GoRoute(
@@ -71,7 +71,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (context, state) => const FinancesScreen()),
       GoRoute(
           path: '/clash',
-          builder: (context, state) => const ClashResolverScreen()),
+          builder: (context, state) => ClashResolverScreen(
+                festivalId: state.uri.queryParameters['festivalId'],
+              )),
     ],
   );
 });

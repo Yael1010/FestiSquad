@@ -7,6 +7,7 @@ venv*/
 
 # Flutter/Dart
 .dart_tool/
+.dart-home/
 .flutter-plugins
 .flutter-plugins-dependencies
 build/

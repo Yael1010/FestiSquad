@@ -37,6 +37,48 @@ class StageUpdateRequest(StrictModel):
     polygon: GeoJsonPolygon | None = None
 
 
+class ScheduleItemCreateRequest(StrictModel):
+    stage_name: str = Field(min_length=1, max_length=120)
+    artist_name: str = Field(min_length=1, max_length=160)
+    starts_at: datetime
+    ends_at: datetime
+    genres: list[str] = Field(default_factory=list, max_length=12)
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.ends_at <= self.starts_at:
+            raise ValueError("El horario debe terminar después de comenzar.")
+        self.genres = list(
+            dict.fromkeys(
+                " ".join(value.strip().split()).casefold()
+                for value in self.genres
+                if value.strip()
+            )
+        )
+        return self
+
+
+class ScheduleItemAdminRequest(StrictModel):
+    stage_id: str
+    artist_name: str = Field(min_length=1, max_length=160)
+    starts_at: datetime
+    ends_at: datetime
+    genres: list[str] = Field(default_factory=list, max_length=12)
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.ends_at <= self.starts_at:
+            raise ValueError("El horario debe terminar después de comenzar.")
+        self.genres = list(
+            dict.fromkeys(
+                " ".join(value.strip().split()).casefold()
+                for value in self.genres
+                if value.strip()
+            )
+        )
+        return self
+
+
 class FestivalCreateRequest(StrictModel):
     name: str = Field(min_length=2, max_length=160)
     venue_name: str = Field(min_length=2, max_length=160)
@@ -50,6 +92,9 @@ class FestivalCreateRequest(StrictModel):
     official_url: HttpUrl | None = None
     status: Literal["draft", "published"] = "draft"
     stages: list[StageCreateRequest] = Field(default_factory=list, max_length=50)
+    schedule: list[ScheduleItemCreateRequest] = Field(
+        default_factory=list, max_length=500
+    )
 
     @model_validator(mode="after")
     def validate_dates(self):
@@ -91,6 +136,16 @@ class StageResponse(BaseModel):
     id: str
     name: str
     polygon: dict
+
+
+class ScheduleItemResponse(BaseModel):
+    id: str
+    stage_id: str
+    stage_name: str
+    artist_name: str
+    starts_at: datetime
+    ends_at: datetime
+    genres: list[str]
 
 
 class FestivalDetailResponse(FestivalSummaryResponse):

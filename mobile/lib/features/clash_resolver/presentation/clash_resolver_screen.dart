@@ -9,7 +9,9 @@ import '../application/clash_controller.dart';
 import '../domain/clash_models.dart';
 
 class ClashResolverScreen extends ConsumerStatefulWidget {
-  const ClashResolverScreen({super.key});
+  const ClashResolverScreen({super.key, this.festivalId});
+
+  final String? festivalId;
 
   @override
   ConsumerState<ClashResolverScreen> createState() =>
@@ -31,6 +33,7 @@ class _ClashResolverScreenState extends ConsumerState<ClashResolverScreen> {
   final _selectedGenres = <String>{};
   final _artistsController = TextEditingController();
   String? _squadId;
+  bool _canDecide = false;
   int _selectedConflict = 0;
   bool _preferencesHydrated = false;
 
@@ -50,7 +53,10 @@ class _ClashResolverScreenState extends ConsumerState<ClashResolverScreen> {
     var squad = ref.read(squadControllerProvider).valueOrNull;
     squad ??= await ref.read(squadControllerProvider.notifier).loadMine();
     if (!mounted) return;
-    setState(() => _squadId = squad?.id);
+    setState(() {
+      _squadId = squad?.id;
+      _canDecide = squad?.currentUserRole == 'admin';
+    });
     if (squad != null) await _reload();
   }
 
@@ -58,7 +64,9 @@ class _ClashResolverScreenState extends ConsumerState<ClashResolverScreen> {
     final squadId = _squadId;
     if (squadId == null) return;
     try {
-      await ref.read(clashControllerProvider.notifier).load(squadId);
+      await ref
+          .read(clashControllerProvider.notifier)
+          .load(squadId, festivalId: widget.festivalId);
       if (!mounted) return;
       final snapshot = ref.read(clashControllerProvider).valueOrNull;
       if (snapshot != null) _hydratePreferences(snapshot.preferences);
@@ -133,6 +141,39 @@ class _ClashResolverScreenState extends ConsumerState<ClashResolverScreen> {
           .recommend(squadId, conflict);
     } catch (_) {
       if (mounted) _message('No se pudo calcular la recomendación.');
+    }
+  }
+
+  Future<void> _vote(ClashConflict conflict, ConcertOption option) async {
+    final squadId = _squadId;
+    if (squadId == null) return;
+    try {
+      await ref.read(clashControllerProvider.notifier).vote(
+            squadId,
+            conflict,
+            option,
+          );
+    } catch (_) {
+      if (mounted) _message('No fue posible registrar tu voto.');
+    }
+  }
+
+  Future<void> _confirmDecision(
+    ClashConflict conflict,
+    ClashRecommendation recommendation,
+  ) async {
+    final squadId = _squadId;
+    final optionId = recommendation.selectedOptionId;
+    if (squadId == null || optionId == null) return;
+    try {
+      await ref.read(clashControllerProvider.notifier).decide(
+            squadId,
+            conflict,
+            optionId,
+          );
+      if (mounted) _message('Decisión del squad confirmada.');
+    } catch (_) {
+      if (mounted) _message('No fue posible confirmar la decisión.');
     }
   }
 
@@ -304,9 +345,18 @@ class _ClashResolverScreenState extends ConsumerState<ClashResolverScreen> {
                       color: FestiColors.cyan,
                       fontWeight: FontWeight.w800,
                       fontSize: 12)),
+              const SizedBox(height: 5),
+              Text(
+                '${conflict.totalVotes} voto(s) del squad',
+                style: const TextStyle(color: FestiColors.muted, fontSize: 12),
+              ),
               const SizedBox(height: 12),
               for (final option in conflict.options) ...[
-                _ConcertRow(option: option),
+                _ConcertRow(
+                  option: option,
+                  decided: conflict.decidedOptionId == option.id,
+                  onVote: loading ? null : () => _vote(conflict, option),
+                ),
                 if (option != conflict.options.last)
                   const Divider(color: FestiColors.border),
               ],
@@ -316,6 +366,23 @@ class _ClashResolverScreenState extends ConsumerState<ClashResolverScreen> {
                 icon: Icons.auto_awesome_outlined,
                 onPressed: loading ? null : () => _resolve(conflict),
               ),
+              if (_canDecide &&
+                  snapshot?.recommendation?.selectedOptionId != null &&
+                  conflict.options.any((option) =>
+                      option.id ==
+                      snapshot!.recommendation!.selectedOptionId)) ...[
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: loading
+                      ? null
+                      : () => _confirmDecision(
+                            conflict,
+                            snapshot!.recommendation!,
+                          ),
+                  icon: const Icon(Icons.verified_outlined),
+                  label: const Text('Confirmar decisión del squad'),
+                ),
+              ],
             ],
           ),
         ),
@@ -409,8 +476,14 @@ class _SpotifySection extends StatelessWidget {
 }
 
 class _ConcertRow extends StatelessWidget {
-  const _ConcertRow({required this.option});
+  const _ConcertRow({
+    required this.option,
+    required this.decided,
+    required this.onVote,
+  });
   final ConcertOption option;
+  final bool decided;
+  final VoidCallback? onVote;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -448,6 +521,33 @@ class _ConcertRow extends StatelessWidget {
                 ],
               ),
             ),
+            Column(
+              children: [
+                IconButton(
+                  tooltip: option.votedByCurrentUser
+                      ? 'Retirar voto'
+                      : 'Votar por ${option.artist}',
+                  onPressed: onVote,
+                  icon: Icon(
+                    option.votedByCurrentUser
+                        ? Icons.thumb_up_alt
+                        : Icons.thumb_up_alt_outlined,
+                    color: option.votedByCurrentUser
+                        ? FestiColors.cyan
+                        : FestiColors.muted,
+                  ),
+                ),
+                Text('${option.voteCount}',
+                    style: const TextStyle(
+                        color: FestiColors.muted, fontSize: 11)),
+              ],
+            ),
+            if (decided)
+              const Padding(
+                padding: EdgeInsets.only(left: 5),
+                child: Icon(Icons.verified_rounded,
+                    color: Color(0xFF1ED760), size: 21),
+              ),
           ],
         ),
       );
@@ -484,6 +584,12 @@ class _RecommendationCard extends StatelessWidget {
             const SizedBox(height: 9),
             Text(value.reason,
                 style: const TextStyle(color: FestiColors.muted, height: 1.4)),
+            if (value.voteCount > 0) ...[
+              const SizedBox(height: 8),
+              Text('${value.voteCount} voto(s) respaldan esta opción',
+                  style:
+                      const TextStyle(color: FestiColors.cyan, fontSize: 12)),
+            ],
           ],
         ),
       );

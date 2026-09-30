@@ -54,6 +54,7 @@ class FestivalDraft {
     required this.endsAt,
     required this.boundary,
     required this.stages,
+    this.schedule = const [],
     this.countryCode = 'MX',
     this.timezone = 'America/Mexico_City',
     this.officialUrl,
@@ -69,6 +70,7 @@ class FestivalDraft {
   final DateTime endsAt;
   final Map<String, dynamic> boundary;
   final List<Map<String, dynamic>> stages;
+  final List<Map<String, dynamic>> schedule;
   final String? officialUrl;
   final bool publish;
 
@@ -82,6 +84,7 @@ class FestivalDraft {
         'ends_at': endsAt.toUtc().toIso8601String(),
         'boundary': boundary,
         'stages': stages,
+        'schedule': schedule,
         'official_url': officialUrl,
         'status': publish ? 'published' : 'draft',
       };

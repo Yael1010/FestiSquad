@@ -69,6 +69,49 @@ def test_conflicts_keep_only_maximal_simultaneous_groups() -> None:
 
     assert len(groups) == 1
     assert {option.artist for option in groups[0].options} == {"A", "B", "C"}
+    assert len(groups[0].id) == 64
+
+
+def test_conflict_identity_is_independent_from_option_order() -> None:
+    now = datetime.now(timezone.utc)
+    options = [
+        ConcertOption(id="00000000-0000-0000-0000-000000000001", artist="A", stage="1",
+                      starts_at=now, ends_at=now + timedelta(hours=1)),
+        ConcertOption(id="00000000-0000-0000-0000-000000000002", artist="B", stage="2",
+                      starts_at=now, ends_at=now + timedelta(hours=1)),
+    ]
+
+    assert group_conflicts(options)[0].id == group_conflicts(list(reversed(options)))[0].id
+
+
+def test_squad_votes_influence_the_recommendation() -> None:
+    now = datetime.now(timezone.utc)
+    option_a = ConcertOption(
+        id="00000000-0000-0000-0000-000000000001",
+        artist="A",
+        stage="1",
+        starts_at=now,
+        ends_at=now + timedelta(hours=1),
+    )
+    option_b = ConcertOption(
+        id="00000000-0000-0000-0000-000000000002",
+        artist="B",
+        stage="2",
+        starts_at=now,
+        ends_at=now + timedelta(hours=1),
+    )
+
+    result = ClashResolverService().recommend(
+        RecommendationRequest(
+            squad_id="squad-1",
+            options=[option_a, option_b],
+            option_vote_weights={str(option_b.id): 2},
+        )
+    )
+
+    assert result.selected_artist == "B"
+    assert result.vote_count == 2
+    assert "2 voto(s)" in result.reason
 
 
 def test_spotify_credentials_must_be_configured_together() -> None:
