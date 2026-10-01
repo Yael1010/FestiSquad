@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.responses import HTMLResponse
 from jose import JWTError
 
@@ -19,6 +19,7 @@ from app.domains.auth.social_service import (
     SocialProvider,
     social_auth_service,
 )
+from app.core.avatar_storage import AvatarValidationError, avatar_storage
 
 router = APIRouter()
 
@@ -51,11 +52,44 @@ def refresh(payload: RefreshRequest, db: DatabaseSession) -> AuthResponse:
 
 @router.get("/me", response_model=UserResponse)
 def me(current_user: CurrentUser) -> UserResponse:
-    return UserResponse(
-        id=str(current_user.id),
-        name=current_user.name,
-        email=current_user.email,
-    )
+    return _user_response(current_user)
+
+
+@router.post("/avatar", response_model=UserResponse)
+async def upload_avatar(
+    current_user: CurrentUser,
+    db: DatabaseSession,
+    file: UploadFile = File(...),
+) -> UserResponse:
+    # Se lee un byte adicional para identificar cargas que exceden el límite.
+    content = await file.read(avatar_storage.max_bytes + 1)
+    try:
+        new_avatar_url = avatar_storage.save(current_user.id, content)
+    except AvatarValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    previous_avatar_url = current_user.avatar_url
+    try:
+        current_user.avatar_url = new_avatar_url
+        db.commit()
+    except Exception:
+        db.rollback()
+        avatar_storage.delete(new_avatar_url)
+        raise
+    avatar_storage.delete(previous_avatar_url)
+    return _user_response(current_user)
+
+
+@router.delete("/avatar", response_model=UserResponse)
+def delete_avatar(
+    current_user: CurrentUser,
+    db: DatabaseSession,
+) -> UserResponse:
+    previous_avatar_url = current_user.avatar_url
+    current_user.avatar_url = None
+    db.commit()
+    avatar_storage.delete(previous_avatar_url)
+    return _user_response(current_user)
 
 
 @router.post(
@@ -133,6 +167,15 @@ def _social_error(code: str) -> str:
         "provider_already_linked": "Ese proveedor ya está vinculado a una cuenta.",
     }
     return messages.get(code, "No fue posible completar el acceso social.")
+
+
+def _user_response(user) -> UserResponse:
+    return UserResponse(
+        id=str(user.id),
+        name=user.name,
+        email=user.email,
+        avatar_url=user.avatar_url,
+    )
 
 
 def _social_callback_page(provider: SocialProvider, *, success: bool) -> str:

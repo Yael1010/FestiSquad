@@ -10,6 +10,7 @@ from app.domains.finances.db_models import Expense, ExpenseParticipant, Settleme
 from app.domains.finances.db_schemas import ExpenseInput, SettlementInput
 from app.domains.finances.db_service import DatabaseFinanceService
 from app.domains.finances.exact_money import suggest_transfers
+from app.domains.squads.db_models import SquadMember
 
 A, B, C = (UUID(int=value) for value in (1, 2, 3))
 
@@ -169,5 +170,56 @@ def test_settlement_cannot_exceed_current_debt() -> None:
             settlement_input('50.01'),
             B,
         )
+
+    db.commit.assert_not_called()
+
+
+def test_payer_can_cancel_expense_without_deleting_audit_record() -> None:
+    expense = Expense(
+        id=UUID(int=300),
+        squad_id=A,
+        client_request_id=UUID(int=301),
+        paid_by_user_id=A,
+        description='Bebidas',
+        amount=Decimal('120.00'),
+        status='active',
+        created_at=datetime(2026, 10, 1),
+    )
+    membership = SquadMember(squad_id=A, user_id=A, role='member')
+    participant = ExpenseParticipant(
+        expense_id=expense.id,
+        user_id=A,
+        share_amount=Decimal('120.00'),
+    )
+    db = MagicMock(spec=Session)
+    db.get.side_effect = [expense, membership]
+    db.scalars.return_value = [participant]
+
+    result = DatabaseFinanceService().cancel_expense(db, expense.id, A)
+
+    assert result.status == 'cancelled'
+    assert result.cancelled_by_user_id == A
+    assert expense.cancelled_at is not None
+    db.delete.assert_not_called()
+    db.commit.assert_called_once()
+
+
+def test_non_payer_member_cannot_cancel_expense() -> None:
+    expense = Expense(
+        id=UUID(int=310),
+        squad_id=A,
+        client_request_id=UUID(int=311),
+        paid_by_user_id=A,
+        description='Taxi',
+        amount=Decimal('80.00'),
+        status='active',
+        created_at=datetime(2026, 10, 1),
+    )
+    membership = SquadMember(squad_id=A, user_id=B, role='member')
+    db = MagicMock(spec=Session)
+    db.get.side_effect = [expense, membership]
+
+    with pytest.raises(PermissionError, match='pagador'):
+        DatabaseFinanceService().cancel_expense(db, expense.id, B)
 
     db.commit.assert_not_called()

@@ -14,6 +14,8 @@ import '../application/finance_controller.dart';
 import '../domain/finance_models.dart';
 import '../domain/money.dart';
 
+enum _FinanceView { active, history }
+
 class FinancesScreen extends ConsumerStatefulWidget {
   const FinancesScreen({super.key});
 
@@ -24,6 +26,8 @@ class FinancesScreen extends ConsumerStatefulWidget {
 class _FinancesScreenState extends ConsumerState<FinancesScreen> {
   String? get _squadId => activeSquadPreview.value.id;
   String? _currentUserId;
+  _FinanceView _view = _FinanceView.active;
+  int _visibleRecords = 5;
 
   @override
   void initState() {
@@ -78,6 +82,67 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _cancelExpense(SquadExpense expense) async {
+    final verb = expense.pendingSync ? 'eliminar' : 'anular';
+    final confirmed = await _confirm(
+      '¿Quieres $verb el ticket “${expense.description}”?\n\n'
+      '${expense.pendingSync ? 'El borrador aún no se ha sincronizado.' : 'El registro seguirá visible en el historial y dejará de afectar los balances.'}',
+    );
+    if (!confirmed || !mounted) return;
+    try {
+      await ref.read(financeControllerProvider.notifier).cancelExpense(expense);
+      if (mounted) {
+        _show(expense.pendingSync
+            ? 'Borrador eliminado.'
+            : 'Ticket anulado y balances actualizados.');
+      }
+    } on FinanceRequestException catch (error) {
+      if (mounted) _show(error.message);
+    }
+  }
+
+  Future<void> _cancelSettlement(SquadSettlement settlement) async {
+    final verb = settlement.pendingSync ? 'eliminar' : 'anular';
+    final confirmed = await _confirm(
+      '¿Quieres $verb este pago?\n\n'
+      '${settlement.pendingSync ? 'El borrador aún no se ha sincronizado.' : 'El registro seguirá visible en el historial y las deudas se recalcularán.'}',
+    );
+    if (!confirmed || !mounted) return;
+    try {
+      await ref
+          .read(financeControllerProvider.notifier)
+          .cancelSettlement(settlement);
+      if (mounted) {
+        _show(settlement.pendingSync
+            ? 'Pago pendiente eliminado.'
+            : 'Pago anulado y balances actualizados.');
+      }
+    } on FinanceRequestException catch (error) {
+      if (mounted) _show(error.message);
+    }
+  }
+
+  Future<bool> _confirm(String message) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Confirmar acción'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Confirmar'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   Future<void> _settle(
     DebtTransfer transfer,
     Map<String, String> memberNames,
@@ -123,6 +188,9 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
     final memberNames = {
       for (final member in members) member.userId: member.name,
     };
+    final currentMember =
+        members.where((member) => member.isCurrentUser).firstOrNull;
+    final canManageRecords = currentMember?.isAdmin == true;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -155,6 +223,17 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
                     transfers: [],
                     fromCache: false,
                   );
+              final expenses = value.expenses
+                  .where((item) =>
+                      item.isCancelled == (_view == _FinanceView.history))
+                  .toList(growable: false);
+              final settlements = value.settlements
+                  .where((item) =>
+                      item.isCancelled == (_view == _FinanceView.history))
+                  .toList(growable: false);
+              final visibleExpenses = expenses.take(_visibleRecords).toList();
+              final visibleSettlements =
+                  settlements.take(_visibleRecords).toList();
               return RefreshIndicator(
                 onRefresh: _load,
                 child: ListView(
@@ -180,21 +259,51 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
                       onSettle: (transfer) => _settle(transfer, memberNames),
                     ),
                     const SizedBox(height: 24),
+                    SegmentedButton<_FinanceView>(
+                      segments: const [
+                        ButtonSegment(
+                          value: _FinanceView.active,
+                          icon: Icon(Icons.receipt_long_outlined),
+                          label: Text('Activos'),
+                        ),
+                        ButtonSegment(
+                          value: _FinanceView.history,
+                          icon: Icon(Icons.history_rounded),
+                          label: Text('Historial'),
+                        ),
+                      ],
+                      selected: {_view},
+                      onSelectionChanged: (selection) => setState(() {
+                        _view = selection.first;
+                        _visibleRecords = 5;
+                      }),
+                    ),
+                    const SizedBox(height: 22),
                     Row(
                       children: [
                         Expanded(
                           child: Text('TICKETS',
                               style: Theme.of(context).textTheme.labelLarge),
                         ),
-                        Text('${value.expenses.length}',
+                        Text('${expenses.length}',
                             style: const TextStyle(color: FestiColors.muted)),
                       ],
                     ),
                     const SizedBox(height: 10),
                     _ExpenseList(
-                      expenses: value.expenses,
+                      expenses: visibleExpenses,
                       memberNames: memberNames,
+                      currentUserId: _currentUserId,
+                      canManageRecords: canManageRecords,
+                      history: _view == _FinanceView.history,
+                      onCancel: _cancelExpense,
                     ),
+                    if (expenses.length > visibleExpenses.length)
+                      TextButton.icon(
+                        onPressed: () => setState(() => _visibleRecords += 5),
+                        icon: const Icon(Icons.expand_more_rounded),
+                        label: const Text('Mostrar más tickets'),
+                      ),
                     const SizedBox(height: 24),
                     Row(
                       children: [
@@ -202,15 +311,25 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
                           child: Text('PAGOS REGISTRADOS',
                               style: Theme.of(context).textTheme.labelLarge),
                         ),
-                        Text('${value.settlements.length}',
+                        Text('${settlements.length}',
                             style: const TextStyle(color: FestiColors.muted)),
                       ],
                     ),
                     const SizedBox(height: 10),
                     _SettlementList(
-                      settlements: value.settlements,
+                      settlements: visibleSettlements,
                       memberNames: memberNames,
+                      currentUserId: _currentUserId,
+                      canManageRecords: canManageRecords,
+                      history: _view == _FinanceView.history,
+                      onCancel: _cancelSettlement,
                     ),
+                    if (settlements.length > visibleSettlements.length)
+                      TextButton.icon(
+                        onPressed: () => setState(() => _visibleRecords += 5),
+                        icon: const Icon(Icons.expand_more_rounded),
+                        label: const Text('Mostrar más pagos'),
+                      ),
                   ],
                 ),
               );
@@ -328,23 +447,35 @@ class _ExpenseList extends StatelessWidget {
   const _ExpenseList({
     required this.expenses,
     required this.memberNames,
+    required this.currentUserId,
+    required this.canManageRecords,
+    required this.history,
+    required this.onCancel,
   });
 
   final List<SquadExpense> expenses;
   final Map<String, String> memberNames;
+  final String? currentUserId;
+  final bool canManageRecords;
+  final bool history;
+  final ValueChanged<SquadExpense> onCancel;
 
   @override
   Widget build(BuildContext context) {
     if (expenses.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 28),
         child: Column(
           children: [
             Icon(Icons.receipt_long_outlined,
                 size: 42, color: FestiColors.muted),
             SizedBox(height: 12),
-            Text('Todavía no hay tickets compartidos.',
-                style: TextStyle(color: FestiColors.muted)),
+            Text(
+              history
+                  ? 'No hay tickets anulados.'
+                  : 'Todavía no hay tickets compartidos.',
+              style: TextStyle(color: FestiColors.muted),
+            ),
           ],
         ),
       );
@@ -354,22 +485,88 @@ class _ExpenseList extends StatelessWidget {
         for (final expense in expenses)
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading:
-                const CircleAvatar(child: Icon(Icons.receipt_long, size: 18)),
-            title: Text(expense.description),
-            subtitle: Text(
-              '${_nameFor(expense.paidByUserId, memberNames)} · '
-              '${expense.participants.length} participantes',
+            leading: CircleAvatar(
+              child: Icon(
+                expense.isCancelled
+                    ? Icons.do_not_disturb_alt_rounded
+                    : Icons.receipt_long,
+                size: 18,
+              ),
             ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
+            title: Text(
+              expense.description,
+              style: TextStyle(
+                decoration:
+                    expense.isCancelled ? TextDecoration.lineThrough : null,
+                color: expense.isCancelled ? FestiColors.muted : null,
+              ),
+            ),
+            subtitle: Text(
+              expense.isCancelled
+                  ? 'Anulado · ${_shortDate(expense.cancelledAt ?? expense.createdAt)}'
+                  : '${_nameFor(expense.paidByUserId, memberNames)} · '
+                      '${expense.participants.length} participantes',
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(expense.amount.format(),
-                    style: const TextStyle(fontWeight: FontWeight.w800)),
-                if (expense.pendingSync)
-                  const Text('PENDIENTE',
-                      style: TextStyle(color: FestiColors.cyan, fontSize: 10)),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      expense.amount.format(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: expense.isCancelled ? FestiColors.muted : null,
+                      ),
+                    ),
+                    if (expense.pendingSync)
+                      const Text(
+                        'PENDIENTE',
+                        style: TextStyle(
+                          color: FestiColors.cyan,
+                          fontSize: 10,
+                        ),
+                      )
+                    else if (expense.isCancelled)
+                      const Text(
+                        'ANULADO',
+                        style: TextStyle(
+                          color: FestiColors.danger,
+                          fontSize: 10,
+                        ),
+                      ),
+                  ],
+                ),
+                PopupMenuButton<String>(
+                  tooltip: 'Acciones del ticket',
+                  onSelected: (action) {
+                    if (action == 'details') {
+                      _showExpenseDetails(context, expense, memberNames);
+                    } else if (action == 'cancel') {
+                      onCancel(expense);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'details',
+                      child: Text('Ver detalle'),
+                    ),
+                    if (!expense.isCancelled &&
+                        (expense.pendingSync ||
+                            canManageRecords ||
+                            expense.paidByUserId == currentUserId))
+                      PopupMenuItem(
+                        value: 'cancel',
+                        child: Text(
+                          expense.pendingSync
+                              ? 'Eliminar borrador'
+                              : 'Anular ticket',
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -382,16 +579,24 @@ class _SettlementList extends StatelessWidget {
   const _SettlementList({
     required this.settlements,
     required this.memberNames,
+    required this.currentUserId,
+    required this.canManageRecords,
+    required this.history,
+    required this.onCancel,
   });
 
   final List<SquadSettlement> settlements;
   final Map<String, String> memberNames;
+  final String? currentUserId;
+  final bool canManageRecords;
+  final bool history;
+  final ValueChanged<SquadSettlement> onCancel;
 
   @override
   Widget build(BuildContext context) {
     if (settlements.isEmpty) {
-      return const Text(
-        'Aún no se han liquidado pagos.',
+      return Text(
+        history ? 'No hay pagos anulados.' : 'Aún no se han liquidado pagos.',
         style: TextStyle(color: FestiColors.muted),
       );
     }
@@ -400,35 +605,214 @@ class _SettlementList extends StatelessWidget {
         for (final settlement in settlements)
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const CircleAvatar(
-              child: Icon(Icons.check_circle_outline, size: 18),
+            leading: CircleAvatar(
+              child: Icon(
+                settlement.isCancelled
+                    ? Icons.do_not_disturb_alt_rounded
+                    : Icons.check_circle_outline,
+                size: 18,
+              ),
             ),
             title: Text(
               '${_nameFor(settlement.fromUserId, memberNames)} pagó a '
               '${_nameFor(settlement.toUserId, memberNames)}',
+              style: TextStyle(
+                decoration:
+                    settlement.isCancelled ? TextDecoration.lineThrough : null,
+                color: settlement.isCancelled ? FestiColors.muted : null,
+              ),
             ),
             subtitle: Text(
-              settlement.note?.isNotEmpty == true
-                  ? settlement.note!
-                  : _shortDate(settlement.createdAt),
+              settlement.isCancelled
+                  ? 'Anulado · ${_shortDate(settlement.cancelledAt ?? settlement.createdAt)}'
+                  : settlement.note?.isNotEmpty == true
+                      ? settlement.note!
+                      : _shortDate(settlement.createdAt),
             ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  settlement.amount.format(),
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      settlement.amount.format(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color:
+                            settlement.isCancelled ? FestiColors.muted : null,
+                      ),
+                    ),
+                    if (settlement.pendingSync)
+                      const Text(
+                        'PENDIENTE',
+                        style: TextStyle(
+                          color: FestiColors.cyan,
+                          fontSize: 10,
+                        ),
+                      )
+                    else if (settlement.isCancelled)
+                      const Text(
+                        'ANULADO',
+                        style: TextStyle(
+                          color: FestiColors.danger,
+                          fontSize: 10,
+                        ),
+                      ),
+                  ],
                 ),
-                if (settlement.pendingSync)
-                  const Text(
-                    'PENDIENTE',
-                    style: TextStyle(color: FestiColors.cyan, fontSize: 10),
-                  ),
+                PopupMenuButton<String>(
+                  tooltip: 'Acciones del pago',
+                  onSelected: (action) {
+                    if (action == 'details') {
+                      _showSettlementDetails(context, settlement, memberNames);
+                    } else if (action == 'cancel') {
+                      onCancel(settlement);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'details',
+                      child: Text('Ver detalle'),
+                    ),
+                    if (!settlement.isCancelled &&
+                        (settlement.pendingSync ||
+                            canManageRecords ||
+                            settlement.fromUserId == currentUserId))
+                      PopupMenuItem(
+                        value: 'cancel',
+                        child: Text(
+                          settlement.pendingSync
+                              ? 'Eliminar borrador'
+                              : 'Anular pago',
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
       ],
+    );
+  }
+}
+
+void _showExpenseDetails(
+  BuildContext context,
+  SquadExpense expense,
+  Map<String, String> memberNames,
+) {
+  showModalBottomSheet<void>(
+    context: context,
+    useSafeArea: true,
+    builder: (context) => _MovementDetailSheet(
+      title: expense.description,
+      amount: expense.amount.format(),
+      status: expense.isCancelled ? 'Anulado' : 'Activo',
+      rows: [
+        ('Pagó', _nameFor(expense.paidByUserId, memberNames)),
+        ('Participantes', '${expense.participants.length}'),
+        ('Registrado', _shortDate(expense.createdAt)),
+        if (expense.cancelledAt != null)
+          ('Anulado', _shortDate(expense.cancelledAt!)),
+      ],
+    ),
+  );
+}
+
+void _showSettlementDetails(
+  BuildContext context,
+  SquadSettlement settlement,
+  Map<String, String> memberNames,
+) {
+  showModalBottomSheet<void>(
+    context: context,
+    useSafeArea: true,
+    builder: (context) => _MovementDetailSheet(
+      title: 'Pago registrado',
+      amount: settlement.amount.format(),
+      status: settlement.isCancelled ? 'Anulado' : 'Activo',
+      rows: [
+        ('De', _nameFor(settlement.fromUserId, memberNames)),
+        ('Para', _nameFor(settlement.toUserId, memberNames)),
+        ('Registrado', _shortDate(settlement.createdAt)),
+        if (settlement.note?.isNotEmpty == true) ('Nota', settlement.note!),
+        if (settlement.cancelledAt != null)
+          ('Anulado', _shortDate(settlement.cancelledAt!)),
+      ],
+    ),
+  );
+}
+
+class _MovementDetailSheet extends StatelessWidget {
+  const _MovementDetailSheet({
+    required this.title,
+    required this.amount,
+    required this.status,
+    required this.rows,
+  });
+
+  final String title;
+  final String amount;
+  final String status;
+  final List<(String, String)> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final cancelled = status == 'Anulado';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 4, 22, 26),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 8),
+          Text(
+            amount,
+            style: TextStyle(
+              color: cancelled ? FestiColors.muted : FestiColors.cyan,
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: StatusPill(
+              status.toUpperCase(),
+              icon: cancelled
+                  ? Icons.do_not_disturb_alt_rounded
+                  : Icons.check_circle_outline,
+            ),
+          ),
+          const SizedBox(height: 18),
+          for (final row in rows)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 104,
+                    child: Text(
+                      row.$1,
+                      style: const TextStyle(color: FestiColors.muted),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      row.$2,
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

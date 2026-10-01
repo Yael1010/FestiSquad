@@ -110,6 +110,9 @@ class CachedExpenses extends Table {
   TextColumn get participantsJson => text()();
   DateTimeColumn get createdAt => dateTime()();
   TextColumn get syncState => text()();
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  DateTimeColumn get cancelledAt => dateTime().nullable()();
+  TextColumn get cancelledByUserId => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {sessionUserId, clientRequestId};
@@ -148,6 +151,9 @@ class CachedSettlements extends Table {
   TextColumn get note => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   TextColumn get syncState => text()();
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  DateTimeColumn get cancelledAt => dateTime().nullable()();
+  TextColumn get cancelledByUserId => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {sessionUserId, clientRequestId};
@@ -213,7 +219,7 @@ class AppDatabase extends _$AppDatabase {
         );
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -246,6 +252,29 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 7) {
             await migrator.createTable(cachedSettlements);
+          }
+          if (from < 8) {
+            await migrator.addColumn(cachedExpenses, cachedExpenses.status);
+            await migrator.addColumn(
+              cachedExpenses,
+              cachedExpenses.cancelledAt,
+            );
+            await migrator.addColumn(
+              cachedExpenses,
+              cachedExpenses.cancelledByUserId,
+            );
+            await migrator.addColumn(
+              cachedSettlements,
+              cachedSettlements.status,
+            );
+            await migrator.addColumn(
+              cachedSettlements,
+              cachedSettlements.cancelledAt,
+            );
+            await migrator.addColumn(
+              cachedSettlements,
+              cachedSettlements.cancelledByUserId,
+            );
           }
         },
       );

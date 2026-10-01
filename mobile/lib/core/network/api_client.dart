@@ -27,7 +27,8 @@ class ApiClient {
   ApiClient({
     required String baseUrl,
     required TokenStorage tokenStorage,
-  }) : _dio = Dio(
+  })  : _baseUrl = baseUrl,
+        _dio = Dio(
           BaseOptions(
             baseUrl: baseUrl,
             connectTimeout: const Duration(seconds: 5),
@@ -87,7 +88,14 @@ class ApiClient {
   }
 
   final Dio _dio;
+  final String _baseUrl;
   final RetryPolicy _retryPolicy = const RetryPolicy();
+
+  String resolveUrl(String value) {
+    final uri = Uri.tryParse(value);
+    if (uri != null && uri.hasScheme) return value;
+    return Uri.parse(_baseUrl).resolve(value).toString();
+  }
 
   Future<Response<dynamic>> get(String path) => _retryPolicy.execute(
         () => _dio.get(path),

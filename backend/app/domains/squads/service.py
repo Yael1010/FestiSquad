@@ -133,7 +133,7 @@ class SquadService:
             SquadMemberResponse(
                 user_id=str(user.id),
                 name=user.name,
-                avatar_url=avatars.get(user.id),
+                avatar_url=user.avatar_url or avatars.get(user.id),
                 role=membership.role,
                 joined_at=membership.joined_at,
                 last_location_at=latest_locations.get(user.id),

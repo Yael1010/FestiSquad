@@ -38,7 +38,7 @@ class SquadMembersScreen extends ConsumerWidget {
                 ? null
                 : () => ref
                     .read(squadMembersControllerProvider(squadId).notifier)
-                    .load(),
+                    .load(forceRefresh: true),
             icon: const Icon(Icons.refresh_rounded),
           ),
           if (current?.isOwner == true)
@@ -52,7 +52,9 @@ class SquadMembersScreen extends ConsumerWidget {
       body: FestiBody(
         child: RefreshIndicator(
           onRefresh: () =>
-              ref.read(squadMembersControllerProvider(squadId).notifier).load(),
+              ref
+                  .read(squadMembersControllerProvider(squadId).notifier)
+                  .load(forceRefresh: true),
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
             children: [

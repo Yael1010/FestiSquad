@@ -33,6 +33,7 @@ class UserResponse(BaseModel):
     id: str
     name: str
     email: EmailStr
+    avatar_url: str | None = None
 
 
 class SocialAuthorizationResponse(BaseModel):

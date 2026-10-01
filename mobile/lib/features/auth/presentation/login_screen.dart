@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/festi_widgets.dart';
@@ -38,209 +37,341 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                  center: Alignment(0, -.45),
-                  radius: .95,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              'assets/images/login_festival_background.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
-                Color(0xFF0D4965),
-                Color(0xFF0D2048),
-                FestiColors.background
-              ],
-                  stops: [
-                0,
-                .45,
-                1
-              ])),
-          child: SafeArea(
+                    Color(0x33030A17),
+                    Color(0x55102758),
+                    Color(0xDD02050B),
+                    Color(0xFF02050B),
+                  ],
+                  stops: [0, .42, .78, 1],
+                ),
+              ),
+            ),
+            SafeArea(
               child: FestiBody(
-                  child: LayoutBuilder(
-                      builder: (context, constraints) => SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 28, vertical: 24),
-                            child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                    minHeight: (constraints.maxHeight - 48)
-                                        .clamp(0, double.infinity)),
-                                child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      const SizedBox(height: 28),
-                                      Column(children: [
-                                        const _FestiLogo(),
-                                        const SizedBox(height: 10),
-                                        const Text.rich(
-                                            TextSpan(children: [
-                                              TextSpan(
-                                                  text: 'Festi',
-                                                  style: TextStyle(
-                                                      color: Colors.white)),
-                                              TextSpan(
-                                                  text: 'Squad',
-                                                  style: TextStyle(
-                                                      color: FestiColors.cyan))
-                                            ]),
-                                            style: TextStyle(
-                                                fontSize: 46,
-                                                fontWeight: FontWeight.w900,
-                                                letterSpacing: -2)),
-                                        const SizedBox(height: 24),
-                                        Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 9),
-                                            decoration: BoxDecoration(
-                                                color: const Color(0xFF09304A),
-                                                border: Border.all(
-                                                    color: const Color(
-                                                        0xFF14506B)),
-                                                borderRadius:
-                                                    BorderRadius.circular(30)),
-                                            child: const Text(
-                                                'CONNECT · COORDINATE · CELEBRATE',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                    color: FestiColors.cyan,
-                                                    fontSize: 11,
-                                                    letterSpacing: 1.4,
-                                                    fontWeight:
-                                                        FontWeight.w700))),
-                                      ]),
-                                      const SizedBox(height: 64),
-                                      Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            BlueButton(
-                                                label: 'CREAR CUENTA',
-                                                onPressed: () =>
-                                                    _account(context, true)),
-                                            const Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                    vertical: 24),
-                                                child: Row(children: [
-                                                  Expanded(
-                                                      child: Divider(
-                                                          color: FestiColors
-                                                              .border)),
-                                                  Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 16),
-                                                      child: Text(
-                                                          'O REGÍSTRATE CON',
-                                                          style: TextStyle(
-                                                              color: FestiColors
-                                                                  .muted,
-                                                              fontSize: 12,
-                                                              letterSpacing:
-                                                                  1))),
-                                                  Expanded(
-                                                      child: Divider(
-                                                          color: FestiColors
-                                                              .border))
-                                                ])),
-                                            ElevatedButton.icon(
-                                                style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        Colors.white,
-                                                    foregroundColor:
-                                                        const Color(0xFF102141),
-                                                    minimumSize:
-                                                        const Size(0, 56)),
-                                                onPressed: () =>
-                                                    _social(context, 'google'),
-                                                icon: const Text('G',
-                                                    style: TextStyle(
-                                                        fontSize: 24,
-                                                        fontWeight:
-                                                            FontWeight.w900,
-                                                        color:
-                                                            FestiColors.blue)),
-                                                label: const Text(
-                                                    'CONTINUAR CON GOOGLE',
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w800))),
-                                            const SizedBox(height: 14),
-                                            FilledButton.icon(
-                                                style: FilledButton.styleFrom(
-                                                    backgroundColor:
-                                                        FestiColors.blue,
-                                                    foregroundColor:
-                                                        Colors.white,
-                                                    minimumSize:
-                                                        const Size(0, 56)),
-                                                onPressed: () =>
-                                                    _social(context, 'spotify'),
-                                                icon: const Icon(
-                                                    Icons.graphic_eq),
-                                                label: const Text(
-                                                    'CONTINUAR CON SPOTIFY',
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w800))),
-                                            const SizedBox(height: 14),
-                                            OutlinedButton(
-                                                onPressed: () =>
-                                                    _account(context, false),
-                                                child: const Text(
-                                                    'INICIAR SESIÓN',
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w800,
-                                                        letterSpacing: .8))),
-                                            TextButton(
-                                                onPressed: () =>
-                                                    context.go('/dashboard'),
-                                                child: const Text(
-                                                    'Explorar demostración',
-                                                    style: TextStyle(
-                                                        color:
-                                                            FestiColors.muted,
-                                                        fontSize: 12))),
-                                          ]),
-                                      const SizedBox(height: 28),
-                                      Wrap(
-                                          alignment: WrapAlignment.center,
-                                          crossAxisAlignment:
-                                              WrapCrossAlignment.center,
-                                          children: [
-                                            const Text(
-                                                'Al continuar, aceptas nuestros',
-                                                style: TextStyle(
-                                                    color: FestiColors.muted,
-                                                    fontSize: 12)),
-                                            TextButton(
-                                                onPressed: () => showFeatureInfo(
-                                                    context,
-                                                    'Términos de servicio',
-                                                    'Los términos de servicio aún no han sido publicados. Esta versión es una demostración de las interfaces.'),
-                                                child: const Text(
-                                                    'Términos de servicio',
-                                                    style: TextStyle(
-                                                        fontSize: 12,
-                                                        decoration:
-                                                            TextDecoration
-                                                                .underline))),
-                                            TextButton(
-                                                onPressed: () => showFeatureInfo(
-                                                    context,
-                                                    'Política de privacidad',
-                                                    'La política de privacidad aún no ha sido publicada. Los formularios de esta demostración no envían ni almacenan tus datos.'),
-                                                child: const Text(
-                                                    'Política de privacidad',
-                                                    style: TextStyle(
-                                                        fontSize: 12,
-                                                        decoration:
-                                                            TextDecoration
-                                                                .underline))),
-                                          ]),
-                                    ])),
-                          )))),
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(34, 24, 34, 14),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: (constraints.maxHeight - 38)
+                            .clamp(0, double.infinity),
+                      ),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 52),
+                            const _LoginBrand(),
+                            const Spacer(),
+                            _LoginActionButton(
+                              label: 'CREAR CUENTA',
+                              background: const LinearGradient(
+                                colors: [FestiColors.blue, FestiColors.cyan],
+                              ),
+                              foreground: Colors.white,
+                              onPressed: () => _account(context, true),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Divider(color: Color(0xFF334258)),
+                                  ),
+                                  Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 14),
+                                    child: Text(
+                                      'O REGÍSTRATE CON',
+                                      style: TextStyle(
+                                        color: Color(0xFFB6BDCA),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Divider(color: Color(0xFF334258)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _LoginActionButton(
+                              label: 'REGISTRARSE CON GOOGLE',
+                              background: const LinearGradient(
+                                colors: [Colors.white, Colors.white],
+                              ),
+                              foreground: const Color(0xFF161A22),
+                              icon: const _GoogleMark(),
+                              onPressed: () => _social(context, 'google'),
+                            ),
+                            const SizedBox(height: 14),
+                            _LoginActionButton(
+                              label: 'REGISTRARSE CON SPOTIFY',
+                              background: const LinearGradient(
+                                colors: [Color(0xFF1ED760), Color(0xFF1ED760)],
+                              ),
+                              foreground: Colors.black,
+                              icon: const _SpotifyMark(),
+                              onPressed: () => _social(context, 'spotify'),
+                            ),
+                            const SizedBox(height: 16),
+                            _LoginActionButton(
+                              label: 'INICIAR SESIÓN',
+                              background: const LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.transparent
+                                ],
+                              ),
+                              foreground: FestiColors.cyan,
+                              borderColor: const Color(0xFF1185B4),
+                              onPressed: () => _account(context, false),
+                            ),
+                            const Spacer(),
+                            _LegalNotice(
+                              onTerms: () => showFeatureInfo(
+                                context,
+                                'Términos de servicio',
+                                'Los términos de servicio se publicarán antes del lanzamiento oficial.',
+                              ),
+                              onPrivacy: () => showFeatureInfo(
+                                context,
+                                'Política de privacidad',
+                                'FestiSquad protege las credenciales y utiliza los datos únicamente para prestar sus funciones.',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _LoginBrand extends StatelessWidget {
+  const _LoginBrand();
+
+  @override
+  Widget build(BuildContext context) => Column(
+        children: [
+          const _FestiLogo(),
+          const SizedBox(height: 2),
+          const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Festi',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  TextSpan(
+                    text: 'Squad',
+                    style: TextStyle(color: Color(0xFF3397EE)),
+                  ),
+                ],
+              ),
+              style: TextStyle(
+                fontSize: 43,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 26),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 7),
+            decoration: BoxDecoration(
+              color: const Color(0xB30A304A),
+              border: Border.all(color: const Color(0xFF145F7E)),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'CONNECT · COORDINATE · CELEBRATE',
+                style: TextStyle(
+                  color: Color(0xFF63DCF8),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.3,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+}
+
+class _LoginActionButton extends StatelessWidget {
+  const _LoginActionButton({
+    required this.label,
+    required this.background,
+    required this.foreground,
+    required this.onPressed,
+    this.icon,
+    this.borderColor,
+  });
+
+  final String label;
+  final Gradient background;
+  final Color foreground;
+  final VoidCallback onPressed;
+  final Widget? icon;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: label,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: background,
+            borderRadius: BorderRadius.circular(30),
+            border:
+                borderColor == null ? null : Border.all(color: borderColor!),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(30),
+              child: SizedBox(
+                height: 58,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[
+                      icon!,
+                      const SizedBox(width: 12),
+                    ],
+                    Flexible(
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: foreground,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          letterSpacing: .4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+class _GoogleMark extends StatelessWidget {
+  const _GoogleMark();
+
+  @override
+  Widget build(BuildContext context) => const Text(
+        'G',
+        style: TextStyle(
+          color: Color(0xFF4285F4),
+          fontSize: 24,
+          fontWeight: FontWeight.w900,
+        ),
+      );
+}
+
+class _SpotifyMark extends StatelessWidget {
+  const _SpotifyMark();
+
+  @override
+  Widget build(BuildContext context) => const CircleAvatar(
+        radius: 12,
+        backgroundColor: Colors.black,
+        child: Icon(Icons.graphic_eq, size: 17, color: Color(0xFF1ED760)),
+      );
+}
+
+class _LegalNotice extends StatelessWidget {
+  const _LegalNotice({required this.onTerms, required this.onPrivacy});
+
+  final VoidCallback onTerms;
+  final VoidCallback onPrivacy;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 24),
+        child: Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(text: 'Al continuar, aceptas nuestros '),
+              WidgetSpan(
+                alignment: PlaceholderAlignment.baseline,
+                baseline: TextBaseline.alphabetic,
+                child:
+                    _LegalLink(label: 'Términos de servicio', onTap: onTerms),
+              ),
+              const TextSpan(text: ' y '),
+              WidgetSpan(
+                alignment: PlaceholderAlignment.baseline,
+                baseline: TextBaseline.alphabetic,
+                child: _LegalLink(
+                  label: 'Política de privacidad',
+                  onTap: onPrivacy,
+                ),
+              ),
+            ],
+          ),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Color(0xFFB6BDCA),
+            fontSize: 11,
+            height: 1.45,
+          ),
+        ),
+      );
+}
+
+class _LegalLink extends StatelessWidget {
+  const _LegalLink({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        link: true,
+        label: label,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFFE5E7EB),
+              fontSize: 11,
+              decoration: TextDecoration.underline,
+              decorationColor: Color(0xFFE5E7EB),
+            ),
+          ),
         ),
       );
 }

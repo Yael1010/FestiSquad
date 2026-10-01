@@ -20,6 +20,9 @@ class User(Base):
     name: Mapped[str] = mapped_column(Unicode(120))
     email: Mapped[str] = mapped_column(Unicode(255), unique=True)
     password_hash: Mapped[str] = mapped_column(Unicode(255))
+    # Ruta relativa servida por la API. Una foto personalizada tiene prioridad
+    # sobre el avatar que pueda proporcionar un proveedor social.
+    avatar_url: Mapped[str | None] = mapped_column(Unicode(1000))
     is_platform_admin: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,

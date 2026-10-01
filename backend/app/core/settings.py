@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = []
     performance_target_ms: int = Field(default=1500, ge=100, le=30000)
     max_request_body_bytes: int = Field(
-        default=1_048_576,
+        default=5_500_000,
         ge=1024,
         le=10_485_760,
     )

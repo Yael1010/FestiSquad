@@ -12,6 +12,7 @@ venv*/
 .flutter-plugins-dependencies
 build/
 coverage/
+backend/storage/
 battery-phase7.txt
 
 # Environment

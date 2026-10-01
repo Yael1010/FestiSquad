@@ -274,8 +274,9 @@ class _FakeSquadRepository implements SquadRepository {
 
   @override
   Future<OfflineData<List<SquadMemberProfile>>> loadMembers(
-    String squadId,
-  ) async =>
+    String squadId, {
+    bool forceRefresh = false,
+  }) async =>
       const OfflineData([], fromCache: false);
 
   @override

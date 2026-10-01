@@ -3065,6 +3065,25 @@ class $CachedExpensesTable extends CachedExpenses
   late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
       'sync_state', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('active'));
+  static const VerificationMeta _cancelledAtMeta =
+      const VerificationMeta('cancelledAt');
+  @override
+  late final GeneratedColumn<DateTime> cancelledAt = GeneratedColumn<DateTime>(
+      'cancelled_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _cancelledByUserIdMeta =
+      const VerificationMeta('cancelledByUserId');
+  @override
+  late final GeneratedColumn<String> cancelledByUserId =
+      GeneratedColumn<String>('cancelled_by_user_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         sessionUserId,
@@ -3076,7 +3095,10 @@ class $CachedExpensesTable extends CachedExpenses
         amountCents,
         participantsJson,
         createdAt,
-        syncState
+        syncState,
+        status,
+        cancelledAt,
+        cancelledByUserId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3158,6 +3180,22 @@ class $CachedExpensesTable extends CachedExpenses
     } else if (isInserting) {
       context.missing(_syncStateMeta);
     }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('cancelled_at')) {
+      context.handle(
+          _cancelledAtMeta,
+          cancelledAt.isAcceptableOrUnknown(
+              data['cancelled_at']!, _cancelledAtMeta));
+    }
+    if (data.containsKey('cancelled_by_user_id')) {
+      context.handle(
+          _cancelledByUserIdMeta,
+          cancelledByUserId.isAcceptableOrUnknown(
+              data['cancelled_by_user_id']!, _cancelledByUserIdMeta));
+    }
     return context;
   }
 
@@ -3187,6 +3225,12 @@ class $CachedExpensesTable extends CachedExpenses
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       syncState: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      cancelledAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cancelled_at']),
+      cancelledByUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}cancelled_by_user_id']),
     );
   }
 
@@ -3207,6 +3251,9 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
   final String participantsJson;
   final DateTime createdAt;
   final String syncState;
+  final String status;
+  final DateTime? cancelledAt;
+  final String? cancelledByUserId;
   const CachedExpense(
       {required this.sessionUserId,
       required this.clientRequestId,
@@ -3217,7 +3264,10 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
       required this.amountCents,
       required this.participantsJson,
       required this.createdAt,
-      required this.syncState});
+      required this.syncState,
+      required this.status,
+      this.cancelledAt,
+      this.cancelledByUserId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3233,6 +3283,13 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
     map['participants_json'] = Variable<String>(participantsJson);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['sync_state'] = Variable<String>(syncState);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || cancelledAt != null) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt);
+    }
+    if (!nullToAbsent || cancelledByUserId != null) {
+      map['cancelled_by_user_id'] = Variable<String>(cancelledByUserId);
+    }
     return map;
   }
 
@@ -3250,6 +3307,13 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
       participantsJson: Value(participantsJson),
       createdAt: Value(createdAt),
       syncState: Value(syncState),
+      status: Value(status),
+      cancelledAt: cancelledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledAt),
+      cancelledByUserId: cancelledByUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledByUserId),
     );
   }
 
@@ -3267,6 +3331,10 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
       participantsJson: serializer.fromJson<String>(json['participantsJson']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       syncState: serializer.fromJson<String>(json['syncState']),
+      status: serializer.fromJson<String>(json['status']),
+      cancelledAt: serializer.fromJson<DateTime?>(json['cancelledAt']),
+      cancelledByUserId:
+          serializer.fromJson<String?>(json['cancelledByUserId']),
     );
   }
   @override
@@ -3283,6 +3351,9 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
       'participantsJson': serializer.toJson<String>(participantsJson),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'syncState': serializer.toJson<String>(syncState),
+      'status': serializer.toJson<String>(status),
+      'cancelledAt': serializer.toJson<DateTime?>(cancelledAt),
+      'cancelledByUserId': serializer.toJson<String?>(cancelledByUserId),
     };
   }
 
@@ -3296,7 +3367,10 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
           int? amountCents,
           String? participantsJson,
           DateTime? createdAt,
-          String? syncState}) =>
+          String? syncState,
+          String? status,
+          Value<DateTime?> cancelledAt = const Value.absent(),
+          Value<String?> cancelledByUserId = const Value.absent()}) =>
       CachedExpense(
         sessionUserId: sessionUserId ?? this.sessionUserId,
         clientRequestId: clientRequestId ?? this.clientRequestId,
@@ -3308,6 +3382,11 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
         participantsJson: participantsJson ?? this.participantsJson,
         createdAt: createdAt ?? this.createdAt,
         syncState: syncState ?? this.syncState,
+        status: status ?? this.status,
+        cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
+        cancelledByUserId: cancelledByUserId.present
+            ? cancelledByUserId.value
+            : this.cancelledByUserId,
       );
   CachedExpense copyWithCompanion(CachedExpensesCompanion data) {
     return CachedExpense(
@@ -3331,6 +3410,12 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
           : this.participantsJson,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       syncState: data.syncState.present ? data.syncState.value : this.syncState,
+      status: data.status.present ? data.status.value : this.status,
+      cancelledAt:
+          data.cancelledAt.present ? data.cancelledAt.value : this.cancelledAt,
+      cancelledByUserId: data.cancelledByUserId.present
+          ? data.cancelledByUserId.value
+          : this.cancelledByUserId,
     );
   }
 
@@ -3346,7 +3431,10 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
           ..write('amountCents: $amountCents, ')
           ..write('participantsJson: $participantsJson, ')
           ..write('createdAt: $createdAt, ')
-          ..write('syncState: $syncState')
+          ..write('syncState: $syncState, ')
+          ..write('status: $status, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('cancelledByUserId: $cancelledByUserId')
           ..write(')'))
         .toString();
   }
@@ -3362,7 +3450,10 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
       amountCents,
       participantsJson,
       createdAt,
-      syncState);
+      syncState,
+      status,
+      cancelledAt,
+      cancelledByUserId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3376,7 +3467,10 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
           other.amountCents == this.amountCents &&
           other.participantsJson == this.participantsJson &&
           other.createdAt == this.createdAt &&
-          other.syncState == this.syncState);
+          other.syncState == this.syncState &&
+          other.status == this.status &&
+          other.cancelledAt == this.cancelledAt &&
+          other.cancelledByUserId == this.cancelledByUserId);
 }
 
 class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
@@ -3390,6 +3484,9 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
   final Value<String> participantsJson;
   final Value<DateTime> createdAt;
   final Value<String> syncState;
+  final Value<String> status;
+  final Value<DateTime?> cancelledAt;
+  final Value<String?> cancelledByUserId;
   final Value<int> rowid;
   const CachedExpensesCompanion({
     this.sessionUserId = const Value.absent(),
@@ -3402,6 +3499,9 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
     this.participantsJson = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.syncState = const Value.absent(),
+    this.status = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.cancelledByUserId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CachedExpensesCompanion.insert({
@@ -3415,6 +3515,9 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
     required String participantsJson,
     required DateTime createdAt,
     required String syncState,
+    this.status = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.cancelledByUserId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : sessionUserId = Value(sessionUserId),
         clientRequestId = Value(clientRequestId),
@@ -3436,6 +3539,9 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
     Expression<String>? participantsJson,
     Expression<DateTime>? createdAt,
     Expression<String>? syncState,
+    Expression<String>? status,
+    Expression<DateTime>? cancelledAt,
+    Expression<String>? cancelledByUserId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3449,6 +3555,9 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
       if (participantsJson != null) 'participants_json': participantsJson,
       if (createdAt != null) 'created_at': createdAt,
       if (syncState != null) 'sync_state': syncState,
+      if (status != null) 'status': status,
+      if (cancelledAt != null) 'cancelled_at': cancelledAt,
+      if (cancelledByUserId != null) 'cancelled_by_user_id': cancelledByUserId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3464,6 +3573,9 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
       Value<String>? participantsJson,
       Value<DateTime>? createdAt,
       Value<String>? syncState,
+      Value<String>? status,
+      Value<DateTime?>? cancelledAt,
+      Value<String?>? cancelledByUserId,
       Value<int>? rowid}) {
     return CachedExpensesCompanion(
       sessionUserId: sessionUserId ?? this.sessionUserId,
@@ -3476,6 +3588,9 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
       participantsJson: participantsJson ?? this.participantsJson,
       createdAt: createdAt ?? this.createdAt,
       syncState: syncState ?? this.syncState,
+      status: status ?? this.status,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
+      cancelledByUserId: cancelledByUserId ?? this.cancelledByUserId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3513,6 +3628,15 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
     if (syncState.present) {
       map['sync_state'] = Variable<String>(syncState.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (cancelledAt.present) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt.value);
+    }
+    if (cancelledByUserId.present) {
+      map['cancelled_by_user_id'] = Variable<String>(cancelledByUserId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3532,6 +3656,9 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
           ..write('participantsJson: $participantsJson, ')
           ..write('createdAt: $createdAt, ')
           ..write('syncState: $syncState, ')
+          ..write('status: $status, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('cancelledByUserId: $cancelledByUserId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4244,6 +4371,25 @@ class $CachedSettlementsTable extends CachedSettlements
   late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
       'sync_state', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('active'));
+  static const VerificationMeta _cancelledAtMeta =
+      const VerificationMeta('cancelledAt');
+  @override
+  late final GeneratedColumn<DateTime> cancelledAt = GeneratedColumn<DateTime>(
+      'cancelled_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _cancelledByUserIdMeta =
+      const VerificationMeta('cancelledByUserId');
+  @override
+  late final GeneratedColumn<String> cancelledByUserId =
+      GeneratedColumn<String>('cancelled_by_user_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         sessionUserId,
@@ -4255,7 +4401,10 @@ class $CachedSettlementsTable extends CachedSettlements
         amountCents,
         note,
         createdAt,
-        syncState
+        syncState,
+        status,
+        cancelledAt,
+        cancelledByUserId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4331,6 +4480,22 @@ class $CachedSettlementsTable extends CachedSettlements
     } else if (isInserting) {
       context.missing(_syncStateMeta);
     }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('cancelled_at')) {
+      context.handle(
+          _cancelledAtMeta,
+          cancelledAt.isAcceptableOrUnknown(
+              data['cancelled_at']!, _cancelledAtMeta));
+    }
+    if (data.containsKey('cancelled_by_user_id')) {
+      context.handle(
+          _cancelledByUserIdMeta,
+          cancelledByUserId.isAcceptableOrUnknown(
+              data['cancelled_by_user_id']!, _cancelledByUserIdMeta));
+    }
     return context;
   }
 
@@ -4360,6 +4525,12 @@ class $CachedSettlementsTable extends CachedSettlements
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       syncState: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      cancelledAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cancelled_at']),
+      cancelledByUserId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}cancelled_by_user_id']),
     );
   }
 
@@ -4381,6 +4552,9 @@ class CachedSettlement extends DataClass
   final String? note;
   final DateTime createdAt;
   final String syncState;
+  final String status;
+  final DateTime? cancelledAt;
+  final String? cancelledByUserId;
   const CachedSettlement(
       {required this.sessionUserId,
       required this.clientRequestId,
@@ -4391,7 +4565,10 @@ class CachedSettlement extends DataClass
       required this.amountCents,
       this.note,
       required this.createdAt,
-      required this.syncState});
+      required this.syncState,
+      required this.status,
+      this.cancelledAt,
+      this.cancelledByUserId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4409,6 +4586,13 @@ class CachedSettlement extends DataClass
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['sync_state'] = Variable<String>(syncState);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || cancelledAt != null) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt);
+    }
+    if (!nullToAbsent || cancelledByUserId != null) {
+      map['cancelled_by_user_id'] = Variable<String>(cancelledByUserId);
+    }
     return map;
   }
 
@@ -4426,6 +4610,13 @@ class CachedSettlement extends DataClass
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       createdAt: Value(createdAt),
       syncState: Value(syncState),
+      status: Value(status),
+      cancelledAt: cancelledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledAt),
+      cancelledByUserId: cancelledByUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledByUserId),
     );
   }
 
@@ -4443,6 +4634,10 @@ class CachedSettlement extends DataClass
       note: serializer.fromJson<String?>(json['note']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       syncState: serializer.fromJson<String>(json['syncState']),
+      status: serializer.fromJson<String>(json['status']),
+      cancelledAt: serializer.fromJson<DateTime?>(json['cancelledAt']),
+      cancelledByUserId:
+          serializer.fromJson<String?>(json['cancelledByUserId']),
     );
   }
   @override
@@ -4459,6 +4654,9 @@ class CachedSettlement extends DataClass
       'note': serializer.toJson<String?>(note),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'syncState': serializer.toJson<String>(syncState),
+      'status': serializer.toJson<String>(status),
+      'cancelledAt': serializer.toJson<DateTime?>(cancelledAt),
+      'cancelledByUserId': serializer.toJson<String?>(cancelledByUserId),
     };
   }
 
@@ -4472,7 +4670,10 @@ class CachedSettlement extends DataClass
           int? amountCents,
           Value<String?> note = const Value.absent(),
           DateTime? createdAt,
-          String? syncState}) =>
+          String? syncState,
+          String? status,
+          Value<DateTime?> cancelledAt = const Value.absent(),
+          Value<String?> cancelledByUserId = const Value.absent()}) =>
       CachedSettlement(
         sessionUserId: sessionUserId ?? this.sessionUserId,
         clientRequestId: clientRequestId ?? this.clientRequestId,
@@ -4484,6 +4685,11 @@ class CachedSettlement extends DataClass
         note: note.present ? note.value : this.note,
         createdAt: createdAt ?? this.createdAt,
         syncState: syncState ?? this.syncState,
+        status: status ?? this.status,
+        cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
+        cancelledByUserId: cancelledByUserId.present
+            ? cancelledByUserId.value
+            : this.cancelledByUserId,
       );
   CachedSettlement copyWithCompanion(CachedSettlementsCompanion data) {
     return CachedSettlement(
@@ -4503,6 +4709,12 @@ class CachedSettlement extends DataClass
       note: data.note.present ? data.note.value : this.note,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       syncState: data.syncState.present ? data.syncState.value : this.syncState,
+      status: data.status.present ? data.status.value : this.status,
+      cancelledAt:
+          data.cancelledAt.present ? data.cancelledAt.value : this.cancelledAt,
+      cancelledByUserId: data.cancelledByUserId.present
+          ? data.cancelledByUserId.value
+          : this.cancelledByUserId,
     );
   }
 
@@ -4518,14 +4730,29 @@ class CachedSettlement extends DataClass
           ..write('amountCents: $amountCents, ')
           ..write('note: $note, ')
           ..write('createdAt: $createdAt, ')
-          ..write('syncState: $syncState')
+          ..write('syncState: $syncState, ')
+          ..write('status: $status, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('cancelledByUserId: $cancelledByUserId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(sessionUserId, clientRequestId, serverId,
-      squadId, fromUserId, toUserId, amountCents, note, createdAt, syncState);
+  int get hashCode => Object.hash(
+      sessionUserId,
+      clientRequestId,
+      serverId,
+      squadId,
+      fromUserId,
+      toUserId,
+      amountCents,
+      note,
+      createdAt,
+      syncState,
+      status,
+      cancelledAt,
+      cancelledByUserId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4539,7 +4766,10 @@ class CachedSettlement extends DataClass
           other.amountCents == this.amountCents &&
           other.note == this.note &&
           other.createdAt == this.createdAt &&
-          other.syncState == this.syncState);
+          other.syncState == this.syncState &&
+          other.status == this.status &&
+          other.cancelledAt == this.cancelledAt &&
+          other.cancelledByUserId == this.cancelledByUserId);
 }
 
 class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
@@ -4553,6 +4783,9 @@ class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
   final Value<String?> note;
   final Value<DateTime> createdAt;
   final Value<String> syncState;
+  final Value<String> status;
+  final Value<DateTime?> cancelledAt;
+  final Value<String?> cancelledByUserId;
   final Value<int> rowid;
   const CachedSettlementsCompanion({
     this.sessionUserId = const Value.absent(),
@@ -4565,6 +4798,9 @@ class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
     this.note = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.syncState = const Value.absent(),
+    this.status = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.cancelledByUserId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CachedSettlementsCompanion.insert({
@@ -4578,6 +4814,9 @@ class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
     this.note = const Value.absent(),
     required DateTime createdAt,
     required String syncState,
+    this.status = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.cancelledByUserId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : sessionUserId = Value(sessionUserId),
         clientRequestId = Value(clientRequestId),
@@ -4598,6 +4837,9 @@ class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
     Expression<String>? note,
     Expression<DateTime>? createdAt,
     Expression<String>? syncState,
+    Expression<String>? status,
+    Expression<DateTime>? cancelledAt,
+    Expression<String>? cancelledByUserId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4611,6 +4853,9 @@ class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
       if (note != null) 'note': note,
       if (createdAt != null) 'created_at': createdAt,
       if (syncState != null) 'sync_state': syncState,
+      if (status != null) 'status': status,
+      if (cancelledAt != null) 'cancelled_at': cancelledAt,
+      if (cancelledByUserId != null) 'cancelled_by_user_id': cancelledByUserId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4626,6 +4871,9 @@ class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
       Value<String?>? note,
       Value<DateTime>? createdAt,
       Value<String>? syncState,
+      Value<String>? status,
+      Value<DateTime?>? cancelledAt,
+      Value<String?>? cancelledByUserId,
       Value<int>? rowid}) {
     return CachedSettlementsCompanion(
       sessionUserId: sessionUserId ?? this.sessionUserId,
@@ -4638,6 +4886,9 @@ class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
       note: note ?? this.note,
       createdAt: createdAt ?? this.createdAt,
       syncState: syncState ?? this.syncState,
+      status: status ?? this.status,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
+      cancelledByUserId: cancelledByUserId ?? this.cancelledByUserId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4675,6 +4926,15 @@ class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
     if (syncState.present) {
       map['sync_state'] = Variable<String>(syncState.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (cancelledAt.present) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt.value);
+    }
+    if (cancelledByUserId.present) {
+      map['cancelled_by_user_id'] = Variable<String>(cancelledByUserId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4694,6 +4954,9 @@ class CachedSettlementsCompanion extends UpdateCompanion<CachedSettlement> {
           ..write('note: $note, ')
           ..write('createdAt: $createdAt, ')
           ..write('syncState: $syncState, ')
+          ..write('status: $status, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('cancelledByUserId: $cancelledByUserId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7237,6 +7500,9 @@ typedef $$CachedExpensesTableCreateCompanionBuilder = CachedExpensesCompanion
   required String participantsJson,
   required DateTime createdAt,
   required String syncState,
+  Value<String> status,
+  Value<DateTime?> cancelledAt,
+  Value<String?> cancelledByUserId,
   Value<int> rowid,
 });
 typedef $$CachedExpensesTableUpdateCompanionBuilder = CachedExpensesCompanion
@@ -7251,6 +7517,9 @@ typedef $$CachedExpensesTableUpdateCompanionBuilder = CachedExpensesCompanion
   Value<String> participantsJson,
   Value<DateTime> createdAt,
   Value<String> syncState,
+  Value<String> status,
+  Value<DateTime?> cancelledAt,
+  Value<String?> cancelledByUserId,
   Value<int> rowid,
 });
 
@@ -7294,6 +7563,16 @@ class $$CachedExpensesTableFilterComposer
 
   ColumnFilters<String> get syncState => $composableBuilder(
       column: $table.syncState, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cancelledAt => $composableBuilder(
+      column: $table.cancelledAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get cancelledByUserId => $composableBuilder(
+      column: $table.cancelledByUserId,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$CachedExpensesTableOrderingComposer
@@ -7338,6 +7617,16 @@ class $$CachedExpensesTableOrderingComposer
 
   ColumnOrderings<String> get syncState => $composableBuilder(
       column: $table.syncState, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cancelledAt => $composableBuilder(
+      column: $table.cancelledAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get cancelledByUserId => $composableBuilder(
+      column: $table.cancelledByUserId,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$CachedExpensesTableAnnotationComposer
@@ -7378,6 +7667,15 @@ class $$CachedExpensesTableAnnotationComposer
 
   GeneratedColumn<String> get syncState =>
       $composableBuilder(column: $table.syncState, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cancelledAt => $composableBuilder(
+      column: $table.cancelledAt, builder: (column) => column);
+
+  GeneratedColumn<String> get cancelledByUserId => $composableBuilder(
+      column: $table.cancelledByUserId, builder: (column) => column);
 }
 
 class $$CachedExpensesTableTableManager extends RootTableManager<
@@ -7417,6 +7715,9 @@ class $$CachedExpensesTableTableManager extends RootTableManager<
             Value<String> participantsJson = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<String> syncState = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<DateTime?> cancelledAt = const Value.absent(),
+            Value<String?> cancelledByUserId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CachedExpensesCompanion(
@@ -7430,6 +7731,9 @@ class $$CachedExpensesTableTableManager extends RootTableManager<
             participantsJson: participantsJson,
             createdAt: createdAt,
             syncState: syncState,
+            status: status,
+            cancelledAt: cancelledAt,
+            cancelledByUserId: cancelledByUserId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -7443,6 +7747,9 @@ class $$CachedExpensesTableTableManager extends RootTableManager<
             required String participantsJson,
             required DateTime createdAt,
             required String syncState,
+            Value<String> status = const Value.absent(),
+            Value<DateTime?> cancelledAt = const Value.absent(),
+            Value<String?> cancelledByUserId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CachedExpensesCompanion.insert(
@@ -7456,6 +7763,9 @@ class $$CachedExpensesTableTableManager extends RootTableManager<
             participantsJson: participantsJson,
             createdAt: createdAt,
             syncState: syncState,
+            status: status,
+            cancelledAt: cancelledAt,
+            cancelledByUserId: cancelledByUserId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -7847,6 +8157,9 @@ typedef $$CachedSettlementsTableCreateCompanionBuilder
   Value<String?> note,
   required DateTime createdAt,
   required String syncState,
+  Value<String> status,
+  Value<DateTime?> cancelledAt,
+  Value<String?> cancelledByUserId,
   Value<int> rowid,
 });
 typedef $$CachedSettlementsTableUpdateCompanionBuilder
@@ -7861,6 +8174,9 @@ typedef $$CachedSettlementsTableUpdateCompanionBuilder
   Value<String?> note,
   Value<DateTime> createdAt,
   Value<String> syncState,
+  Value<String> status,
+  Value<DateTime?> cancelledAt,
+  Value<String?> cancelledByUserId,
   Value<int> rowid,
 });
 
@@ -7903,6 +8219,16 @@ class $$CachedSettlementsTableFilterComposer
 
   ColumnFilters<String> get syncState => $composableBuilder(
       column: $table.syncState, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cancelledAt => $composableBuilder(
+      column: $table.cancelledAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get cancelledByUserId => $composableBuilder(
+      column: $table.cancelledByUserId,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$CachedSettlementsTableOrderingComposer
@@ -7945,6 +8271,16 @@ class $$CachedSettlementsTableOrderingComposer
 
   ColumnOrderings<String> get syncState => $composableBuilder(
       column: $table.syncState, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cancelledAt => $composableBuilder(
+      column: $table.cancelledAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get cancelledByUserId => $composableBuilder(
+      column: $table.cancelledByUserId,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$CachedSettlementsTableAnnotationComposer
@@ -7985,6 +8321,15 @@ class $$CachedSettlementsTableAnnotationComposer
 
   GeneratedColumn<String> get syncState =>
       $composableBuilder(column: $table.syncState, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cancelledAt => $composableBuilder(
+      column: $table.cancelledAt, builder: (column) => column);
+
+  GeneratedColumn<String> get cancelledByUserId => $composableBuilder(
+      column: $table.cancelledByUserId, builder: (column) => column);
 }
 
 class $$CachedSettlementsTableTableManager extends RootTableManager<
@@ -8025,6 +8370,9 @@ class $$CachedSettlementsTableTableManager extends RootTableManager<
             Value<String?> note = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<String> syncState = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<DateTime?> cancelledAt = const Value.absent(),
+            Value<String?> cancelledByUserId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CachedSettlementsCompanion(
@@ -8038,6 +8386,9 @@ class $$CachedSettlementsTableTableManager extends RootTableManager<
             note: note,
             createdAt: createdAt,
             syncState: syncState,
+            status: status,
+            cancelledAt: cancelledAt,
+            cancelledByUserId: cancelledByUserId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -8051,6 +8402,9 @@ class $$CachedSettlementsTableTableManager extends RootTableManager<
             Value<String?> note = const Value.absent(),
             required DateTime createdAt,
             required String syncState,
+            Value<String> status = const Value.absent(),
+            Value<DateTime?> cancelledAt = const Value.absent(),
+            Value<String?> cancelledByUserId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CachedSettlementsCompanion.insert(
@@ -8064,6 +8418,9 @@ class $$CachedSettlementsTableTableManager extends RootTableManager<
             note: note,
             createdAt: createdAt,
             syncState: syncState,
+            status: status,
+            cancelledAt: cancelledAt,
+            cancelledByUserId: cancelledByUserId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

@@ -36,6 +36,7 @@ def list_expenses(
     current_user: CurrentUser,
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    include_cancelled: bool = Query(default=False),
 ) -> list[ExpenseOutput]:
     try:
         return finance_service.list_expenses(
@@ -44,9 +45,26 @@ def list_expenses(
             current_user.id,
             limit=limit,
             offset=offset,
+            include_cancelled=include_cancelled,
         )
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail='No perteneces a este squad.') from exc
+
+
+@router.post('/{expense_id}/cancel', response_model=ExpenseOutput)
+def cancel_expense(
+    expense_id: UUID,
+    db: DatabaseSession,
+    current_user: CurrentUser,
+) -> ExpenseOutput:
+    try:
+        return finance_service.cancel_expense(db, expense_id, current_user.id)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        if str(exc) == 'ticket_not_found':
+            raise HTTPException(status_code=404, detail='Ticket no encontrado.') from exc
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get('/squad/{squad_id}/balances', response_model=BalanceOutput)
@@ -89,6 +107,7 @@ def list_settlements(
     current_user: CurrentUser,
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    include_cancelled: bool = Query(default=False),
 ) -> list[SettlementOutput]:
     try:
         return finance_service.list_settlements(
@@ -97,6 +116,23 @@ def list_settlements(
             current_user.id,
             limit=limit,
             offset=offset,
+            include_cancelled=include_cancelled,
         )
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail='No perteneces a este squad.') from exc
+
+
+@router.post('/settlements/{settlement_id}/cancel', response_model=SettlementOutput)
+def cancel_settlement(
+    settlement_id: UUID,
+    db: DatabaseSession,
+    current_user: CurrentUser,
+) -> SettlementOutput:
+    try:
+        return finance_service.cancel_settlement(db, settlement_id, current_user.id)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        if str(exc) == 'settlement_not_found':
+            raise HTTPException(status_code=404, detail='Pago no encontrado.') from exc
+        raise HTTPException(status_code=422, detail=str(exc)) from exc

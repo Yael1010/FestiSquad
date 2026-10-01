@@ -45,6 +45,28 @@ class FinanceController extends StateNotifier<AsyncValue<FinanceSnapshot?>> {
       throw FinanceRequestException(message);
     }
   }
+
+  Future<void> cancelExpense(SquadExpense expense) async {
+    state = const AsyncValue.loading();
+    try {
+      state = AsyncValue.data(await _repository.cancelExpense(expense));
+    } catch (error, stackTrace) {
+      final message = apiErrorMessage(error);
+      state = AsyncValue.error(message, stackTrace);
+      throw FinanceRequestException(message);
+    }
+  }
+
+  Future<void> cancelSettlement(SquadSettlement settlement) async {
+    state = const AsyncValue.loading();
+    try {
+      state = AsyncValue.data(await _repository.cancelSettlement(settlement));
+    } catch (error, stackTrace) {
+      final message = apiErrorMessage(error);
+      state = AsyncValue.error(message, stackTrace);
+      throw FinanceRequestException(message);
+    }
+  }
 }
 
 class FinanceRequestException implements Exception {

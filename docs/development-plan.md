@@ -52,6 +52,10 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - [x] Fase 13: sistema visual consolidado, accesibilidad, flujo crítico E2E y
   verificación automatizada de entrega. Las mediciones físicas y el benchmark
   del despliegue quedan como evidencias manuales de aceptación.
+- [x] Fase 14: foto de perfil personalizada, almacenada por el backend y
+  compartida entre los integrantes de cada squad al sincronizar sus perfiles.
+- [x] Fase 15: historial financiero auditable, anulación autorizada de tickets
+  y pagos, recálculo de balances y vistas paginadas en el Fondo Común.
 
 ## APIs Iniciales
 
@@ -62,6 +66,9 @@ FestiSquad se desarrollará como una app móvil **Flutter offline-first** con ba
 - `POST /api/v1/auth/social/{provider}/link`
 - `GET /api/v1/auth/social/{provider}/callback`
 - `POST /api/v1/auth/social/session`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/avatar`
+- `DELETE /api/v1/auth/avatar`
 - `POST /api/v1/squads`
 - `POST /api/v1/squads/join`
 - `GET /api/v1/squads/{squad_id}`

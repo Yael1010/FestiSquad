@@ -41,8 +41,9 @@ void main() {
 class _MembersRepository implements SquadRepository {
   @override
   Future<OfflineData<List<SquadMemberProfile>>> loadMembers(
-    String squadId,
-  ) async {
+    String squadId, {
+    bool forceRefresh = false,
+  }) async {
     return OfflineData(
       [
         SquadMemberProfile(

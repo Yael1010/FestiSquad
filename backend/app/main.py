@@ -2,12 +2,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app import db_probe
 from app.api.v1.router import api_router
 from app.core.database import dispose_engine
 from app.core.http_middleware import QualityMiddleware
 from app.core.settings import settings
+from app.core.avatar_storage import avatar_storage
 
 
 @asynccontextmanager
@@ -41,6 +43,7 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
+    app.mount("/media", StaticFiles(directory=avatar_storage.root), name="media")
 
     @app.get("/health", tags=["health"])
     def health() -> dict[str, str]:

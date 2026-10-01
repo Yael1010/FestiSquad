@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -102,19 +102,42 @@ class DatabaseFinanceService:
         *,
         limit: int = 50,
         offset: int = 0,
+        include_cancelled: bool = False,
     ) -> list[ExpenseOutput]:
         self._require_member(db, squad_id, actor_id)
+        statement = select(Expense).where(Expense.squad_id == squad_id)
+        if not include_cancelled:
+            statement = statement.where(Expense.status == 'active')
         expenses = list(
             db.scalars(
-                select(Expense)
-                .where(Expense.squad_id == squad_id)
-                .order_by(Expense.created_at.desc(), Expense.id.desc())
+                statement.order_by(Expense.created_at.desc(), Expense.id.desc())
                 .offset(offset)
                 .limit(limit)
             )
         )
         participants = self._participants(db, [expense.id for expense in expenses])
         return [self._output(expense, participants[expense.id]) for expense in expenses]
+
+    def cancel_expense(
+        self,
+        db: Session,
+        expense_id: UUID,
+        actor_id: UUID,
+    ) -> ExpenseOutput:
+        expense = db.get(Expense, expense_id)
+        if expense is None:
+            raise ValueError('ticket_not_found')
+        membership = self._require_member(db, expense.squad_id, actor_id)
+        if actor_id != expense.paid_by_user_id and membership.role != 'admin':
+            raise PermissionError('Solo el pagador o un administrador puede anular el ticket')
+        if expense.status != 'cancelled':
+            expense.status = 'cancelled'
+            expense.cancelled_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            expense.cancelled_by_user_id = actor_id
+            db.commit()
+            db.refresh(expense)
+        participants = self._participants(db, [expense.id])[expense.id]
+        return self._output(expense, participants)
 
     def balances_for_squad(
         self, db: Session, squad_id: UUID, actor_id: UUID
@@ -194,16 +217,38 @@ class DatabaseFinanceService:
         *,
         limit: int = 50,
         offset: int = 0,
+        include_cancelled: bool = False,
     ) -> list[SettlementOutput]:
         self._require_member(db, squad_id, actor_id)
+        statement = select(Settlement).where(Settlement.squad_id == squad_id)
+        if not include_cancelled:
+            statement = statement.where(Settlement.status == 'active')
         rows = db.scalars(
-            select(Settlement)
-            .where(Settlement.squad_id == squad_id)
-            .order_by(Settlement.created_at.desc(), Settlement.id.desc())
+            statement.order_by(Settlement.created_at.desc(), Settlement.id.desc())
             .offset(offset)
             .limit(limit)
         )
         return [self._settlement_output(row) for row in rows]
+
+    def cancel_settlement(
+        self,
+        db: Session,
+        settlement_id: UUID,
+        actor_id: UUID,
+    ) -> SettlementOutput:
+        settlement = db.get(Settlement, settlement_id)
+        if settlement is None:
+            raise ValueError('settlement_not_found')
+        membership = self._require_member(db, settlement.squad_id, actor_id)
+        if actor_id != settlement.from_user_id and membership.role != 'admin':
+            raise PermissionError('Solo el pagador o un administrador puede anular el pago')
+        if settlement.status != 'cancelled':
+            settlement.status = 'cancelled'
+            settlement.cancelled_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            settlement.cancelled_by_user_id = actor_id
+            db.commit()
+            db.refresh(settlement)
+        return self._settlement_output(settlement)
 
     def _balance_map(self, db: Session, squad_id: UUID) -> dict[UUID, Decimal]:
         rows = db.execute(
@@ -227,9 +272,13 @@ class DatabaseFinanceService:
             )
         )
 
-    def _require_member(self, db: Session, squad_id: UUID, actor_id: UUID) -> None:
-        if actor_id not in self._member_ids(db, squad_id):
+    def _require_member(
+        self, db: Session, squad_id: UUID, actor_id: UUID
+    ) -> SquadMember:
+        membership = db.get(SquadMember, (squad_id, actor_id))
+        if membership is None:
             raise PermissionError('El actor no pertenece al squad')
+        return membership
 
     def _participants(
         self, db: Session, expense_ids: list[UUID]
@@ -260,6 +309,9 @@ class DatabaseFinanceService:
             paid_by_user_id=expense.paid_by_user_id,
             description=expense.description,
             amount=expense.amount,
+            status=expense.status or 'active',
+            cancelled_at=self._utc(expense.cancelled_at),
+            cancelled_by_user_id=expense.cancelled_by_user_id,
             participants=[
                 ShareInput(
                     user_id=participant.user_id,
@@ -282,8 +334,17 @@ class DatabaseFinanceService:
             to_user_id=settlement.to_user_id,
             amount=settlement.amount,
             note=settlement.note,
+            status=settlement.status or 'active',
+            cancelled_at=self._utc(settlement.cancelled_at),
+            cancelled_by_user_id=settlement.cancelled_by_user_id,
             created_at=created_at,
         )
+
+    @staticmethod
+    def _utc(value: datetime | None) -> datetime | None:
+        if value is None or value.tzinfo is not None:
+            return value
+        return value.replace(tzinfo=timezone.utc)
 
 
 finance_service = DatabaseFinanceService()

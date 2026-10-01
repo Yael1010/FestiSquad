@@ -117,6 +117,44 @@ void main() {
     expect(result.transfers.single.amount.cents, 3000);
     expect(await database.readPendingSettlements(), hasLength(1));
   });
+
+  test('cancelling an offline draft removes it and restores balances',
+      () async {
+    FlutterSecureStorage.setMockInitialValues({
+      'auth_user_id': userA,
+      'auth_access_token': 'access',
+      'auth_refresh_token': 'refresh',
+    });
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    final repository = FinanceRepository(
+      _FakeFinanceRemote()..offline = true,
+      database,
+      TokenStorage(const FlutterSecureStorage()),
+    );
+    final created = await repository.create(
+      ExpenseDraft(
+        clientRequestId: requestId,
+        squadId: squadId,
+        paidByUserId: userA,
+        description: 'Agua',
+        amount: Money.parse('60.00'),
+        participants: const [
+          ExpenseShare(userId: userA, amount: Money.fromCents(3000)),
+          ExpenseShare(userId: userB, amount: Money.fromCents(3000)),
+        ],
+      ),
+    );
+
+    final result = await repository.cancelExpense(created.expenses.single);
+
+    expect(result.expenses, isEmpty);
+    expect(
+      result.netBalances.values.every((balance) => balance.cents == 0),
+      isTrue,
+    );
+    expect(await database.readPendingExpenses(), isEmpty);
+  });
 }
 
 class _FakeFinanceRemote implements FinanceRemoteDataSource {
@@ -170,6 +208,12 @@ class _FakeFinanceRemote implements FinanceRemoteDataSource {
       pendingSync: false,
     );
   }
+
+  @override
+  Future<SquadExpense> cancelExpense(String expenseId) => _failure();
+
+  @override
+  Future<SquadSettlement> cancelSettlement(String settlementId) => _failure();
 
   @override
   Future<List<SquadExpense>> expenses(String squadId) async {

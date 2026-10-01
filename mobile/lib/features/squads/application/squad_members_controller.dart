@@ -23,9 +23,11 @@ class SquadMembersController
   final SquadRepository _repository;
   final String squadId;
 
-  Future<void> load() async {
+  Future<void> load({bool forceRefresh = false}) async {
     try {
-      state = AsyncValue.data(await _repository.loadMembers(squadId));
+      state = AsyncValue.data(
+        await _repository.loadMembers(squadId, forceRefresh: forceRefresh),
+      );
     } catch (error, stackTrace) {
       state = AsyncValue.error(apiErrorMessage(error), stackTrace);
     }

@@ -14,12 +14,15 @@ import 'package:festisquad/features/clash_resolver/domain/clash_models.dart';
 import 'package:festisquad/features/finances/data/finance_repository.dart';
 import 'package:festisquad/features/finances/domain/finance_models.dart';
 import 'package:festisquad/features/finances/domain/money.dart';
+import 'package:festisquad/features/profile/data/profile_repository.dart';
+import 'package:festisquad/features/profile/domain/user_profile.dart';
 import 'package:festisquad/features/squads/presentation/dashboard_screen.dart';
 import 'package:festisquad/features/squads/presentation/join_squad_screen.dart';
 import 'package:festisquad/features/squads/presentation/squad_preview.dart';
 import 'package:festisquad/features/squads/presentation/squad_signal_screen.dart';
 import 'package:festisquad/features/squads/data/squad_repository.dart';
 import 'package:festisquad/features/squads/domain/squad.dart';
+import 'package:festisquad/src/app.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -164,6 +167,105 @@ void main() {
     expect(find.text('Escribe tu nombre'), findsOneWidget);
     expect(find.text('Escribe un correo válido'), findsOneWidget);
     expect(find.text('Usa al menos 8 caracteres'), findsOneWidget);
+  });
+
+  testWidgets('welcome screen has no demonstration access', (tester) async {
+    await tester.pumpWidget(ProviderScope(overrides: [
+      authRepositoryProvider.overrideWithValue(_FakeAuthRepository())
+    ], child: MaterialApp(theme: buildAppTheme(), home: const LoginScreen())));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Explorar demostración'), findsNothing);
+    expect(find.text('CREAR CUENTA'), findsOneWidget);
+    expect(find.text('INICIAR SESIÓN'), findsOneWidget);
+  });
+
+  testWidgets('profile sheet shows useful account actions without the user id',
+      (tester) async {
+    addTearDown(() =>
+        activeSquadPreview.value = const SquadPreview("Headliners ’26", 5));
+    const squad = Squad(
+      id: '00000000-0000-0000-0000-000000000030',
+      name: 'Mi squad',
+      code: 'PROFILE',
+      ownerId: '00000000-0000-0000-0000-000000000002',
+      memberIds: ['00000000-0000-0000-0000-000000000002'],
+      currentUserRole: 'admin',
+    );
+    final member = SquadMemberProfile(
+      userId: _FakeAuthRepository.session.userId,
+      name: 'Yael Flores',
+      role: 'admin',
+      joinedAt: DateTime.utc(2026, 10, 1),
+      isOwner: true,
+      isCurrentUser: true,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(
+            _FakeAuthRepository(restoredSession: _FakeAuthRepository.session),
+          ),
+          squadRepositoryProvider.overrideWithValue(
+            _FakeSquadRepository(mine: const [squad], members: [member]),
+          ),
+          profileRepositoryProvider.overrideWithValue(_FakeProfileRepository()),
+          financeRepositoryProvider.overrideWithValue(
+            _FakeFinanceRepository(
+              const FinanceSnapshot(
+                expenses: [],
+                settlements: [],
+                netBalances: {},
+                transfers: [],
+                fromCache: false,
+              ),
+            ),
+          ),
+          clashRemoteDataSourceProvider.overrideWithValue(
+            _FakeClashRemoteDataSource(),
+          ),
+        ],
+        child: MaterialApp(
+          theme: buildAppTheme(),
+          home: const DashboardScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Perfil'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mi perfil'), findsOneWidget);
+    expect(find.text('Yael Flores'), findsWidgets);
+    expect(find.text('yael@example.com'), findsOneWidget);
+    expect(find.text('Cambiar foto de perfil'), findsOneWidget);
+    expect(find.text('CUENTAS VINCULADAS'), findsOneWidget);
+    expect(find.text('CERRAR SESIÓN'), findsOneWidget);
+    expect(
+        find.textContaining(_FakeAuthRepository.session.userId), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('unauthenticated navigation cannot open the dashboard',
+      (tester) async {
+    final container = ProviderContainer(overrides: [
+      authRepositoryProvider.overrideWithValue(_FakeAuthRepository())
+    ]);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const FestiSquadApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    container.read(routerProvider).go('/dashboard');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.byType(DashboardScreen), findsNothing);
   });
 
   testWidgets('long pressing the squad bolt reveals Squad Signal',
@@ -418,6 +520,27 @@ class _FakeAuthRepository implements AuthRepository {
   Future<AuthSession?> restore() async => restoredSession;
 }
 
+class _FakeProfileRepository implements ProfileRepository {
+  static const profile = UserProfile(
+    id: '00000000-0000-0000-0000-000000000002',
+    name: 'Yael Flores',
+    email: 'yael@example.com',
+  );
+
+  @override
+  Future<UserProfile> getMe() async => profile;
+
+  @override
+  Future<UserProfile> removeAvatar() async => profile;
+
+  @override
+  Future<UserProfile> uploadAvatar({
+    required Uint8List bytes,
+    required String filename,
+  }) async =>
+      profile;
+}
+
 class _FakeSquadRepository implements SquadRepository {
   _FakeSquadRepository({
     this.mine = const [],
@@ -434,8 +557,9 @@ class _FakeSquadRepository implements SquadRepository {
 
   @override
   Future<OfflineData<List<SquadMemberProfile>>> loadMembers(
-    String squadId,
-  ) async =>
+    String squadId, {
+    bool forceRefresh = false,
+  }) async =>
       OfflineData(members, fromCache: false);
 
   @override
@@ -550,5 +674,14 @@ class _FakeFinanceRepository implements FinanceRepository {
 
   @override
   Future<FinanceSnapshot> createSettlement(SettlementDraft draft) async =>
+      snapshot;
+
+  @override
+  Future<FinanceSnapshot> cancelExpense(SquadExpense expense) async => snapshot;
+
+  @override
+  Future<FinanceSnapshot> cancelSettlement(
+    SquadSettlement settlement,
+  ) async =>
       snapshot;
 }

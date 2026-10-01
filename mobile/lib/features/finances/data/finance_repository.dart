@@ -33,6 +33,8 @@ abstract interface class FinanceRemoteDataSource {
   );
   Future<SquadExpense> create(ExpenseDraft draft);
   Future<SquadSettlement> createSettlement(SettlementDraft draft);
+  Future<SquadExpense> cancelExpense(String expenseId);
+  Future<SquadSettlement> cancelSettlement(String settlementId);
 }
 
 class ApiFinanceRemoteDataSource implements FinanceRemoteDataSource {
@@ -42,7 +44,8 @@ class ApiFinanceRemoteDataSource implements FinanceRemoteDataSource {
 
   @override
   Future<List<SquadExpense>> expenses(String squadId) async {
-    final response = await _api.get('/expenses/squad/$squadId');
+    final response =
+        await _api.get('/expenses/squad/$squadId?include_cancelled=true');
     return (response.data as List)
         .map((item) => SquadExpense.fromJson(
               Map<String, dynamic>.from(item as Map),
@@ -81,7 +84,8 @@ class ApiFinanceRemoteDataSource implements FinanceRemoteDataSource {
 
   @override
   Future<List<SquadSettlement>> settlements(String squadId) async {
-    final response = await _api.get('/expenses/squad/$squadId/settlements');
+    final response = await _api
+        .get('/expenses/squad/$squadId/settlements?include_cancelled=true');
     return (response.data as List)
         .map((item) => SquadSettlement.fromJson(
               Map<String, dynamic>.from(item as Map),
@@ -93,6 +97,23 @@ class ApiFinanceRemoteDataSource implements FinanceRemoteDataSource {
   Future<SquadSettlement> createSettlement(SettlementDraft draft) async {
     final response =
         await _api.post('/expenses/settlements', data: draft.toJson());
+    return SquadSettlement.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
+
+  @override
+  Future<SquadExpense> cancelExpense(String expenseId) async {
+    final response = await _api.post('/expenses/$expenseId/cancel');
+    return SquadExpense.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
+  }
+
+  @override
+  Future<SquadSettlement> cancelSettlement(String settlementId) async {
+    final response =
+        await _api.post('/expenses/settlements/$settlementId/cancel');
     return SquadSettlement.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
@@ -202,6 +223,30 @@ class FinanceRepository {
     }
   }
 
+  Future<FinanceSnapshot> cancelExpense(SquadExpense expense) async {
+    final userId = await _currentUserId();
+    if (expense.pendingSync) {
+      await _database.deleteExpense(userId, expense.clientRequestId);
+      await _deletePending(expense.clientRequestId);
+      await _recalculateLocalSummary(userId, expense.squadId);
+      return _readCache(userId, expense.squadId);
+    }
+    await _remote.cancelExpense(expense.id);
+    return _refresh(userId, expense.squadId);
+  }
+
+  Future<FinanceSnapshot> cancelSettlement(SquadSettlement settlement) async {
+    final userId = await _currentUserId();
+    if (settlement.pendingSync) {
+      await _database.deleteSettlement(userId, settlement.clientRequestId);
+      await _deletePendingSettlement(settlement.clientRequestId);
+      await _recalculateLocalSummary(userId, settlement.squadId);
+      return _readCache(userId, settlement.squadId);
+    }
+    await _remote.cancelSettlement(settlement.id);
+    return _refresh(userId, settlement.squadId);
+  }
+
   Future<FinanceSnapshot> _refresh(String userId, String squadId) async {
     final responses = await Future.wait([
       _remote.expenses(squadId),
@@ -279,6 +324,9 @@ class FinanceRepository {
               }).toList(growable: false),
               createdAt: row.createdAt,
               pendingSync: row.syncState != 'synced',
+              status: row.status,
+              cancelledAt: row.cancelledAt,
+              cancelledByUserId: row.cancelledByUserId,
             ))
         .toList(growable: false);
   }
@@ -302,6 +350,9 @@ class FinanceRepository {
               note: row.note,
               createdAt: row.createdAt,
               pendingSync: row.syncState != 'synced',
+              status: row.status,
+              cancelledAt: row.cancelledAt,
+              cancelledByUserId: row.cancelledByUserId,
             ))
         .toList(growable: false);
   }
@@ -330,6 +381,9 @@ class FinanceRepository {
       note: Value(settlement.note),
       createdAt: settlement.createdAt.toUtc(),
       syncState: settlement.pendingSync ? 'pending' : 'synced',
+      status: Value(settlement.status),
+      cancelledAt: Value(settlement.cancelledAt?.toUtc()),
+      cancelledByUserId: Value(settlement.cancelledByUserId),
     );
   }
 
@@ -351,6 +405,9 @@ class FinanceRepository {
       ]),
       createdAt: expense.createdAt.toUtc(),
       syncState: expense.pendingSync ? 'pending' : 'synced',
+      status: Value(expense.status),
+      cancelledAt: Value(expense.cancelledAt?.toUtc()),
+      cancelledByUserId: Value(expense.cancelledByUserId),
     );
   }
 
@@ -385,6 +442,7 @@ class FinanceRepository {
     final settlements = await _readSettlements(userId, squadId);
     final balances = <String, Money>{};
     for (final expense in expenses) {
+      if (expense.isCancelled) continue;
       balances.update(
         expense.paidByUserId,
         (value) => value + expense.amount,
@@ -399,6 +457,7 @@ class FinanceRepository {
       }
     }
     for (final settlement in settlements) {
+      if (settlement.isCancelled) continue;
       balances.update(
         settlement.fromUserId,
         (value) => value + settlement.amount,

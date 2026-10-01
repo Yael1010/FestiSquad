@@ -28,6 +28,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final auth = ref.read(authControllerProvider);
       final hasSession = auth.valueOrNull != null;
       if (hasSession && state.matchedLocation == '/login') return '/dashboard';
+      if (!hasSession && state.matchedLocation != '/login') return '/login';
       return null;
     },
     routes: [

@@ -55,6 +55,9 @@ class SquadExpense {
     required this.participants,
     required this.createdAt,
     required this.pendingSync,
+    this.status = 'active',
+    this.cancelledAt,
+    this.cancelledByUserId,
   });
 
   final String id;
@@ -66,6 +69,11 @@ class SquadExpense {
   final List<ExpenseShare> participants;
   final DateTime createdAt;
   final bool pendingSync;
+  final String status;
+  final DateTime? cancelledAt;
+  final String? cancelledByUserId;
+
+  bool get isCancelled => status == 'cancelled';
 
   factory SquadExpense.fromJson(Map<String, dynamic> json) => SquadExpense(
         id: json['id'] as String,
@@ -81,6 +89,11 @@ class SquadExpense {
             .toList(growable: false),
         createdAt: DateTime.parse(json['created_at'] as String),
         pendingSync: false,
+        status: json['status'] as String? ?? 'active',
+        cancelledAt: json['cancelled_at'] == null
+            ? null
+            : DateTime.parse(json['cancelled_at'] as String),
+        cancelledByUserId: json['cancelled_by_user_id'] as String?,
       );
 }
 
@@ -144,6 +157,9 @@ class SquadSettlement {
     required this.createdAt,
     required this.pendingSync,
     this.note,
+    this.status = 'active',
+    this.cancelledAt,
+    this.cancelledByUserId,
   });
 
   final String id;
@@ -155,6 +171,11 @@ class SquadSettlement {
   final String? note;
   final DateTime createdAt;
   final bool pendingSync;
+  final String status;
+  final DateTime? cancelledAt;
+  final String? cancelledByUserId;
+
+  bool get isCancelled => status == 'cancelled';
 
   factory SquadSettlement.fromJson(Map<String, dynamic> json) =>
       SquadSettlement(
@@ -167,6 +188,11 @@ class SquadSettlement {
         note: json['note'] as String?,
         createdAt: DateTime.parse(json['created_at'] as String),
         pendingSync: false,
+        status: json['status'] as String? ?? 'active',
+        cancelledAt: json['cancelled_at'] == null
+            ? null
+            : DateTime.parse(json['cancelled_at'] as String),
+        cancelledByUserId: json['cancelled_by_user_id'] as String?,
       );
 }
 

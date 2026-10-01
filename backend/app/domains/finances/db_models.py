@@ -20,6 +20,10 @@ class Expense(Base):
     __tablename__ = 'expenses'
     __table_args__ = (
         CheckConstraint('amount > 0', name='ck_expenses_amount'),
+        CheckConstraint(
+            "status IN ('active', 'cancelled')",
+            name='ck_expenses_status',
+        ),
         Index('ix_expenses_squad_created', 'squad_id', text('created_at DESC')),
         Index('uq_expenses_client_request', 'client_request_id', unique=True),
     )
@@ -29,6 +33,11 @@ class Expense(Base):
     paid_by_user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'))
     description: Mapped[str] = mapped_column(Unicode(180))
     amount: Mapped[Decimal] = mapped_column(DECIMAL(18, 2, asdecimal=True))
+    status: Mapped[str] = mapped_column(
+        Unicode(20), nullable=False, default='active', server_default=text("'active'")
+    )
+    cancelled_at: Mapped[datetime | None] = mapped_column(DATETIME2)
+    cancelled_by_user_id: Mapped[UUID | None] = mapped_column(ForeignKey('users.id'))
     created_at: Mapped[datetime] = mapped_column(DATETIME2, server_default=text('SYSUTCDATETIME()'))
 
 
@@ -47,6 +56,10 @@ class Settlement(Base):
         CheckConstraint(
             'from_user_id <> to_user_id',
             name='ck_settlements_distinct_users',
+        ),
+        CheckConstraint(
+            "status IN ('active', 'cancelled')",
+            name='ck_settlements_status',
         ),
         Index(
             'ix_settlements_squad_created',
@@ -71,6 +84,11 @@ class Settlement(Base):
     to_user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id'))
     amount: Mapped[Decimal] = mapped_column(DECIMAL(18, 2, asdecimal=True))
     note: Mapped[str | None] = mapped_column(Unicode(180))
+    status: Mapped[str] = mapped_column(
+        Unicode(20), nullable=False, default='active', server_default=text("'active'")
+    )
+    cancelled_at: Mapped[datetime | None] = mapped_column(DATETIME2)
+    cancelled_by_user_id: Mapped[UUID | None] = mapped_column(ForeignKey('users.id'))
     created_at: Mapped[datetime] = mapped_column(
         DATETIME2,
         server_default=text('SYSUTCDATETIME()'),

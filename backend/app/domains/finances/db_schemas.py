@@ -39,6 +39,9 @@ class ExpenseInput(BaseModel):
 class ExpenseOutput(ExpenseInput):
     id: UUID
     currency: str = 'MXN'
+    status: str = 'active'
+    cancelled_at: datetime | None = None
+    cancelled_by_user_id: UUID | None = None
     created_at: datetime
 
 
@@ -76,4 +79,7 @@ class SettlementInput(BaseModel):
 class SettlementOutput(SettlementInput):
     id: UUID
     currency: str = 'MXN'
+    status: str = 'active'
+    cancelled_at: datetime | None = None
+    cancelled_by_user_id: UUID | None = None
     created_at: datetime

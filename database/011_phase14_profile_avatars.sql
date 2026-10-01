@@ -1,0 +1,10 @@
+SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+
+IF COL_LENGTH('dbo.users', 'avatar_url') IS NULL
+BEGIN
+    ALTER TABLE dbo.users
+        ADD avatar_url NVARCHAR(1000) NULL;
+END;
+
+COMMIT TRANSACTION;

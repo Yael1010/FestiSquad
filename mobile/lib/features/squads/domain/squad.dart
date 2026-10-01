@@ -64,4 +64,17 @@ class SquadMemberProfile {
   }
 
   bool get isAdmin => role == 'admin';
+
+  SquadMemberProfile copyWith({String? avatarUrl}) {
+    return SquadMemberProfile(
+      userId: userId,
+      name: name,
+      avatarUrl: avatarUrl,
+      role: role,
+      joinedAt: joinedAt,
+      lastLocationAt: lastLocationAt,
+      isOwner: isOwner,
+      isCurrentUser: isCurrentUser,
+    );
+  }
 }

@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/festi_widgets.dart';
+import '../../../core/network/api_client.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/presentation/login_screen.dart';
 import '../../clash_resolver/application/clash_controller.dart';
@@ -14,6 +16,8 @@ import '../../clash_resolver/domain/clash_models.dart';
 import '../../finances/data/finance_repository.dart';
 import '../../finances/domain/finance_models.dart';
 import '../../finances/domain/money.dart';
+import '../../profile/data/profile_repository.dart';
+import '../../profile/domain/user_profile.dart';
 import '../application/squad_controller.dart';
 import '../data/squad_repository.dart';
 import '../domain/squad.dart';
@@ -33,6 +37,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   List<SquadMemberProfile> _squadMembers = const [];
   MusicPreferences? _musicPreferences;
   bool _spotifyLoading = false;
+  bool _avatarSaving = false;
+  final ImagePicker _imagePicker = ImagePicker();
   static const _searchItems = [
     ('Festivales y escenarios', '/festivals', 'escenarios mapa festival'),
     ('Mi squad · Amigos', '/join', 'amigos squad'),
@@ -99,8 +105,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Future<void> _loadMembers(String squadId) async {
     try {
-      final result =
-          await ref.read(squadRepositoryProvider).loadMembers(squadId);
+      final result = await ref
+          .read(squadRepositoryProvider)
+          .loadMembers(squadId, forceRefresh: true);
       if (!mounted || activeSquadPreview.value.id != squadId) return;
       setState(() => _squadMembers = result.value);
     } catch (_) {
@@ -212,40 +219,108 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       return;
     }
 
-    final action = await showDialog<String>(
+    UserProfile? profile;
+    try {
+      profile = await ref.read(profileRepositoryProvider).getMe();
+    } catch (_) {
+      // El perfil puede abrirse con los datos del squad si la red falla.
+    }
+    if (!mounted) return;
+
+    final action = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sesión activa'),
-        content: Text('Usuario ${session.userId}'),
-        actions: [
-          IconButton(
-            tooltip: 'Vincular Google',
-            onPressed: () => Navigator.pop(context, 'google'),
-            icon: const Text(
-              'G',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Vincular Spotify',
-            onPressed: () => Navigator.pop(context, 'spotify'),
-            icon: const Icon(Icons.graphic_eq),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'logout'),
-            child: const Text('Cerrar sesión'),
-          ),
-        ],
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: FestiColors.surface,
+      builder: (context) => _ProfileSheet(
+        name: profile?.name.trim().isNotEmpty == true
+            ? profile!.name.trim()
+            : _displayName,
+        email: profile?.email,
+        avatarUrl: profile?.avatarUrl ?? _displayAvatarUrl,
+        spotifyConnected: _musicPreferences?.spotifyConnected == true,
       ),
     );
     if (action == 'google' || action == 'spotify') {
       if (mounted) showSocialAuthSheet(context, action!, link: true);
       return;
     }
+    if (action == 'avatar') {
+      await _changeAvatar();
+      return;
+    }
+    if (action == 'remove_avatar') {
+      await _removeAvatar();
+      return;
+    }
     if (action != 'logout') return;
     await ref.read(authControllerProvider.notifier).logout();
     activeSquadPreview.value = const SquadPreview('Sin squad activo', 0);
     if (mounted) context.go('/login');
+  }
+
+  Future<void> _changeAvatar() async {
+    if (_avatarSaving) return;
+    final image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+    if (image == null || !mounted) return;
+
+    final bytes = await image.readAsBytes();
+    if (bytes.length > 5 * 1024 * 1024) {
+      _showMessage('La imagen no puede superar 5 MB.');
+      return;
+    }
+    setState(() => _avatarSaving = true);
+    try {
+      final profile = await ref.read(profileRepositoryProvider).uploadAvatar(
+            bytes: bytes,
+            filename: image.name.isEmpty ? 'perfil.jpg' : image.name,
+          );
+      if (!mounted) return;
+      setState(() {
+        _squadMembers = _squadMembers
+            .map((member) => member.isCurrentUser
+                ? member.copyWith(avatarUrl: profile.avatarUrl)
+                : member)
+            .toList(growable: false);
+      });
+      _showMessage('Foto de perfil actualizada.');
+    } catch (error) {
+      if (mounted) _showMessage(apiErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _avatarSaving = false);
+    }
+  }
+
+  Future<void> _removeAvatar() async {
+    if (_avatarSaving) return;
+    setState(() => _avatarSaving = true);
+    try {
+      final profile = await ref.read(profileRepositoryProvider).removeAvatar();
+      if (!mounted) return;
+      setState(() {
+        _squadMembers = _squadMembers
+            .map((member) => member.isCurrentUser
+                ? member.copyWith(avatarUrl: profile.avatarUrl)
+                : member)
+            .toList(growable: false);
+      });
+      _showMessage('Se restauró la foto vinculada o las iniciales.');
+    } catch (error) {
+      if (mounted) _showMessage(apiErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _avatarSaving = false);
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _openClash() async {
@@ -271,10 +346,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return value.isEmpty ? 'FS' : value;
   }
 
+  String? get _displayAvatarUrl {
+    for (final member in _squadMembers) {
+      if (member.isCurrentUser) return member.avatarUrl;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayName = _displayName;
     final displayInitials = _displayInitials;
+    final displayAvatarUrl = _displayAvatarUrl;
     return Scaffold(
       body: SafeArea(
           child: FestiBody(
@@ -282,23 +365,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
                   children: [
             Row(children: [
-              Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: FestiColors.cyan),
-                      boxShadow: [
-                        BoxShadow(
-                            color: FestiColors.cyan.withValues(alpha: .18),
-                            blurRadius: 16)
-                      ]),
-                  child: CircleAvatar(
-                      radius: 23,
-                      backgroundColor: const Color(0xFF173B67),
-                      child: Text(displayInitials,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800)))),
+              _DashboardAvatar(
+                initials: displayInitials,
+                avatarUrl: displayAvatarUrl,
+                saving: _avatarSaving,
+                onEdit: _changeAvatar,
+              ),
               const SizedBox(width: 14),
               Expanded(
                   child: Column(
@@ -623,6 +695,334 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 }
 
+class _ProfileSheet extends StatelessWidget {
+  const _ProfileSheet({
+    required this.name,
+    required this.email,
+    required this.avatarUrl,
+    required this.spotifyConnected,
+  });
+
+  final String name;
+  final String? email;
+  final String? avatarUrl;
+  final bool spotifyConnected;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(22, 4, 22, 22 + bottomInset),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Mi perfil',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                _ProfilePhoto(
+                  name: name,
+                  avatarUrl: avatarUrl,
+                  onTap: () => Navigator.pop(context, 'avatar'),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        email ?? 'Cuenta FestiSquad',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: FestiColors.muted,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Row(
+                        children: [
+                          SizedBox(
+                            width: 7,
+                            height: 7,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: FestiColors.success,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 7),
+                          Text(
+                            'Sesión activa',
+                            style: TextStyle(
+                              color: FestiColors.success,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const _ProfileSectionLabel('PERSONALIZACIÓN'),
+            const SizedBox(height: 8),
+            _ProfileAction(
+              icon: Icons.photo_camera_outlined,
+              title: 'Cambiar foto de perfil',
+              subtitle: 'Elige una imagen desde tu dispositivo',
+              onTap: () => Navigator.pop(context, 'avatar'),
+            ),
+            if (avatarUrl != null)
+              _ProfileAction(
+                icon: Icons.person_remove_outlined,
+                title: 'Restaurar foto vinculada',
+                subtitle: 'Usa tu foto social o tus iniciales',
+                onTap: () => Navigator.pop(context, 'remove_avatar'),
+              ),
+            const SizedBox(height: 18),
+            const _ProfileSectionLabel('CUENTAS VINCULADAS'),
+            const SizedBox(height: 8),
+            _ProfileAction(
+              leading: const Text(
+                'G',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              title: 'Google',
+              subtitle: 'Vincula otra forma de iniciar sesión',
+              trailing: 'Vincular',
+              onTap: () => Navigator.pop(context, 'google'),
+            ),
+            _ProfileAction(
+              icon: Icons.graphic_eq_rounded,
+              iconColor:
+                  spotifyConnected ? FestiColors.success : FestiColors.cyan,
+              title: 'Spotify',
+              subtitle: spotifyConnected
+                  ? 'Preferencias musicales sincronizadas'
+                  : 'Conecta tus artistas y géneros',
+              trailing: spotifyConnected ? 'Conectado' : 'Vincular',
+              trailingColor:
+                  spotifyConnected ? FestiColors.success : FestiColors.cyan,
+              onTap: () => Navigator.pop(context, 'spotify'),
+            ),
+            const SizedBox(height: 18),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.pop(context, 'logout'),
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text('CERRAR SESIÓN'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: FestiColors.danger,
+                side: const BorderSide(color: Color(0xFF633445)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfilePhoto extends StatelessWidget {
+  const _ProfilePhoto({
+    required this.name,
+    required this.avatarUrl,
+    required this.onTap,
+  });
+
+  final String name;
+  final String? avatarUrl;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = name
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .join();
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 76,
+          height: 76,
+          clipBehavior: Clip.antiAlias,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF173B67),
+            border: Border.all(color: FestiColors.cyan, width: 2),
+          ),
+          child: avatarUrl == null
+              ? Text(
+                  initials.isEmpty ? 'FS' : initials,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                  ),
+                )
+              : Image.network(
+                  avatarUrl!,
+                  width: 76,
+                  height: 76,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Text(
+                    initials.isEmpty ? 'FS' : initials,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+        ),
+        Positioned(
+          right: -3,
+          bottom: -3,
+          child: IconButton.filled(
+            tooltip: 'Cambiar foto',
+            onPressed: onTap,
+            style: IconButton.styleFrom(
+              minimumSize: const Size(30, 30),
+              fixedSize: const Size(30, 30),
+              padding: EdgeInsets.zero,
+              backgroundColor: FestiColors.cyan,
+              foregroundColor: FestiColors.background,
+              side: const BorderSide(color: FestiColors.surface, width: 3),
+            ),
+            icon: const Icon(Icons.edit_rounded, size: 15),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileSectionLabel extends StatelessWidget {
+  const _ProfileSectionLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Text(
+        label,
+        style: const TextStyle(
+          color: FestiColors.muted,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      );
+}
+
+class _ProfileAction extends StatelessWidget {
+  const _ProfileAction({
+    this.icon,
+    this.leading,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.iconColor = FestiColors.cyan,
+    this.trailing,
+    this.trailingColor = FestiColors.cyan,
+  }) : assert(icon != null || leading != null);
+
+  final IconData? icon;
+  final Widget? leading;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final Color iconColor;
+  final String? trailing;
+  final Color trailingColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFF111F34),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: FestiColors.border),
+              ),
+              child: leading ?? Icon(icon, color: iconColor, size: 21),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: FestiColors.muted,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null) ...[
+              const SizedBox(width: 8),
+              Text(
+                trailing!,
+                style: TextStyle(
+                  color: trailingColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ] else
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: FestiColors.muted,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SquadAvatars extends StatelessWidget {
   const _SquadAvatars({
     required this.memberCount,
@@ -644,22 +1044,11 @@ class _SquadAvatars extends StatelessWidget {
     }
 
     final visibleCount = memberCount > 3 ? 3 : memberCount;
-    final labels = List<String>.generate(visibleCount, (index) {
-      if (index >= members.length) return '${index + 1}';
-      final words = members[index]
-          .name
-          .trim()
-          .split(RegExp(r'\s+'))
-          .where((word) => word.isNotEmpty)
-          .toList(growable: false);
-      if (words.isEmpty) return '${index + 1}';
-      return words.take(2).map((word) => word[0].toUpperCase()).join();
-    });
-
     return Wrap(
       spacing: -5,
       children: [
-        for (final label in labels) _Avatar(label),
+        for (var index = 0; index < visibleCount; index++)
+          _Avatar.fromMember(index < members.length ? members[index] : null),
         if (memberCount > visibleCount)
           _Avatar('+${memberCount - visibleCount}'),
       ],
@@ -909,8 +1298,21 @@ class _SquadSignalTriggerState extends State<_SquadSignalTrigger> {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar(this.label);
+  const _Avatar(this.label) : avatarUrl = null;
+  _Avatar.fromMember(SquadMemberProfile? member)
+      : label = member == null ? '?' : _initialsFor(member.name),
+        avatarUrl = member?.avatarUrl;
   final String label;
+  final String? avatarUrl;
+
+  static String _initialsFor(String name) => name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((part) => part.isNotEmpty)
+      .take(2)
+      .map((part) => part[0].toUpperCase())
+      .join();
+
   @override
   Widget build(BuildContext context) => Container(
       width: 30,
@@ -920,11 +1322,92 @@ class _Avatar extends StatelessWidget {
           shape: BoxShape.circle,
           color: const Color(0xFF153D5B),
           border: Border.all(color: FestiColors.cyan)),
-      child: Text(label,
-          style: const TextStyle(
-              fontSize: 9,
-              color: FestiColors.cyan,
-              fontWeight: FontWeight.bold)));
+      clipBehavior: Clip.antiAlias,
+      child: avatarUrl == null
+          ? Text(label,
+              style: const TextStyle(
+                  fontSize: 9,
+                  color: FestiColors.cyan,
+                  fontWeight: FontWeight.bold))
+          : Image.network(
+              avatarUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Text(label,
+                  style: const TextStyle(
+                      fontSize: 9,
+                      color: FestiColors.cyan,
+                      fontWeight: FontWeight.bold)),
+            ));
+}
+
+class _DashboardAvatar extends StatelessWidget {
+  const _DashboardAvatar({
+    required this.initials,
+    required this.avatarUrl,
+    required this.saving,
+    required this.onEdit,
+  });
+
+  final String initials;
+  final String? avatarUrl;
+  final bool saving;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: FestiColors.cyan),
+            boxShadow: [
+              BoxShadow(
+                color: FestiColors.cyan.withValues(alpha: .18),
+                blurRadius: 16,
+              ),
+            ],
+          ),
+          child: CircleAvatar(
+            radius: 23,
+            backgroundColor: const Color(0xFF173B67),
+            foregroundImage:
+                avatarUrl == null ? null : NetworkImage(avatarUrl!),
+            child: Text(
+              initials,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+        Positioned(
+          right: -5,
+          bottom: -5,
+          child: Material(
+            color: FestiColors.cyan,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: saving ? null : onEdit,
+              child: SizedBox(
+                width: 23,
+                height: 23,
+                child: saving
+                    ? const Padding(
+                        padding: EdgeInsets.all(5),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.edit,
+                        size: 13, color: Color(0xFF071120)),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _FestivalPainter extends CustomPainter {

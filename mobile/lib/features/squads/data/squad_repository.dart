@@ -29,7 +29,10 @@ abstract interface class SquadRepository {
 
   Future<Squad> join(String code);
 
-  Future<OfflineData<List<SquadMemberProfile>>> loadMembers(String squadId);
+  Future<OfflineData<List<SquadMemberProfile>>> loadMembers(
+    String squadId, {
+    bool forceRefresh = false,
+  });
 
   Future<void> updateRole(String squadId, String userId, String role);
 
@@ -90,9 +93,7 @@ class ApiSquadRemoteDataSource implements SquadRemoteDataSource {
   Future<List<SquadMemberProfile>> listMembers(String squadId) async {
     final response = await _api.get('/squads/$squadId/members');
     return (response.data as List)
-        .map((item) => SquadMemberProfile.fromJson(
-              Map<String, dynamic>.from(item as Map),
-            ))
+        .map((item) => _parseMember(Map<String, dynamic>.from(item as Map)))
         .toList(growable: false);
   }
 
@@ -121,6 +122,14 @@ class ApiSquadRemoteDataSource implements SquadRemoteDataSource {
 
   Squad _parse(dynamic data) {
     return Squad.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  SquadMemberProfile _parseMember(Map<String, dynamic> payload) {
+    final avatarUrl = payload['avatar_url'];
+    if (avatarUrl is String && avatarUrl.isNotEmpty) {
+      payload['avatar_url'] = _api.resolveUrl(avatarUrl);
+    }
+    return SquadMemberProfile.fromJson(payload);
   }
 }
 
@@ -169,13 +178,30 @@ class OfflineFirstSquadRepository implements SquadRepository {
 
   @override
   Future<OfflineData<List<SquadMemberProfile>>> loadMembers(
-      String squadId) async {
+    String squadId, {
+    bool forceRefresh = false,
+  }) async {
     final userId = await _currentUserId();
     List<CachedSquadMember> cached = const [];
     try {
       cached = await _database.readSquadMembers(userId, squadId);
     } catch (_) {
       // El detalle remoto sigue disponible si el caché local falla.
+    }
+    if (forceRefresh) {
+      try {
+        final members = await _remote.listMembers(squadId);
+        await _tryCacheMembers(userId, squadId, members);
+        return OfflineData(members, fromCache: false);
+      } catch (_) {
+        if (cached.isNotEmpty) {
+          return OfflineData(
+            cached.map(_memberFromCache).toList(growable: false),
+            fromCache: true,
+          );
+        }
+        rethrow;
+      }
     }
     if (cached.isNotEmpty) {
       unawaited(_refreshMembersSilently(userId, squadId));
